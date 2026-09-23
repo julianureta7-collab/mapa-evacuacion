@@ -27,3 +27,6 @@ Campus San Joaquín: alerta de **sismo** → ruta a zona de seguridad más cerca
 
 ## Al terminar cada etapa
 Escribir `docs/reportes/NN-etapa.md`: qué se hizo, capturas, decisiones, limitaciones. Lo usa el equipo para el informe escrito.
+
+## Caché de GitHub Pages
+Pages sirve con `Cache-Control: max-age=600`. Al publicar cambios en JS/CSS, subir el número `?v=N` en `index.html` y en los `import` de `js/*.js` (buscar `?v=`), si no los navegadores pueden seguir usando la versión anterior por 10 minutos.

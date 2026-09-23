@@ -82,6 +82,26 @@ body {
   background: #1565c0; border: 4px solid #fff; box-shadow: 0 0 0 2px #1565c0, 0 2px 8px rgba(0,0,0,.4);
 }
 .pin-etiqueta {
-  position: absolute; top: -22px; left: 50%; transform: translateX(-50%);
+  position: absolute; top: 28px; left: 50%; transform: translateX(-50%);
   background: #1565c0; color: #fff; font-size: 12px; font-weight: 700; padding: 1px 6px; border-radius: 6px;
 }
+
+/* Brújula */
+.control-brujula {
+  width: 34px; height: 34px; padding: 0; display: grid; place-items: center;
+  background: #fff; cursor: pointer; border-radius: 4px;
+}
+.control-brujula.activa { background: #1565c0; box-shadow: 0 0 0 3px rgba(21,101,192,.35); }
+.control-brujula.activa .brujula-aguja circle { fill: #1565c0; }
+.brujula-aguja { transition: transform .15s linear; }
+
+/* Linterna en el pin: el SVG está centrado en el punto y rota alrededor de él */
+.pin-usuario { overflow: visible; }
+.pin-linterna {
+  position: absolute; left: 12px; top: 12px;
+  transform: translate(-50%, -50%);
+  pointer-events: none; opacity: 0; transition: opacity .3s;
+}
+.pin-linterna.visible { opacity: 1; }
+.pin-punto, .pin-etiqueta { position: relative; z-index: 1; }
+.pin-etiqueta { position: absolute; }

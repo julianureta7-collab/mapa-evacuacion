@@ -1,12 +1,14 @@
 // Punto de entrada: selector de escenario, carga de datos, ficha, leyenda y diagnóstico.
-import { ESCENARIOS, ESCENARIO_INICIAL, ESTILOS } from './config.js';
-import { cargarEscenario } from './datos.js';
-import { crearMapa, mostrarEscenario, mostrarVacio } from './mapa.js';
-import { prepararAreas, diagnosticar, TEXTOS } from './diagnostico.js';
-import { iniciarPosicion, modoSimulacion, modoGPS, quitarPin } from './posicion.js';
+import { ESCENARIOS, ESCENARIO_INICIAL, ESTILOS } from './config.js?v=4';
+import { cargarEscenario } from './datos.js?v=4';
+import { crearMapa, mostrarEscenario, mostrarVacio } from './mapa.js?v=4';
+import { prepararAreas, diagnosticar, TEXTOS } from './diagnostico.js?v=4';
+import { iniciarPosicion, modoSimulacion, modoGPS, quitarPin, setLinterna, posicionActual } from './posicion.js?v=4';
+import { crearControlBrujula, activarNorte } from './brujula.js?v=4';
 
 const $ = (id) => document.getElementById(id);
 let escenarioActual = null;
+let mapa = null;
 let pendienteRAF = null;
 
 function error(msg) {
@@ -37,6 +39,8 @@ function dibujarFuente(escenario, metadata) {
 }
 
 // ---- Diagnóstico ----
+const fmtDist = (m) => m >= 1000 ? `${(m / 1000).toLocaleString('es-CL', { maximumFractionDigits: 1 })} km` : `${Math.round(m)} m`;
+
 function mostrarDiagnostico(latlng, precision) {
   const r = diagnosticar(latlng ? [latlng.lng, latlng.lat] : null, precision);
   const t = TEXTOS[r.estado];
@@ -47,8 +51,8 @@ function mostrarDiagnostico(latlng, precision) {
   const detalle = [...r.advertencias];
   if (r.estado !== 'sin_ubicacion' && Number.isFinite(r.distanciaBorde)) {
     detalle.push(r.dentro
-      ? `Distancia al borde del área: ${Math.round(r.distanciaBorde)} m.`
-      : `A ${Math.round(r.distanciaBorde)} m del área a evacuar${r.comuna ? ` (${r.comuna})` : ''}.`);
+      ? `Distancia al borde del área: ${fmtDist(r.distanciaBorde)}.`
+      : `A ${fmtDist(r.distanciaBorde)} del área a evacuar${r.comuna ? ` (${r.comuna})` : ''}.`);
   }
   if (precision != null) detalle.push(`Precisión GPS: ±${Math.round(precision)} m.`);
   $('estado-detalle').innerHTML = detalle.map(d => `<div>${d}</div>`).join('');
@@ -73,6 +77,7 @@ function seleccionarModo(m) {
 async function activarEscenario(clave) {
   const esc = ESCENARIOS[clave];
   escenarioActual = esc;
+  activarNorte();
   quitarPin();
   $('diagnostico').hidden = true;
   $('ficha-titulo').textContent = 'Qué hacer si suena la alarma';
@@ -91,6 +96,8 @@ async function activarEscenario(clave) {
     dibujarFuente(esc, datos.metadata);
     if (prepararAreas(datos.capas.area_evacuar) > 0) {
       $('diagnostico').hidden = false;
+      mapa.invalidateSize(false);            // el panel achica el mapa en el celular
+      mapa.setView(esc.centro, esc.zoom);
       seleccionarModo('simulacion');
     }
   } catch (e) {
@@ -100,8 +107,13 @@ async function activarEscenario(clave) {
 }
 
 function iniciar() {
-  const mapa = crearMapa('mapa');
+  mapa = crearMapa('mapa');
   iniciarPosicion(mapa, alCambiarPosicion);
+  crearControlBrujula(mapa, {
+    onRumbo: (rumbo, bearing) => setLinterna(rumbo, bearing),
+    onError: (msg) => error(msg),
+    onActivar: () => { const p = posicionActual(); if (p) mapa.setView(p, Math.max(mapa.getZoom(), 16)); },
+  });
   $('btn-simulacion').addEventListener('click', () => seleccionarModo('simulacion'));
   $('btn-gps').addEventListener('click', () => seleccionarModo('gps'));
   const sel = $('selector-escenario');

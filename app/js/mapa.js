@@ -1,15 +1,30 @@
 // Mapa Leaflet: fondo OSM y capas del escenario.
-import { ESTILOS } from './config.js';
+import { ESTILOS } from './config.js?v=4';
 
 let mapa, controlCapas, grupoEscenario;
 
 export function crearMapa(idContenedor) {
-  mapa = L.map(idContenedor, { zoomControl: true, preferCanvas: true });
+  mapa = L.map(idContenedor, {
+    zoomControl: true,
+    preferCanvas: true,
+    // leaflet-rotate: rotación controlada solo por nuestro botón de brújula
+    rotate: true,
+    bearing: 0,
+    rotateControl: false,
+    touchRotate: false,
+    shiftKeyRotate: false,
+    compassBearing: false,
+  });
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '&copy; OpenStreetMap',
   }).addTo(mapa);
   mapa.attributionControl.addAttribution('Capas de amenaza: SENAPRED');
+  // Si el contenedor cambia de tamaño (p. ej. aparece el panel de diagnóstico en el celular),
+  // Leaflet debe recalcular; si no, el "centro" del mapa queda fuera de la vista.
+  if ('ResizeObserver' in window) {
+    new ResizeObserver(() => mapa.invalidateSize({ animate: false })).observe(mapa.getContainer());
+  }
   return mapa;
 }
 
@@ -39,10 +54,12 @@ export function mostrarEscenario(escenario, datos) {
     controlCapas.addOverlay(capa, c.nombre);
     if (c.visible) capa.addTo(grupoEscenario);
   }
+  mapa.invalidateSize(false);
   mapa.setView(escenario.centro, escenario.zoom);
 }
 
 export function mostrarVacio(escenario) {
   if (grupoEscenario) { grupoEscenario.remove(); controlCapas?.remove(); grupoEscenario = null; controlCapas = null; }
+  mapa.invalidateSize(false);
   mapa.setView(escenario.centro, escenario.zoom);
 }
