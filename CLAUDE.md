@@ -1,0 +1,29 @@
+# Contexto para Claude Code
+
+Proyecto: app web de rutas de evacuación (MVP para demostración en clase, plazo < 2 semanas).
+La especificación completa vive fuera del repo (OneDrive del usuario); este archivo resume lo esencial.
+
+## Principios
+- **No inventar rutas.** Las vías, puntos de encuentro y áreas vienen de SENAPRED (tsunami). En el campus, las zonas son levantamiento propio y la app debe decirlo.
+- **Simulacro siempre visible.** El banner de SIMULACRO y el aviso "no reemplaza a la autoridad" no se quitan.
+- **Ubicación solo en el dispositivo.** Nunca enviar coordenadas del usuario a un servidor propio.
+- **Sin build.** JS plano con ES modules, sin framework ni bundler. Librerías copiadas en `app/vendor/` (Leaflet y Turf son globales `L` y `turf`). Nada de CDNs: tiene que funcionar offline.
+- Código, comentarios y textos de UI en español.
+
+## Etapas
+1. Datos: GeoJSON SENAPRED visibles en Leaflet ← **actual**
+2. Diagnóstico: punto dentro/fuera/cerca del Área a Evacuar (Turf `booleanPointInPolygon`)
+3. Ruta: ORS `foot-walking`; validación "sale del área y no vuelve a entrar"; NO usar `avoid_polygons` con el área donde está el usuario; fallback a ruta precalculada o flecha recta si ORS responde 429
+4. Alarma: panel con login (Supabase Realtime) que activa modo emergencia en todos los dispositivos; polling 15 s de respaldo
+5. Interfaz de emergencia: flecha con brújula, voz, vibración (Android) / pitido (iPhone); botón "Estoy listo para el simulacro" que pide permisos con un toque
+6. Offline: service worker
+
+## Demostración objetivo
+Campus San Joaquín: alerta de **sismo** → ruta a zona de seguridad más cercana; alerta de **incendio en edificio X** → esa zona se descarta (buffer 50 m) y la ruta cambia. Luego Viña del Mar (tsunami) con pin de simulación arrastrable.
+
+## Comandos
+- `node scripts/descargar_capas.mjs` — descarga capas (campos: puntos/vías usan `nom_com`; el área usa `comuna`)
+- `node scripts/servidor.mjs` — http://localhost:8080
+
+## Al terminar cada etapa
+Escribir `docs/reportes/NN-etapa.md`: qué se hizo, capturas, decisiones, limitaciones. Lo usa el equipo para el informe escrito.

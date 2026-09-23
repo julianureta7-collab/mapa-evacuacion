@@ -1,0 +1,52 @@
+{
+  "escenario": "tsunami_vina",
+  "nombre": "Viña del Mar",
+  "fuente": "SENAPRED — Amenaza por Tsunami 2024 (IDE Chile / Geoportal)",
+  "url_servicio": "https://services5.arcgis.com/i7S5PSnIJAUcWvSE/ArcGIS/rest/services/Amenaza_por_Tsunami_2024/FeatureServer",
+  "ficha_catalogo": "https://geoportal.cl/geoportal/catalog/download/1dbd467c-ebaf-3c0d-b92e-1a2eb3286f55",
+  "fecha_publicacion_fuente": "2024-05-01",
+  "fecha_descarga": "2026-09-23T01:37:51.587Z",
+  "bbox": [
+    -71.6,
+    -33.06,
+    -71.48,
+    -32.93
+  ],
+  "capas": [
+    {
+      "capa": "Punto de Encuentro",
+      "indice": 0,
+      "archivo": "puntos_encuentro.geojson",
+      "elementos": 34,
+      "kb": 11
+    },
+    {
+      "capa": "Vía de Evacuación",
+      "indice": 1,
+      "archivo": "vias_evacuacion.geojson",
+      "elementos": 74,
+      "kb": 47
+    },
+    {
+      "capa": "Línea Segura",
+      "indice": 2,
+      "archivo": "linea_segura.geojson",
+      "elementos": 6,
+      "kb": 141
+    },
+    {
+      "capa": "Área a Evacuar",
+      "indice": 3,
+      "archivo": "area_evacuar.geojson",
+      "elementos": 3,
+      "kb": 252
+    },
+    {
+      "capa": "Cota 30 mts.",
+      "indice": 4,
+      "archivo": "cota_30.geojson",
+      "elementos": 2,
+      "kb": 39
+    }
+  ]
+}

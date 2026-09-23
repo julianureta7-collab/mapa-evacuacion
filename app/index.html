@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#12324a">
+  <title>Mapa de Evacuación</title>
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+  <div class="aviso-simulacro" id="aviso-simulacro">PROTOTIPO · SIMULACRO · No reemplaza las instrucciones de la autoridad</div>
+
+  <header class="cabecera">
+    <div class="titulo">
+      <h1>Mapa de Evacuación</h1>
+      <select id="selector-escenario" aria-label="Escenario"></select>
+    </div>
+  </header>
+
+  <main class="contenido">
+    <div id="mapa" role="application" aria-label="Mapa de la zona"></div>
+
+    <section class="ficha" id="ficha">
+      <h2 id="ficha-titulo">Qué hacer si suena la alarma</h2>
+      <p id="ficha-texto"></p>
+      <ul class="leyenda" id="leyenda"></ul>
+      <p class="fuente" id="fuente"></p>
+    </section>
+  </main>
+
+  <div class="mensaje-error" id="mensaje-error" hidden></div>
+
+  <script src="vendor/leaflet/leaflet.js"></script>
+  <script src="vendor/turf.min.js"></script>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
