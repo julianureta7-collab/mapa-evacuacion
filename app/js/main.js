@@ -1,9 +1,13 @@
-// Punto de entrada: selector de escenario, carga de datos, ficha y leyenda.
+// Punto de entrada: selector de escenario, carga de datos, ficha, leyenda y diagnóstico.
 import { ESCENARIOS, ESCENARIO_INICIAL, ESTILOS } from './config.js';
 import { cargarEscenario } from './datos.js';
 import { crearMapa, mostrarEscenario, mostrarVacio } from './mapa.js';
+import { prepararAreas, diagnosticar, TEXTOS } from './diagnostico.js';
+import { iniciarPosicion, modoSimulacion, modoGPS, quitarPin } from './posicion.js';
 
 const $ = (id) => document.getElementById(id);
+let escenarioActual = null;
+let pendienteRAF = null;
 
 function error(msg) {
   const el = $('mensaje-error');
@@ -32,8 +36,45 @@ function dibujarFuente(escenario, metadata) {
   $('fuente').textContent = `Fuente: ${metadata.fuente}. Publicación ${metadata.fecha_publicacion_fuente}; datos descargados el ${fecha}. Pueden no reflejar cambios posteriores.`;
 }
 
+// ---- Diagnóstico ----
+function mostrarDiagnostico(latlng, precision) {
+  const r = diagnosticar(latlng ? [latlng.lng, latlng.lat] : null, precision);
+  const t = TEXTOS[r.estado];
+  const caja = $('estado');
+  caja.className = `estado ${t.clase}`;
+  $('estado-titulo').textContent = t.titulo;
+  $('estado-texto').textContent = t.texto;
+  const detalle = [...r.advertencias];
+  if (r.estado !== 'sin_ubicacion' && Number.isFinite(r.distanciaBorde)) {
+    detalle.push(r.dentro
+      ? `Distancia al borde del área: ${Math.round(r.distanciaBorde)} m.`
+      : `A ${Math.round(r.distanciaBorde)} m del área a evacuar${r.comuna ? ` (${r.comuna})` : ''}.`);
+  }
+  if (precision != null) detalle.push(`Precisión GPS: ±${Math.round(precision)} m.`);
+  $('estado-detalle').innerHTML = detalle.map(d => `<div>${d}</div>`).join('');
+}
+
+function alCambiarPosicion(latlng, precision, arrastrando) {
+  // Mientras se arrastra, recalcular a lo más una vez por cuadro
+  if (arrastrando) {
+    if (pendienteRAF) return;
+    pendienteRAF = requestAnimationFrame(() => { pendienteRAF = null; mostrarDiagnostico(latlng, precision); });
+  } else mostrarDiagnostico(latlng, precision);
+}
+
+function seleccionarModo(m) {
+  $('btn-simulacion').classList.toggle('activo', m === 'simulacion');
+  $('btn-gps').classList.toggle('activo', m === 'gps');
+  if (m === 'simulacion') modoSimulacion(escenarioActual.centro);
+  else modoGPS((msg) => { error(msg); mostrarDiagnostico(null, null); seleccionarModo('simulacion'); });
+}
+
+// ---- Escenarios ----
 async function activarEscenario(clave) {
   const esc = ESCENARIOS[clave];
+  escenarioActual = esc;
+  quitarPin();
+  $('diagnostico').hidden = true;
   $('ficha-titulo').textContent = 'Qué hacer si suena la alarma';
   $('ficha-texto').textContent = esc.ficha;
   dibujarLeyenda(esc);
@@ -48,6 +89,10 @@ async function activarEscenario(clave) {
     const datos = await cargarEscenario(esc);
     mostrarEscenario(esc, datos);
     dibujarFuente(esc, datos.metadata);
+    if (prepararAreas(datos.capas.area_evacuar) > 0) {
+      $('diagnostico').hidden = false;
+      seleccionarModo('simulacion');
+    }
   } catch (e) {
     mostrarVacio(esc);
     error(`${e.message}. ¿Ejecutaste "node scripts/descargar_capas.mjs"?`);
@@ -55,7 +100,10 @@ async function activarEscenario(clave) {
 }
 
 function iniciar() {
-  crearMapa('mapa');
+  const mapa = crearMapa('mapa');
+  iniciarPosicion(mapa, alCambiarPosicion);
+  $('btn-simulacion').addEventListener('click', () => seleccionarModo('simulacion'));
+  $('btn-gps').addEventListener('click', () => seleccionarModo('gps'));
   const sel = $('selector-escenario');
   sel.innerHTML = Object.entries(ESCENARIOS)
     .map(([k, e]) => `<option value="${k}">${e.nombre}${e.pendiente ? ' (pendiente)' : ''}</option>`).join('');

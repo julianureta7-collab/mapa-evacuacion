@@ -22,6 +22,17 @@
     <div id="mapa" role="application" aria-label="Mapa de la zona"></div>
 
     <section class="ficha" id="ficha">
+      <div class="diagnostico" id="diagnostico" hidden>
+        <div class="modos" role="group" aria-label="Origen de la posición">
+          <button type="button" id="btn-simulacion" class="activo">Simular con pin</button>
+          <button type="button" id="btn-gps">Usar mi ubicación</button>
+        </div>
+        <div class="estado" id="estado" aria-live="polite">
+          <div class="estado-titulo" id="estado-titulo"></div>
+          <div class="estado-texto" id="estado-texto"></div>
+          <div class="estado-detalle" id="estado-detalle"></div>
+        </div>
+      </div>
       <h2 id="ficha-titulo">Qué hacer si suena la alarma</h2>
       <p id="ficha-texto"></p>
       <ul class="leyenda" id="leyenda"></ul>
