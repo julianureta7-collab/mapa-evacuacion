@@ -1,6 +1,12 @@
 // Etapa 3: elegir el punto de encuentro y trazar la ruta a pie.
 //
-// Reglas (ver especificación):
+// MÉTODO PRINCIPAL — vía oficial SENAPRED:
+//  Las vías de evacuación publicadas están digitalizadas en el sentido de la evacuación
+//  (las 74 de Viña empiezan dentro del área y 59 terminan fuera). Son corredores sueltos,
+//  no una red. Entonces: se busca la vía que conviene tomar, se traza el acercamiento
+//  hasta ella y desde ahí se sigue la vía oficial tal cual, hasta su final.
+//
+// MÉTODO DE RESPALDO — ruta por calles (ORS), si no hay una vía oficial cerca:
 //  1. Candidatos: puntos de encuentro a menos de 3 km en línea recta, fuera del área a evacuar.
 //  2. Se piden rutas a pie (OpenRouteService, foot-walking) a los 3 más cercanos.
 //  3. Validación "sale y no vuelve a entrar": una vez que la ruta cruza el borde del área,
@@ -18,6 +24,10 @@ const MAX_CANDIDATOS = 3;
 const TOLERANCIA_VIA_M = 20;     // un tramo "sigue la vía oficial" si está a menos de esto
 const VELOCIDAD_PIE = 1.2;       // m/s, para estimar tiempo en línea recta
 
+const RADIO_VIA_M = 500;         // máximo acercamiento a pie hasta una vía oficial
+const ACERCAMIENTO_RECTO_M = 60; // bajo esto, el acercamiento se dibuja recto sin pedir ruta
+const FINAL_A_PUNTO_M = 150;     // si la vía termina así de cerca de un punto de encuentro, se une
+
 let areas = [];                  // Features de polígono
 let puntos = [];                 // Features de punto de encuentro
 let vias = [];                   // Features de línea (vías de evacuación oficiales)
@@ -28,8 +38,105 @@ export const hayClaveORS = () => !!ORS_API_KEY && ORS_API_KEY !== 'PEGAR_AQUI_LA
 export function prepararRutas({ area_evacuar, puntos_encuentro, vias_evacuacion }) {
   areas = (area_evacuar?.features || []).filter(f => f.geometry);
   puntos = (puntos_encuentro?.features || []).filter(f => f.geometry);
-  vias = (vias_evacuacion?.features || []).filter(f => f.geometry);
+  vias = (vias_evacuacion?.features || []).filter(f => f.geometry && f.geometry.type === 'LineString');
   cache.clear();
+}
+
+// ---- Geometría plana local (rápida, precisa a escala de ciudad) ----
+const R_T = 6371008.8;
+function proyector(lat0) {
+  const kx = (Math.PI / 180) * R_T * Math.cos(lat0 * Math.PI / 180), ky = (Math.PI / 180) * R_T;
+  return ([lng, lat]) => [lng * kx, lat * ky];
+}
+const distM = (a, b) => turf.distance(a, b, { units: 'meters' });
+function largo(coords) { let L = 0; for (let i = 1; i < coords.length; i++) L += distM(coords[i - 1], coords[i]); return L; }
+
+// Punto más cercano de una polilínea: índice del segmento, fracción t y distancia.
+function proyectarEnLinea(origen, coords) {
+  const P = proyector(origen[1]);
+  const [px, py] = P(origen);
+  let mejor = { d2: Infinity, i: 0, t: 0 };
+  for (let i = 0; i < coords.length - 1; i++) {
+    const [x1, y1] = P(coords[i]), [x2, y2] = P(coords[i + 1]);
+    const dx = x2 - x1, dy = y2 - y1, l2 = dx * dx + dy * dy;
+    let t = l2 ? ((px - x1) * dx + (py - y1) * dy) / l2 : 0;
+    t = Math.max(0, Math.min(1, t));
+    const ex = x1 + t * dx - px, ey = y1 + t * dy - py, d2 = ex * ex + ey * ey;
+    if (d2 < mejor.d2) mejor = { d2, i, t };
+  }
+  const a = coords[mejor.i], b = coords[mejor.i + 1];
+  const punto = [a[0] + (b[0] - a[0]) * mejor.t, a[1] + (b[1] - a[1]) * mejor.t];
+  return { punto, i: mejor.i, distancia: Math.sqrt(mejor.d2) };
+}
+
+function puntoMasCercanoFuera(lngLat, maxM) {
+  let mejor = null;
+  for (const p of puntos) {
+    const d = distM(lngLat, p.geometry.coordinates);
+    if (d <= maxM && (!mejor || d < mejor.d) && !dentroDeArea(p.geometry.coordinates)) mejor = { p, d };
+  }
+  return mejor;
+}
+
+// Elige la vía oficial a tomar. Costo = acercamiento (con factor de desvío por cuadras)
+// + lo que queda de vía desde el punto de entrada hasta su final.
+function elegirViaOficial(origen) {
+  const opciones = [];
+  for (const v of vias) {
+    const c = v.geometry.coordinates;
+    const pr = proyectarEnLinea(origen, c);
+    if (pr.distancia > RADIO_VIA_M) continue;
+    const resto = [pr.punto, ...c.slice(pr.i + 1)];
+    const fin = resto[resto.length - 1];
+    const finSeguro = !dentroDeArea(fin);
+    const puntoFinal = puntoMasCercanoFuera(fin, FINAL_A_PUNTO_M);
+    if (!finSeguro && !puntoFinal) continue;           // la vía no saca de la zona
+    const largoResto = largo(resto);
+    if (largoResto < 5 && dentroDeArea(origen)) continue;  // ya al final de una vía pero aún dentro
+    opciones.push({ via: v, entrada: pr.punto, acercamiento: pr.distancia, resto, largoResto, puntoFinal,
+      costo: pr.distancia * 1.4 + largoResto });
+  }
+  opciones.sort((a, b) => a.costo - b.costo);
+  return opciones[0] || null;
+}
+
+async function rutaPorViaOficial(origen, signal) {
+  const op = elegirViaOficial(origen);
+  if (!op) return null;
+  // 1) Acercamiento hasta la vía
+  let acercamiento = [origen, op.entrada], acercamientoPorCalles = false, aviso = null;
+  if (op.acercamiento > ACERCAMIENTO_RECTO_M && hayClaveORS()) {
+    try {
+      const f = await pedirRutaORS(origen, op.entrada, signal);
+      acercamiento = f.geometry.coordinates; acercamientoPorCalles = true;
+    } catch (e) {
+      if (e.name === 'AbortError') throw e;
+      aviso = 'El tramo hasta la vía oficial se muestra en línea recta (sin servicio de rutas).';
+    }
+  }
+  // 2) Vía oficial desde la entrada hasta su final; 3) unión al punto de encuentro si está cerca
+  const oficial = op.resto;
+  const fin = oficial[oficial.length - 1];
+  const final = op.puntoFinal && op.puntoFinal.d > 5 ? [fin, op.puntoFinal.p.geometry.coordinates] : null;
+  const todo = [...acercamiento, ...oficial.slice(1), ...(final ? final.slice(1) : [])];
+  const analisis = analizarRuta(todo);
+  if (analisis.reentradas > 0) return null;           // no debería pasar, pero se valida igual
+  const distancia = largo(acercamiento) + op.largoResto + (final ? largo(final) : 0);
+  return {
+    tipo: 'oficial',
+    via: op.via,
+    destino: op.puntoFinal?.p || null,
+    geometria: { type: 'LineString', coordinates: todo },
+    tramos: [
+      { tipo: acercamientoPorCalles ? 'acercamiento' : 'acercamiento_recto', coords: acercamiento },
+      { tipo: 'oficial', coords: oficial },
+      ...(final ? [{ tipo: 'final', coords: final }] : []),
+    ],
+    distancia, duracion: distancia / VELOCIDAD_PIE,
+    acercamientoM: largo(acercamiento), oficialM: op.largoResto,
+    metrosDentro: analisis.metrosDentro,
+    aviso,
+  };
 }
 
 const dentroDeArea = (lngLat) => areas.some(a => turf.booleanPointInPolygon(lngLat, a));
@@ -100,11 +207,17 @@ export async function calcularRuta(origen, { signal } = {}) {
   const k = claveCache(origen);
   if (cache.has(k)) return cache.get(k);
 
+  // 1) Método principal: seguir una vía de evacuación oficial
+  try {
+    const oficial = await rutaPorViaOficial(origen, signal);
+    if (oficial) { cache.set(k, oficial); return oficial; }
+  } catch (e) { if (e.name === 'AbortError') throw e; }
+
+  // 2) Respaldo: ruta por calles a un punto de encuentro
   const cands = candidatos(origen);
   if (!cands.length) {
-    return { tipo: 'sin_candidatos', aviso: 'No hay puntos de encuentro a menos de 3 km. Dirígete a zona alta, lejos de la costa.' };
+    return { tipo: 'sin_candidatos', aviso: 'No hay vías ni puntos de encuentro cercanos. Dirígete a zona alta, lejos de la costa.' };
   }
-
   let resultado = null, aviso = null;
   if (hayClaveORS()) {
     try {
@@ -151,6 +264,11 @@ export async function calcularRuta(origen, { signal } = {}) {
   }
   cache.set(k, resultado);
   return resultado;
+}
+
+export function nombreVia(v) {
+  const pr = v?.properties || {};
+  return pr.nombre_ve?.trim() || pr.name || 'vía de evacuación';
 }
 
 export function nombreDestino(p) {

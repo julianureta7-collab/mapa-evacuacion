@@ -17,7 +17,7 @@ Se validó en iPhone. En iPhone la primera vez hay que aceptar el permiso de ori
 
 Cuando la persona debe evacuar (o está cerca del límite), la app elige un punto de encuentro y dibuja la ruta a pie.
 
-**Cómo se elige el destino:**
+**Método de respaldo (ruta por calles). Cómo se elige el destino:**
 
 1. Se consideran los puntos de encuentro oficiales a menos de 3 km, descartando los que están dentro del área de inundación.
 2. Se piden rutas a pie reales, por calles, a los 3 más cercanos (servicio OpenRouteService).
@@ -27,6 +27,33 @@ Cuando la persona debe evacuar (o está cerca del límite), la app elige un punt
 **Qué muestra la app:** la distancia y el tiempo a pie, en cuántos metros se sale de la zona, qué porcentaje del trayecto va por vías de evacuación oficiales de SENAPRED, y la primera instrucción ("Diríjase al oriente por…").
 
 ![Ruta calculada al punto de encuentro](img/etapa3-ruta.png)
+
+## Actualización: rutas sobre las vías oficiales de SENAPRED
+
+Al analizar la capa de vías de evacuación se encontró que **las 74 vías están dibujadas en el sentido de la evacuación**: todas empiezan dentro del área de inundación y 59 terminan fuera de ella. No forman una red conectada (solo 4 se tocan entre sí), sino corredores independientes que van de la costa a la zona segura, y 19 terminan junto a un punto de encuentro.
+
+Con eso, el **método principal** pasó a ser:
+
+1. Buscar la vía oficial que más conviene tomar (a menos de 500 m). El costo es el acercamiento a pie, con un factor 1,4 por el desvío entre cuadras, más lo que queda de vía hasta su final.
+2. Trazar el acercamiento hasta la vía: en línea recta si son menos de 60 m, o por calles con OpenRouteService.
+3. Seguir la vía oficial **tal como la publicó SENAPRED**, desde el punto de entrada hasta su final.
+4. Si la vía termina a menos de 150 m de un punto de encuentro, unirla hasta él.
+
+La ruta por calles a un punto de encuentro (descrita arriba) queda como **respaldo** para cuando no hay ninguna vía oficial cerca.
+
+**Cobertura medida** sobre una grilla de 495 puntos cada 150 m dentro del área de inundación de Viña del Mar:
+
+| Resultado | Puntos | % |
+| --- | --- | --- |
+| Ruta por vía oficial SENAPRED | 382 | 77 % |
+| Sin vía oficial a menos de 500 m → ruta por calles (o línea recta sin servicio) | 83 | 17 % |
+| Sin vía ni punto de encuentro cercano | 30 | 6 % |
+
+En las rutas por vía oficial, el acercamiento hasta la vía tiene una mediana de 199 m (90 % bajo 414 m), y el tiempo total a pie una mediana de 7,6 minutos (90 % bajo 18,5 min). El cálculo tarda ~1,3 ms en el teléfono y **no necesita internet** salvo para el tramo de acercamiento por calles.
+
+![Ruta que sigue la vía oficial de SENAPRED hasta el punto de encuentro](img/etapa3-via-oficial.png)
+
+Esto es un argumento fuerte para la presentación: el sistema no inventa rutas, guía a la persona hasta la vía que definió el municipio y la hace seguirla.
 
 ## Qué pasa si falla el servicio de rutas
 

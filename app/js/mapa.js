@@ -70,22 +70,28 @@ let capaRuta = null;
 export function dibujarRuta(r, { encuadrar = false } = {}) {
   limpiarRuta();
   if (!r || !r.geometria) return;
-  const recta = r.tipo === 'recta';
-  const latlngs = r.geometria.coordinates.map(([lng, lat]) => [lat, lng]);
-  const fin = latlngs[latlngs.length - 1];
-  capaRuta = L.layerGroup([
-    L.polyline(latlngs, { color: '#ffffff', weight: 11, opacity: 0.95, lineCap: 'round', lineJoin: 'round', interactive: false }),
-    L.polyline(latlngs, {
-      color: '#6a1b9a', weight: 6, opacity: 1, lineCap: 'round', lineJoin: 'round', interactive: false,
-      dashArray: recta ? '2 12' : null,
-    }),
-    L.marker(fin, {
-      icon: L.divIcon({ className: 'destino-icono', html: '<div class="destino-punto"></div><div class="destino-etiqueta">Punto de encuentro</div>', iconSize: [28, 28], iconAnchor: [14, 14] }),
-      interactive: false, zIndexOffset: 900,
-    }),
-  ]).addTo(mapa);
+  const aLatLng = (cs) => cs.map(([lng, lat]) => [lat, lng]);
+  // Tramos: la vía oficial va sólida y gruesa; acercamiento y unión final, punteados
+  const tramos = r.tramos || [{ tipo: r.tipo === 'recta' ? 'recta' : 'calles', coords: r.geometria.coordinates }];
+  const capas = [];
+  for (const t of tramos) {
+    const ll = aLatLng(t.coords);
+    const punteado = t.tipo === 'recta' || t.tipo === 'acercamiento_recto' || t.tipo === 'final';
+    const grueso = t.tipo === 'oficial' ? 8 : 6;
+    capas.push(L.polyline(ll, { color: '#ffffff', weight: grueso + 5, opacity: 0.95, lineCap: 'round', lineJoin: 'round', interactive: false }));
+    capas.push(L.polyline(ll, { color: '#6a1b9a', weight: grueso, opacity: 1, lineCap: 'round', lineJoin: 'round',
+      dashArray: punteado ? '2 12' : null, interactive: false }));
+  }
+  const todos = aLatLng(r.geometria.coordinates);
+  const fin = todos[todos.length - 1];
+  const etiqueta = r.tipo === 'oficial' && !r.destino ? 'Zona segura' : 'Punto de encuentro';
+  capas.push(L.marker(fin, {
+    icon: L.divIcon({ className: 'destino-icono', html: `<div class="destino-punto"></div><div class="destino-etiqueta">${etiqueta}</div>`, iconSize: [28, 28], iconAnchor: [14, 14] }),
+    interactive: false, zIndexOffset: 900,
+  }));
+  capaRuta = L.layerGroup(capas).addTo(mapa);
   // Encuadrar si se pide, o si la ruta no cabe en la vista actual
-  const limites = L.latLngBounds(latlngs);
+  const limites = L.latLngBounds(todos);
   if (encuadrar || !mapa.getBounds().contains(limites)) mapa.fitBounds(limites, { padding: [50, 50], maxZoom: 17 });
 }
 

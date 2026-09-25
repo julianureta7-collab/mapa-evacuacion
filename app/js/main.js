@@ -2,7 +2,7 @@
 import { ESCENARIOS, ESCENARIO_INICIAL, ESTILOS } from './config.js?v=5';
 import { cargarEscenario } from './datos.js?v=5';
 import { crearMapa, mostrarEscenario, mostrarVacio, dibujarRuta, limpiarRuta } from './mapa.js?v=5';
-import { prepararRutas, calcularRuta, nombreDestino, rumboATexto } from './ruta.js?v=5';
+import { prepararRutas, calcularRuta, nombreDestino, nombreVia, rumboATexto } from './ruta.js?v=5';
 import { prepararAreas, diagnosticar, TEXTOS } from './diagnostico.js?v=5';
 import { iniciarPosicion, modoSimulacion, modoGPS, quitarPin, setLinterna, posicionActual } from './posicion.js?v=5';
 import { crearControlBrujula, activarNorte } from './brujula.js?v=5';
@@ -79,6 +79,24 @@ function mostrarInfoRuta(r) {
   el.hidden = false;
   if (r.tipo === 'sin_candidatos') {
     el.innerHTML = `<div class="ruta-titulo">Sin punto de encuentro cercano</div><div class="ruta-aviso">${r.aviso}</div>`;
+    return;
+  }
+  if (r.tipo === 'oficial') {
+    const detalle = [];
+    if (r.acercamientoM >= 10) detalle.push(`1. Camina ${fmtDist(r.acercamientoM)} hasta la vía de evacuación oficial${r.tramos[0].tipo === 'acercamiento_recto' ? ' (tramo en línea recta)' : ''}.`);
+    const hasta = r.destino ? `hasta el ${nombreDestino(r.destino)}` : 'hasta cruzar a la zona segura';
+    detalle.push(r.acercamientoM >= 10
+      ? `2. Síguela ${fmtDist(r.oficialM)} ${hasta}.`
+      : `Sigue la vía de evacuación oficial ${fmtDist(r.oficialM)} ${hasta}.`);
+    if (r.metrosDentro > 0) detalle.push(`Sales de la zona de inundación en ~${fmtDist(r.metrosDentro)}.`);
+    el.innerHTML = `
+      <div class="ruta-titulo">Ruta oficial SENAPRED · vía ${nombreVia(r.via)}</div>
+      <div class="ruta-cifras">
+        <div><strong>${fmtDist(r.distancia)}</strong><span>a pie</span></div>
+        <div><strong>${fmtMin(r.duracion)}</strong><span>caminando</span></div>
+      </div>
+      <div class="ruta-detalle">${detalle.map(d => `<div>${d}</div>`).join('')}</div>
+      ${r.aviso ? `<div class="ruta-aviso">${r.aviso}</div>` : ''}`;
     return;
   }
   const destino = nombreDestino(r.destino);
