@@ -13,8 +13,8 @@ La especificación completa vive fuera del repo (OneDrive del usuario); este arc
 ## Etapas
 1. Datos: GeoJSON SENAPRED visibles en Leaflet ✅
 2. Diagnóstico ✅ (`js/diagnostico.js`, `js/posicion.js`; distancia al borde con proyección local, no Turf, por rendimiento)
-3. ← **actual** Ruta: ORS `foot-walking`; validación "sale del área y no vuelve a entrar"; NO usar `avoid_polygons` con el área donde está el usuario; fallback a ruta precalculada o flecha recta si ORS responde 429
-4. Alarma: panel con login (Supabase Realtime) que activa modo emergencia en todos los dispositivos; polling 15 s de respaldo
+3. ✅ Ruta (`js/ruta.js`): ORS `foot-walking`; validación "sale del área y no vuelve a entrar"; NO usar `avoid_polygons` con el área donde está el usuario; fallback a ruta precalculada o flecha recta si ORS responde 429
+4. ← **actual** Alarma: panel con login (Supabase Realtime) que activa modo emergencia en todos los dispositivos; polling 15 s de respaldo
 5. Interfaz de emergencia: flecha con brújula, voz, vibración (Android) / pitido (iPhone); botón "Estoy listo para el simulacro" que pide permisos con un toque
 6. Offline: service worker
 

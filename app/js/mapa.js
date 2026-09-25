@@ -1,5 +1,5 @@
 // Mapa Leaflet: fondo OSM y capas del escenario.
-import { ESTILOS } from './config.js?v=4';
+import { ESTILOS } from './config.js?v=5';
 
 let mapa, controlCapas, grupoEscenario;
 
@@ -62,4 +62,33 @@ export function mostrarVacio(escenario) {
   if (grupoEscenario) { grupoEscenario.remove(); controlCapas?.remove(); grupoEscenario = null; controlCapas = null; }
   mapa.invalidateSize(false);
   mapa.setView(escenario.centro, escenario.zoom);
+}
+
+// ---- Etapa 3: dibujo de la ruta ----
+let capaRuta = null;
+
+export function dibujarRuta(r, { encuadrar = false } = {}) {
+  limpiarRuta();
+  if (!r || !r.geometria) return;
+  const recta = r.tipo === 'recta';
+  const latlngs = r.geometria.coordinates.map(([lng, lat]) => [lat, lng]);
+  const fin = latlngs[latlngs.length - 1];
+  capaRuta = L.layerGroup([
+    L.polyline(latlngs, { color: '#ffffff', weight: 11, opacity: 0.95, lineCap: 'round', lineJoin: 'round', interactive: false }),
+    L.polyline(latlngs, {
+      color: '#6a1b9a', weight: 6, opacity: 1, lineCap: 'round', lineJoin: 'round', interactive: false,
+      dashArray: recta ? '2 12' : null,
+    }),
+    L.marker(fin, {
+      icon: L.divIcon({ className: 'destino-icono', html: '<div class="destino-punto"></div><div class="destino-etiqueta">Punto de encuentro</div>', iconSize: [28, 28], iconAnchor: [14, 14] }),
+      interactive: false, zIndexOffset: 900,
+    }),
+  ]).addTo(mapa);
+  // Encuadrar si se pide, o si la ruta no cabe en la vista actual
+  const limites = L.latLngBounds(latlngs);
+  if (encuadrar || !mapa.getBounds().contains(limites)) mapa.fitBounds(limites, { padding: [50, 50], maxZoom: 17 });
+}
+
+export function limpiarRuta() {
+  if (capaRuta) { capaRuta.remove(); capaRuta = null; }
 }
