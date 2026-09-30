@@ -1,6 +1,8 @@
 # Mapa de Evacuación Interactivo
 
-Prototipo universitario (Investigación, Innovación y Emprendimiento — UC). Cuando se activa una alerta, la app muestra la ruta de evacuación hacia el punto seguro correspondiente, trazada sobre las vías de evacuación oficiales de SENAPRED.
+Prototipo universitario (Investigación, Innovación y Emprendimiento — UC). Plataforma multiamenaza: una app usuario (modo informativo y modo emergencia) y una app operador que envía alertas y actualiza rutas en tiempo real. La app muestra siempre la mejor información disponible (operador → oficial → sugerida → precaución), con su procedencia a la vista.
+
+**Especificación (fuente única de verdad): [`docs/ESPECIFICACION.md`](docs/ESPECIFICACION.md)** · Contexto para Claude: [`CLAUDE.md`](CLAUDE.md) · Reportes: [`docs/reportes/`](docs/reportes/)
 
 > Prototipo en modo simulacro. No reemplaza las instrucciones de la autoridad.
 
@@ -32,7 +34,7 @@ app/                  la app pública (se publica tal cual en GitHub Pages)
   js/brujula.js       brújula: rota el mapa según hacia dónde mira el teléfono
   data/<escenario>/   GeoJSON + metadata.json (generados por el script)
   vendor/             Leaflet 1.9.4, Turf 7.4 y leaflet-rotate 0.2.8 (GPL-3.0) copiados localmente
-panel/                panel de activación de alertas (etapa 4)
+panel/                app operador: alertas y dibujo de rutas (por crear)
 scripts/
   descargar_capas.mjs descarga desde el FeatureServer de SENAPRED
   servidor.mjs        servidor estático de desarrollo
@@ -41,13 +43,14 @@ docs/reportes/        un reporte por etapa para el equipo
 
 ## Escenarios
 
-| Clave | Amenaza | Datos | Estado |
+| Zona | Amenaza | Datos | Estado |
 | --- | --- | --- | --- |
-| `tsunami_vina` | Tsunami | SENAPRED 2024, oficial | Etapa 1 |
-| `campus_sj` | Sismo e incendio | Levantamiento propio | Pendiente de datos |
+| Viña del Mar | Tsunami | SENAPRED 2024, oficial | ✅ |
+| Viña del Mar | Incendio forestal | Capa oficial + operador | ⏳ |
+| Campus San Joaquín | Incendio estructural | Dibujado por operador | ⏳ |
+| Zona 3 | Por decidir (multiamenaza) | Oficial | ⏳ |
 
 ## Fuente de datos
 
 Capas de amenaza: SENAPRED, *Amenaza por Tsunami 2024*, publicadas en el Geoportal de Chile (IDE Chile). La fecha de descarga queda registrada en `app/data/<escenario>/metadata.json` y se muestra en la app.
 
-La especificación completa está en la carpeta del proyecto en OneDrive.
