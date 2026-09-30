@@ -1,7 +1,8 @@
 // Descarga las capas de Amenaza por Tsunami 2024 (SENAPRED) para un escenario
-// y las guarda como GeoJSON estático en app/data/<escenario>/.
-// Uso:  node scripts/descargar_capas.mjs            (todos los escenarios)
-//       node scripts/descargar_capas.mjs tsunami_vina
+// y las guarda como GeoJSON estático en app/data/<zona>/<amenaza>/.
+// Después hay que declarar las capas en app/data/catalogo.json (rol, nombre, fuente).
+// Uso:  node scripts/descargar_capas.mjs                 (todas las descargas)
+//       node scripts/descargar_capas.mjs vina/tsunami
 // Requiere Node 18+ (usa fetch nativo). No tiene dependencias.
 
 import { writeFile, mkdir } from 'node:fs/promises';
@@ -20,8 +21,9 @@ const CAPAS = [
 ];
 
 // bbox = [oeste, sur, este, norte] en grados (EPSG:4326)
+// Clave = "<zona>/<amenaza>", igual que la carpeta de destino y los ids del catálogo.
 const ESCENARIOS = {
-  tsunami_vina: { nombre: 'Viña del Mar', bbox: [-71.60, -33.06, -71.48, -32.93] },
+  'vina/tsunami': { nombre: 'Viña del Mar', bbox: [-71.60, -33.06, -71.48, -32.93] },
 };
 
 const DECIMALES = 6; // ~10 cm, suficiente y reduce el tamaño del archivo
@@ -67,7 +69,7 @@ async function consultarCapa(capa, bbox) {
 
 async function descargarEscenario(clave) {
   const esc = ESCENARIOS[clave];
-  const carpeta = join(RAIZ, 'app', 'data', clave);
+  const carpeta = join(RAIZ, 'app', 'data', ...clave.split('/'));
   await mkdir(carpeta, { recursive: true });
   const resumen = [];
   for (const capa of CAPAS) {
@@ -106,4 +108,4 @@ for (const clave of claves) {
     process.exit(1);
   }
 }
-console.log('Listo. Revisa app/data/<escenario>/metadata.json');
+console.log('Listo. Revisa app/data/<zona>/<amenaza>/metadata.json');

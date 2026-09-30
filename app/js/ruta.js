@@ -1,6 +1,6 @@
 // Etapa 3: elegir el punto de encuentro y trazar la ruta a pie.
 //
-// MÉTODO PRINCIPAL — vía oficial SENAPRED:
+// MÉTODO PRINCIPAL — seguir una ruta oficial (rol 'ruta'; hoy, vías SENAPRED):
 //  Las vías de evacuación publicadas están digitalizadas en el sentido de la evacuación
 //  (las 74 de Viña empiezan dentro del área y 59 terminan fuera). Son corredores sueltos,
 //  no una red. Entonces: se busca la vía que conviene tomar, se traza el acercamiento
@@ -12,11 +12,11 @@
 //  3. Validación "sale y no vuelve a entrar": una vez que la ruta cruza el borde del área,
 //     no puede volver a entrar. NO se usa avoid_polygons con el área: el usuario está adentro
 //     y ORS no encontraría ruta.
-//  4. Entre las válidas, gana la que te saca antes de la zona de inundación (menos metros
+//  4. Entre las válidas, gana la que te saca antes del área de peligro (menos metros
 //     dentro del área); a igualdad, la más corta en tiempo.
 //  5. Si ORS falla (sin clave, sin red, límite 429): dirección en línea recta al más cercano.
 
-import { ORS_API_KEY } from './claves.js?v=5';
+import { ORS_API_KEY } from './claves.js?v=6';
 
 const ORS_URL = 'https://api.openrouteservice.org/v2/directions/foot-walking/geojson';
 const RADIO_CANDIDATOS_M = 3000;
@@ -35,10 +35,14 @@ const cache = new Map();         // origen redondeado → resultado
 
 export const hayClaveORS = () => !!ORS_API_KEY && ORS_API_KEY !== 'PEGAR_AQUI_LA_CLAVE';
 
-export function prepararRutas({ area_evacuar, puntos_encuentro, vias_evacuacion }) {
-  areas = (area_evacuar?.features || []).filter(f => f.geometry);
-  puntos = (puntos_encuentro?.features || []).filter(f => f.geometry);
-  vias = (vias_evacuacion?.features || []).filter(f => f.geometry && f.geometry.type === 'LineString');
+let nombreArea = 'área de peligro';
+
+// Recibe las capas agrupadas por rol (spec §3): area_peligro, ruta, punto_encuentro.
+export function prepararRutas(porRol, { area = 'área de peligro' } = {}) {
+  areas = (porRol.area_peligro?.features || []).filter(f => f.geometry && /Polygon/.test(f.geometry.type));
+  puntos = (porRol.punto_encuentro?.features || []).filter(f => f.geometry && f.geometry.type === 'Point');
+  vias = (porRol.ruta?.features || []).filter(f => f.geometry && f.geometry.type === 'LineString');
+  nombreArea = area;
   cache.clear();
 }
 
@@ -240,7 +244,7 @@ export async function calcularRuta(origen, { signal } = {}) {
           descartadas: rutas.filter(r => r && r.analisis.reentradas > 0).length,
         };
       } else if (rutas.some(Boolean)) {
-        aviso = 'Todas las rutas calculadas vuelven a entrar a la zona de inundación. Se muestra la dirección al punto más cercano.';
+        aviso = `Todas las rutas calculadas vuelven a entrar a la ${nombreArea}. Se muestra la dirección al punto más cercano.`;
       } else {
         aviso = 'No se pudo calcular la ruta por calles.';
       }
@@ -269,6 +273,13 @@ export async function calcularRuta(origen, { signal } = {}) {
 export function nombreVia(v) {
   const pr = v?.properties || {};
   return pr.nombre_ve?.trim() || pr.name || 'vía de evacuación';
+}
+
+// "SENAPRED", "Operador", etc. según la procedencia marcada al cargar la capa.
+export function organismoDe(f) {
+  const pr = f?.properties || {};
+  if (pr._procedencia === 'operador') return 'operador';
+  return pr._fuente?.organismo || 'oficial';
 }
 
 export function nombreDestino(p) {

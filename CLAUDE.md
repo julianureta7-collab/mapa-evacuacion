@@ -29,7 +29,7 @@
 ## Limitaciones del entorno de Claude (Cowork)
 
 - El sandbox **no llega a ArcGIS, OpenRouteService ni teselas OSM**. Las descargas y las pruebas con servicios reales las hace Julián en su PC. Para probar, se simulan las respuestas (`page.route` de Playwright).
-- **No se puede hacer `git commit/push` desde la VM** (no puede borrar los archivos de bloqueo de git y no tiene credenciales). Julián hace los push, o Claude Code en su PC.
+- **No ejecutes ningún comando `git` desde la VM de Cowork, ni siquiera `git status`.** Git crea `.git/index.lock` y la VM no puede borrarlo, así que el repo queda bloqueado para Julián. Si pasa, en PowerShell: `Remove-Item .git\index.lock`. Julián hace los commits y push, o Claude Code en su PC.
 - Pruebas de interfaz: Playwright con el Chromium del contenedor cloud, sobre una copia de `app/`.
 
 ## Mapa del código (`app/`)
@@ -37,17 +37,20 @@
 | Archivo | Rol |
 | --- | --- |
 | `index.html`, `css/estilos.css` | Interfaz de la app usuario |
-| `js/config.js` | **Hoy:** escenarios hardcodeados → **migrar a `data/catalogo.json`** (spec §3) |
-| `js/datos.js` | Carga de GeoJSON |
+| `data/catalogo.json` | **Zonas × amenazas**, fuentes, estilos por rol y capas oficiales (spec §3). Agregar zona o amenaza = editar esto |
+| `js/catalogo.js` | Lee el catálogo; `zonaEn(lngLat)` decide la zona por cobertura |
+| `js/datos.js` | Carga las capas de una zona × amenaza, agrupadas por rol y marcadas con procedencia (`_procedencia`, `_fuente`) |
 | `js/mapa.js` | Leaflet: capas, ruta, redimensionado |
 | `js/diagnostico.js` | Dentro / cerca / fuera del área (proyección local, <1 ms) |
 | `js/posicion.js` | Pin arrastrable, GPS, linterna. **Hoy** apaga el GPS al usar el pin → **migrar al modelo de dos puntos** (spec §5.1): ubicación real siempre activa si hay permiso + pin de referencia |
 | `js/brujula.js` | Brújula: norte arriba / rota el mapa |
-| `js/ruta.js` | Motor de rutas: vía oficial → ORS sugerida → línea recta |
+| `js/ruta.js` | Motor de rutas por rol: ruta oficial → ORS sugerida → línea recta |
+| `js/main.js` | Desplegables zona/amenaza, el pin decide la zona, diagnóstico, tarjeta de ruta |
 | `js/claves.js` | Clave de ORS (pública a propósito) |
-| `data/tsunami_vina/` | Capas SENAPRED + `metadata.json` |
+| `data/<zona>/<amenaza>/` | Capas oficiales + `metadata.json` (hoy: `data/vina/tsunami/`) |
 | `panel/` | **Por crear:** app operador |
+| `supabase/esquema.sql` | Esquema de la base de datos (correr en el SQL Editor de Supabase) |
 
 ## Próximo paso
 
-Spec §10, punto 1: reestructurar a zonas × amenazas con catálogo y procedencia. Revisa §13 para ver qué falta del equipo (Supabase y clave ORS bloquean los puntos 3 y 6).
+Spec §10, **punto 2**: modelo de dos puntos (el GPS sigue activo si hay permiso aunque se use el pin; spec §5.1). El punto 1 (catálogo zonas × amenazas) está hecho. Revisa §13 para ver qué falta del equipo (Supabase y clave ORS bloquean los puntos 3 y 6).

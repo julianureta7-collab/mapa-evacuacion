@@ -25,14 +25,15 @@ node scripts/servidor.mjs
 app/                  la app pública (se publica tal cual en GitHub Pages)
   index.html
   css/estilos.css
-  js/config.js        escenarios, capas y estilos
+  data/catalogo.json  zonas × amenazas, fuentes y capas (agregar zonas aquí)
+  js/catalogo.js      lectura del catálogo y zona según ubicación
   js/datos.js         carga de GeoJSON
   js/mapa.js          Leaflet
   js/main.js          arranque y UI
   js/diagnostico.js   ¿dentro o fuera del área a evacuar?
   js/posicion.js      pin de simulación, GPS y linterna
   js/brujula.js       brújula: rota el mapa según hacia dónde mira el teléfono
-  data/<escenario>/   GeoJSON + metadata.json (generados por el script)
+  data/<zona>/<amenaza>/  GeoJSON + metadata.json (generados por el script)
   vendor/             Leaflet 1.9.4, Turf 7.4 y leaflet-rotate 0.2.8 (GPL-3.0) copiados localmente
 panel/                app operador: alertas y dibujo de rutas (por crear)
 scripts/
@@ -52,5 +53,5 @@ docs/reportes/        un reporte por etapa para el equipo
 
 ## Fuente de datos
 
-Capas de amenaza: SENAPRED, *Amenaza por Tsunami 2024*, publicadas en el Geoportal de Chile (IDE Chile). La fecha de descarga queda registrada en `app/data/<escenario>/metadata.json` y se muestra en la app.
+Capas de amenaza: SENAPRED, *Amenaza por Tsunami 2024*, publicadas en el Geoportal de Chile (IDE Chile). La fecha de descarga queda registrada en `app/data/<zona>/<amenaza>/metadata.json` y se muestra en la app.
 

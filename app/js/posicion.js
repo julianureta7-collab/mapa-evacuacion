@@ -41,6 +41,14 @@ export function modoSimulacion(latlngInicial) {
   pin.dragging.enable();
 }
 
+// Pone el pin en un punto (p. ej. al elegir una zona en el desplegable) y vuelve a modo simulación.
+export function ubicarPin(latlng) {
+  detenerGPS();
+  modo = 'simulacion';
+  moverPin(L.latLng(latlng), null);
+  pin.dragging.enable();
+}
+
 export function modoGPS(onError) {
   if (!('geolocation' in navigator)) { onError('Este navegador no permite obtener la ubicación.'); return; }
   modo = 'gps';

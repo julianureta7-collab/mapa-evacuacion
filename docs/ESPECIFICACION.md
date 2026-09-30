@@ -37,7 +37,7 @@ Proyecto del curso Investigación, Innovación y Emprendimiento (UC), 5 integran
 | **Ubicación real** | GPS del teléfono, si hay permiso. Se sigue siempre, aunque la persona esté mirando otra zona | Estoy en el Campus |
 | **Pin de referencia** | Lo que la persona está mirando: pin arrastrable o elegido con el desplegable de zona | Estoy mirando Viña |
 
-**Catálogo** (`app/data/catalogo.json`, por crear): lista de zonas con su polígono de cobertura, sus amenazas disponibles y, por amenaza, las capas oficiales (archivos) y el contenido informativo. Las capas del operador viven en la base de datos (§9) y se superponen a las oficiales.
+**Catálogo** (`app/data/catalogo.json`, creado): lista de zonas con su polígono de cobertura, sus amenazas disponibles y, por amenaza, las capas oficiales (archivos) y el contenido informativo. Las capas del operador viven en la base de datos (§9) y se superponen a las oficiales.
 
 **Roles genéricos de capa:** el motor no conoce los nombres de cada organismo. Solo conoce estos **roles**, y el catálogo traduce cada capa oficial a uno de ellos:
 
@@ -163,7 +163,7 @@ App usuario (GitHub Pages) ──realtime──▶ Supabase ◀──realtime/es
 
 - **Hosting:** GitHub Pages, publicación automática en cada push a `main` (`.github/workflows/pages.yml`).
 - **Tiempo real y datos del operador:** Supabase (plan gratuito). **Pendiente: crear el proyecto** (URL + anon key).
-- **Tablas propuestas** (se ajustan al implementar):
+- **Tablas** (script listo en `supabase/esquema.sql`: tablas, auditoría automática, reglas RLS y tiempo real):
   - `alertas` (id, zona, amenaza, mensaje, simulacro, activa, vigente_hasta, autor, creada)
   - `elementos_operador` (id, zona, amenaza o "todas", rol: ruta|punto_encuentro|area_peligro|bloqueo, geometria GeoJSON, motivo, fuente, autor, creado, vigente_hasta: fecha o null = permanente, activo)
   - `desactivaciones_oficiales` (id, zona, amenaza, id_elemento_oficial, motivo, autor, creado)
@@ -177,7 +177,7 @@ App usuario (GitHub Pages) ──realtime──▶ Supabase ◀──realtime/es
 
 **Imprescindible** (en este orden):
 
-1. Reestructurar a **zonas × amenazas** con catálogo y procedencia (hoy el código usa "escenarios").
+1. ✅ Reestructurar a **zonas × amenazas** con catálogo y procedencia.
 2. Dos puntos (ubicación real siempre activa si hay permiso + pin de referencia) que deciden zona y alerta (§5.1), con los desplegables de zona y amenaza.
 3. Supabase + app operador básica: login, **enviar y cancelar alertas** por zona × amenaza.
 4. Modo emergencia en la app usuario (banner, ruta primaria, simulacro, vencimiento).
@@ -212,6 +212,7 @@ Publicado en https://julianureta7-collab.github.io/mapa-evacuacion/
 - ✅ Diagnóstico dentro / cerca / fuera, con pin arrastrable o GPS.
 - ✅ Brújula (norte arriba / brújula) con efecto linterna.
 - ✅ Motor de rutas: vía oficial → ORS sugerida → línea recta. En Viña, 77 % de los puntos del área obtienen ruta por vía oficial.
+- ✅ §10 punto 1: catálogo zonas × amenazas (`app/data/catalogo.json`), capas por rol con procedencia, desplegables de zona y amenaza, el pin decide la zona (y "fuera de cobertura"). Viña (tsunami, incendio forestal sin capa aún) y Campus (incendio estructural sin capa aún).
 - ⏳ Todo lo demás de §10.
 
 Reportes para el informe del equipo: `docs/reportes/` (uno por hito).

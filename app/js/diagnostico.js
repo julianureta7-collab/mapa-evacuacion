@@ -12,7 +12,7 @@ const R = 6371008.8;
 let lat0 = 0, kx = 1;
 const aXY = ([lng, lat]) => [lng * kx, lat * (Math.PI / 180) * R];
 
-// Se llama una vez por escenario: prepara polígonos y sus bordes como segmentos.
+// Se llama una vez por zona × amenaza: prepara polígonos y sus bordes como segmentos.
 export function prepararAreas(areaFC) {
   const feats = (areaFC?.features || []).filter(f => f.geometry && /Polygon/.test(f.geometry.type));
   if (feats.length) {
@@ -80,9 +80,12 @@ export function diagnosticar(lngLat, precision = null) {
   return { estado, dentro, distanciaBorde, comuna, advertencias };
 }
 
-export const TEXTOS = {
-  evacuar: { titulo: 'Debes evacuar', texto: 'Estás dentro del área de inundación. Dirígete a pie a la zona segura.', clase: 'peligro' },
-  limite: { titulo: 'Cerca del límite', texto: 'Estás muy cerca del borde del área de inundación. Evacúa de todas formas hacia zona alta.', clase: 'alerta' },
-  seguro: { titulo: 'Estás en zona segura', texto: 'Estás fuera del área de inundación. Permanece donde estás y sigue las instrucciones de la autoridad.', clase: 'seguro' },
-  sin_ubicacion: { titulo: 'Sin ubicación', texto: 'No pudimos obtener tu ubicación. Mueve el pin en el mapa hasta donde estás.', clase: 'neutro' },
-};
+// Textos del diagnóstico. `area` viene del catálogo según la amenaza (p. ej. "zona de inundación").
+export function textosDiagnostico(area = 'área de peligro') {
+  return {
+    evacuar: { titulo: 'Debes evacuar', texto: `Estás dentro de la ${area}. Dirígete a pie a la zona segura.`, clase: 'peligro' },
+    limite: { titulo: 'Cerca del límite', texto: `Estás muy cerca del borde de la ${area}. Evacúa de todas formas hacia la zona segura.`, clase: 'alerta' },
+    seguro: { titulo: 'Estás en zona segura', texto: `Estás fuera de la ${area}. Permanece donde estás y sigue las instrucciones de la autoridad.`, clase: 'seguro' },
+    sin_ubicacion: { titulo: 'Sin ubicación', texto: 'No pudimos obtener tu ubicación. Mueve el pin en el mapa hasta donde estás.', clase: 'neutro' },
+  };
+}

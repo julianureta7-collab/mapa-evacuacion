@@ -1,7 +1,8 @@
-// Mapa Leaflet: fondo OSM y capas del escenario.
-import { ESTILOS } from './config.js?v=5';
+// Mapa Leaflet: fondo OSM y capas de la zona × amenaza actual.
+import { estiloDe } from './catalogo.js?v=6';
 
-let mapa, controlCapas, grupoEscenario;
+let mapa, controlCapas, grupoCapas;
+let atribucionFuentes = '';
 
 export function crearMapa(idContenedor) {
   mapa = L.map(idContenedor, {
@@ -19,7 +20,6 @@ export function crearMapa(idContenedor) {
     maxZoom: 19,
     attribution: '&copy; OpenStreetMap',
   }).addTo(mapa);
-  mapa.attributionControl.addAttribution('Capas de amenaza: SENAPRED');
   // Si el contenedor cambia de tamaño (p. ej. aparece el panel de diagnóstico en el celular),
   // Leaflet debe recalcular; si no, el "centro" del mapa queda fuera de la vista.
   if ('ResizeObserver' in window) {
@@ -29,39 +29,50 @@ export function crearMapa(idContenedor) {
 }
 
 function popupDe(nombreCapa, props) {
-  const titulo = props.nombre_pe?.trim() || props.name || props.sector || nombreCapa;
+  const titulo = props.nombre_pe?.trim() || props.nombre_ve?.trim() || props.name || props.sector || nombreCapa;
   const filas = [];
   if (props.sector) filas.push(`Sector: ${props.sector}`);
   if (props.nom_com || props.comuna) filas.push(`Comuna: ${props.nom_com || props.comuna}`);
   if (props.name && titulo !== props.name) filas.push(`Código: ${props.name}`);
-  return `<div class="popup-titulo">${titulo}</div><div>${nombreCapa}</div>${filas.map(f => `<div>${f}</div>`).join('')}`;
+  const f = props._fuente;
+  const origen = f ? `Fuente: ${f.organismo}${f.nombre ? ` — ${f.nombre}` : ''}` : '';
+  return `<div class="popup-titulo">${titulo}</div><div>${nombreCapa}</div>${filas.map(x => `<div>${x}</div>`).join('')}${origen ? `<div class="popup-fuente">${origen}</div>` : ''}`;
 }
 
-export function mostrarEscenario(escenario, datos) {
-  if (grupoEscenario) { grupoEscenario.remove(); controlCapas?.remove(); }
-  grupoEscenario = L.featureGroup().addTo(mapa);
-  controlCapas = L.control.layers(null, null, { collapsed: window.innerWidth < 760 }).addTo(mapa);
+function limpiarCapas() {
+  if (grupoCapas) { grupoCapas.remove(); grupoCapas = null; }
+  if (controlCapas) { controlCapas.remove(); controlCapas = null; }
+  if (atribucionFuentes) { mapa.attributionControl.removeAttribution(atribucionFuentes); atribucionFuentes = ''; }
+}
 
-  for (const c of escenario.capas) {
-    const geo = datos.capas[c.archivo];
-    if (!geo) continue;
-    const estilo = ESTILOS[c.estilo || c.archivo] || {};
+// capas: [{ def: {nombre, rol, visible, estilo?}, geo }]
+export function mostrarCapas(capas) {
+  limpiarCapas();
+  grupoCapas = L.featureGroup().addTo(mapa);
+  if (!capas.length) return;
+  controlCapas = L.control.layers(null, null, { collapsed: window.innerWidth < 760 }).addTo(mapa);
+  const organismos = new Set();
+  for (const { def, geo } of capas) {
+    const estilo = estiloDe(def);
     const capa = L.geoJSON(geo, {
       style: () => estilo,
       pointToLayer: (_f, latlng) => L.circleMarker(latlng, estilo),
-      onEachFeature: (f, l) => l.bindPopup(popupDe(c.nombre, f.properties || {})),
+      onEachFeature: (f, l) => l.bindPopup(popupDe(def.nombre, f.properties || {})),
     });
-    controlCapas.addOverlay(capa, c.nombre);
-    if (c.visible) capa.addTo(grupoEscenario);
+    controlCapas.addOverlay(capa, def.nombre);
+    if (def.visible) capa.addTo(grupoCapas);
+    const org = geo.features[0]?.properties?._fuente?.organismo;
+    if (org) organismos.add(org);
   }
-  mapa.invalidateSize(false);
-  mapa.setView(escenario.centro, escenario.zoom);
+  if (organismos.size) {
+    atribucionFuentes = `Capas de amenaza: ${[...organismos].join(', ')}`;
+    mapa.attributionControl.addAttribution(atribucionFuentes);
+  }
 }
 
-export function mostrarVacio(escenario) {
-  if (grupoEscenario) { grupoEscenario.remove(); controlCapas?.remove(); grupoEscenario = null; controlCapas = null; }
+export function centrarEn(centro, zoom) {
   mapa.invalidateSize(false);
-  mapa.setView(escenario.centro, escenario.zoom);
+  mapa.setView(centro, zoom);
 }
 
 // ---- Etapa 3: dibujo de la ruta ----

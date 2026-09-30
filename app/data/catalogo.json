@@ -1,0 +1,85 @@
+{
+  "_doc": "Catálogo de zonas × amenazas (spec §3). Agregar una zona o amenaza = editar este archivo y agregar sus capas en data/<zona>/<amenaza>/. El código no conoce zonas por nombre. Roles válidos: area_peligro, ruta, punto_encuentro, referencia, bloqueo.",
+  "version": 1,
+
+  "amenazas": {
+    "tsunami": {
+      "nombre": "Tsunami",
+      "area": "zona de inundación",
+      "resumen": "Si sientes un sismo fuerte que te impide mantenerte en pie, o suena la alarma de tsunami, evacúa de inmediato a pie hacia la zona segura, sobre la cota 30. No esperes la confirmación oficial ni vuelvas por tus cosas. Sigue las vías de evacuación hasta el punto de encuentro más cercano."
+    },
+    "incendio_forestal": {
+      "nombre": "Incendio forestal",
+      "area": "zona de amenaza de incendio",
+      "resumen": null
+    },
+    "incendio_estructural": {
+      "nombre": "Incendio estructural",
+      "area": "área afectada por el incendio",
+      "resumen": null
+    }
+  },
+
+  "fuentes": {
+    "senapred_tsunami_2024": {
+      "organismo": "SENAPRED",
+      "nombre": "Amenaza por Tsunami 2024",
+      "detalle": "Planos de evacuación de los municipios costeros, recopilados por SENAPRED",
+      "url": "https://geoportal.cl/geoportal/catalog/download/1dbd467c-ebaf-3c0d-b92e-1a2eb3286f55",
+      "publicacion": "2024-05-01"
+    }
+  },
+
+  "estilos": {
+    "area_peligro":    { "color": "#e85d04", "weight": 1, "fillColor": "#e85d04", "fillOpacity": 0.22 },
+    "ruta":            { "color": "#0a7d3b", "weight": 5, "opacity": 0.9 },
+    "punto_encuentro": { "radius": 8, "color": "#ffffff", "weight": 2, "fillColor": "#1b9e4b", "fillOpacity": 1 },
+    "referencia":      { "color": "#1565c0", "weight": 3, "dashArray": "8 6" },
+    "bloqueo":         { "color": "#b00020", "weight": 6, "dashArray": "4 6" }
+  },
+
+  "zonas": [
+    {
+      "id": "vina",
+      "nombre": "Viña del Mar",
+      "centro": [-32.995, -71.545],
+      "zoom": 14,
+      "_cobertura": "Aproximada: el mismo recuadro con que se descargan las capas.",
+      "cobertura": { "type": "Polygon", "coordinates": [[[-71.60, -33.06], [-71.48, -33.06], [-71.48, -32.93], [-71.60, -32.93], [-71.60, -33.06]]] },
+      "amenazas": [
+        {
+          "id": "tsunami",
+          "carpeta": "data/vina/tsunami",
+          "metadata": "metadata.json",
+          "capas": [
+            { "archivo": "area_evacuar.geojson",     "rol": "area_peligro",    "nombre": "Área a evacuar",      "fuente": "senapred_tsunami_2024", "visible": true },
+            { "archivo": "cota_30.geojson",          "rol": "referencia",      "nombre": "Cota 30 m",           "fuente": "senapred_tsunami_2024", "visible": false, "estilo": { "color": "#6b7b8c", "weight": 1.5, "opacity": 0.8 } },
+            { "archivo": "linea_segura.geojson",     "rol": "referencia",      "nombre": "Línea segura",        "fuente": "senapred_tsunami_2024", "visible": true },
+            { "archivo": "vias_evacuacion.geojson",  "rol": "ruta",            "nombre": "Vías de evacuación",  "fuente": "senapred_tsunami_2024", "visible": true },
+            { "archivo": "puntos_encuentro.geojson", "rol": "punto_encuentro", "nombre": "Puntos de encuentro", "fuente": "senapred_tsunami_2024", "visible": true }
+          ]
+        },
+        {
+          "id": "incendio_forestal",
+          "_pendiente": "Verificar si la capa oficial de amenaza por incendio forestal (SENAPRED/CONAF) cubre Viña; mientras tanto, solo lo que dibuje el operador.",
+          "capas": []
+        }
+      ]
+    },
+    {
+      "id": "campus_sj",
+      "nombre": "Campus San Joaquín UC",
+      "centro": [-33.4985, -70.6140],
+      "zoom": 17,
+      "_cobertura": "Aproximada: verificar contra los límites reales del campus.",
+      "cobertura": { "type": "Polygon", "coordinates": [[[-70.6200, -33.5040], [-70.6080, -33.5040], [-70.6080, -33.4940], [-70.6200, -33.4940], [-70.6200, -33.5040]]] },
+      "amenazas": [
+        {
+          "id": "incendio_estructural",
+          "_pendiente": "Sin capas oficiales: las zonas de seguridad y rutas las dibuja un operador (spec §4).",
+          "capas": []
+        }
+      ]
+    }
+  ]
+}
