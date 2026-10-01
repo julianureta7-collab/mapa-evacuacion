@@ -81,11 +81,20 @@ export function diagnosticar(lngLat, precision = null) {
 }
 
 // Textos del diagnóstico. `area` viene del catálogo según la amenaza (p. ej. "zona de inundación").
-export function textosDiagnostico(area = 'área de peligro') {
+// En modo informativo no hay ruta: los textos explican qué hacer SI llega una alerta.
+export function textosDiagnostico(area = 'área de peligro', emergencia = false) {
+  if (!emergencia) {
+    return {
+      evacuar: { titulo: `Estás en la ${area}`, texto: 'Si llega una alerta, tendrás que evacuar a pie hacia la zona segura. La app te mostrará la ruta.', clase: 'peligro' },
+      limite: { titulo: 'Cerca del límite', texto: `Estás muy cerca del borde de la ${area}. Si llega una alerta, evacúa de todas formas.`, clase: 'alerta' },
+      seguro: { titulo: 'Fuera de la zona de peligro', texto: `Este punto está fuera de la ${area}. Si llega una alerta, permanece aquí y sigue las instrucciones de la autoridad.`, clase: 'seguro' },
+      sin_ubicacion: { titulo: 'Sin ubicación', texto: 'Mueve el pin en el mapa o usa tu ubicación.', clase: 'neutro' },
+    };
+  }
   return {
     evacuar: { titulo: 'Debes evacuar', texto: `Estás dentro de la ${area}. Dirígete a pie a la zona segura.`, clase: 'peligro' },
-    limite: { titulo: 'Cerca del límite', texto: `Estás muy cerca del borde de la ${area}. Evacúa de todas formas hacia la zona segura.`, clase: 'alerta' },
-    seguro: { titulo: 'Estás en zona segura', texto: `Estás fuera de la ${area}. Permanece donde estás y sigue las instrucciones de la autoridad.`, clase: 'seguro' },
+    limite: { titulo: 'Evacúa: estás cerca del límite', texto: `Estás muy cerca del borde de la ${area}. Evacúa de todas formas hacia la zona segura.`, clase: 'alerta' },
+    seguro: { titulo: 'Estás en zona segura: permanece aquí', texto: `Estás fuera de la ${area}. Sigue las instrucciones de la autoridad.`, clase: 'seguro' },
     sin_ubicacion: { titulo: 'Sin ubicación', texto: 'No pudimos obtener tu ubicación. Mueve el pin en el mapa hasta donde estás.', clase: 'neutro' },
   };
 }

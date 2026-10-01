@@ -16,7 +16,13 @@ let alRumbo = () => {};    // callback(rumbo | null, bearingMapa)
 let alError = () => {};
 let control = null;
 
-const SUAVIZADO = 0.25;    // 0..1: más bajo = más suave, más lento
+const TAU_MS = 180;          // constante de tiempo del suavizado: independiente de la frecuencia del sensor
+const ZONA_MUERTA = 0.8;     // grados: cambios menores no vuelven a dibujar el mapa (evita temblor)
+let ultimoEvento = 0;
+let ultimoAplicado = null;
+let obtenerCentro = () => null;   // posición del usuario: el mapa gira en torno a ella
+let estaPausado = () => false;    // p. ej. mientras se arrastra el pin
+const difCircular = (a, b) => ((a - b + 540) % 360) - 180;   // en [-180, 180)
 
 function anguloPantalla() {
   if (screen.orientation && typeof screen.orientation.angle === 'number') return screen.orientation.angle;
@@ -40,11 +46,14 @@ function alOrientar(e) {
   const h = leerRumbo(e);
   if (h == null) return;
   if (temporizador) { clearTimeout(temporizador); temporizador = null; }
+  const t = performance.now();
   if (rumbo == null) rumbo = h;
   else {
-    const dif = ((h - rumbo + 540) % 360) - 180;      // diferencia circular en [-180, 180)
-    rumbo = (rumbo + dif * SUAVIZADO + 360) % 360;
+    // Filtro exponencial por tiempo: igual de suave en iPhone (~60 Hz) y Android (frecuencias variables)
+    const k = 1 - Math.exp(-(t - ultimoEvento) / TAU_MS);
+    rumbo = (rumbo + difCircular(h, rumbo) * Math.min(1, Math.max(0.05, k)) + 360) % 360;
   }
+  ultimoEvento = t;
   if (!cuadroPendiente) {
     cuadroPendiente = true;
     requestAnimationFrame(() => { cuadroPendiente = false; aplicar(); });
@@ -53,6 +62,14 @@ function alOrientar(e) {
 
 function aplicar() {
   if (modo !== 'brujula' || rumbo == null) return;
+  if (ultimoAplicado != null && Math.abs(difCircular(rumbo, ultimoAplicado)) < ZONA_MUERTA) return;
+  ultimoAplicado = rumbo;
+  // Girar en torno a la persona: primero centrarla, luego rotar (si no, "orbita" por la pantalla)
+  const c = obtenerCentro();
+  if (c && !estaPausado()) {
+    const p = mapa.latLngToContainerPoint(c), m = mapa.getSize().divideBy(2);
+    if (p.distanceTo(m) > 2) mapa.setView(c, mapa.getZoom(), { animate: false });
+  }
   mapa.setBearing(-rumbo);                            // lo que tienes al frente queda arriba
   actualizarAguja();
   alRumbo(rumbo, mapa.getBearing());
@@ -94,6 +111,8 @@ export async function activarBrujula() {
   catch (e) { alError(e.message); return; }
   modo = 'brujula';
   rumbo = null;
+  ultimoAplicado = null;
+  mapa.dragging.disable();          // modo navegación: el mapa sigue a la persona
   control?.classList.add('activa');
   control?.setAttribute('aria-pressed', 'true');
   control?.setAttribute('title', 'Brújula activa: toca para volver a norte arriba');
@@ -104,6 +123,8 @@ export function activarNorte() {
   dejarDeEscuchar();
   modo = 'norte';
   rumbo = null;
+  ultimoAplicado = null;
+  mapa.dragging.enable();
   mapa.setBearing(0);
   control?.classList.remove('activa');
   control?.setAttribute('aria-pressed', 'false');
@@ -115,8 +136,10 @@ export function activarNorte() {
 export const modoBrujula = () => modo;
 
 // Botón bajo el zoom. Muestra una aguja que siempre apunta al norte real.
-export function crearControlBrujula(m, { onRumbo, onError, onActivar }) {
+export function crearControlBrujula(m, { onRumbo, onError, onActivar, centro, pausado }) {
   mapa = m; alRumbo = onRumbo || alRumbo; alError = onError || alError;
+  obtenerCentro = centro || obtenerCentro;
+  estaPausado = pausado || estaPausado;
   const Control = L.Control.extend({
     options: { position: 'topleft' },
     onAdd() {

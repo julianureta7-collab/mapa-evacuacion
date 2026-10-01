@@ -2,7 +2,7 @@
 // qué amenazas tiene cada una y qué capas oficiales las describen" vive en data/catalogo.json.
 // El resto del código trabaja con roles genéricos y nunca pregunta por una zona por su nombre.
 
-import { cargarJSON } from './datos.js?v=7';
+import { cargarJSON } from './datos.js?v=8';
 
 export const ROLES = ['area_peligro', 'ruta', 'punto_encuentro', 'referencia', 'bloqueo'];
 

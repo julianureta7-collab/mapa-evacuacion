@@ -2,14 +2,14 @@
 // Zonas × amenazas desde data/catalogo.json (spec §3). El pin decide la zona (spec §5.1):
 // al elegir una zona en el desplegable el pin va a su centro, y al arrastrar el pin a otra zona
 // la app cambia de zona sola.
-import { cargarCatalogo, zonas, zona as zonaPorId, amenazasDe, amenazaInfo, fuente, estiloDe, zonaEn } from './catalogo.js?v=7';
-import { cargarCapas } from './datos.js?v=7';
-import { crearMapa, mostrarCapas, centrarEn, dibujarRuta, limpiarRuta } from './mapa.js?v=7';
-import { prepararRutas, calcularRuta, nombreDestino, nombreVia, organismoDe, rumboATexto } from './ruta.js?v=7';
-import { prepararAreas, diagnosticar, textosDiagnostico } from './diagnostico.js?v=7';
-import { iniciarPosicion, iniciarGPSSiHayPermiso, modoSimulacion, modoGPS, ubicarPin, setLinterna, posicionActual, ubicacionReal } from './posicion.js?v=7';
-import { escucharAlertas } from './alertas.js?v=7';
-import { crearControlBrujula } from './brujula.js?v=7';
+import { cargarCatalogo, zonas, zona as zonaPorId, amenazasDe, amenazaInfo, fuente, estiloDe, zonaEn } from './catalogo.js?v=8';
+import { cargarCapas } from './datos.js?v=8';
+import { crearMapa, mostrarCapas, centrarEn, dibujarRuta, limpiarRuta, setModoMapa } from './mapa.js?v=8';
+import { prepararRutas, calcularRuta, nombreDestino, nombreVia, organismoDe, rumboATexto } from './ruta.js?v=8';
+import { prepararAreas, diagnosticar, textosDiagnostico } from './diagnostico.js?v=8';
+import { iniciarPosicion, iniciarGPSSiHayPermiso, modoSimulacion, modoGPS, ubicarPin, setLinterna, posicionActual, ubicacionReal, pinArrastrando } from './posicion.js?v=8';
+import { escucharAlertas } from './alertas.js?v=8';
+import { crearControlBrujula } from './brujula.js?v=8';
 
 const $ = (id) => document.getElementById(id);
 let mapa = null;
@@ -143,7 +143,7 @@ function mostrarDiagnostico(latlng, precision) {
     return { estado: 'sin_mapa' };
   }
   const r = diagnosticar(latlng ? [latlng.lng, latlng.lat] : null, precision);
-  const t = textosDiagnostico(amenazaActual.area)[r.estado];
+  const t = textosDiagnostico(amenazaActual.area, !!emergencia)[r.estado];
   const detalle = [...r.advertencias];
   if (r.estado !== 'sin_ubicacion' && Number.isFinite(r.distanciaBorde)) {
     detalle.push(r.dentro
@@ -161,6 +161,8 @@ function refrescarDiagnostico() {
   const r = mostrarDiagnostico(p, null);
   actualizarRuta(p, r.estado, true);
 }
+
+// La ruta personal solo se muestra durante una alerta (en informativo se ven las capas oficiales).
 
 // ---------------------------------------------------------------- Ruta
 
@@ -205,10 +207,10 @@ function mostrarInfoRuta(r) {
   const destino = nombreDestino(r.destino);
   if (r.tipo === 'ruta') {
     const detalle = [];
-    if (r.metrosDentro > 0) detalle.push(`Sales de la ${area} en ~${fmtDist(r.metrosDentro)}.`);
-    if (r.fraccionVias > 0) detalle.push(`${Math.round(r.fraccionVias * 100)}% del trayecto va por vías de evacuación oficiales.`);
     const paso = r.pasos.find(p => p.instruction)?.instruction;
     if (paso) detalle.push(`Primer paso: ${paso}.`);
+    if (r.metrosDentro > 0) detalle.push(`Sales de la ${area} en ~${fmtDist(r.metrosDentro)}.`);
+    if (r.fraccionVias > 0) detalle.push(`${Math.round(r.fraccionVias * 100)}% del trayecto va por vías de evacuación oficiales.`);
     if (r.descartadas) detalle.push(`Se descartaron ${r.descartadas} ruta(s) que volvían a entrar a la ${area}.`);
     el.innerHTML = `
       <div class="ruta-titulo">Ruta sugerida a ${destino}</div>
@@ -230,7 +232,7 @@ function mostrarInfoRuta(r) {
 }
 
 async function actualizarRuta(latlng, estado, forzar) {
-  if (estado !== 'evacuar' && estado !== 'limite') { ocultarRuta(); return; }
+  if (!emergencia || (estado !== 'evacuar' && estado !== 'limite')) { ocultarRuta(); return; }
   const origen = [latlng.lng, latlng.lat];
   if (!forzar && ultimoOrigenRuta && turf.distance(ultimoOrigenRuta, origen, { units: 'meters' }) < DISTANCIA_RECALCULO_M) return;
   ultimoOrigenRuta = origen;
@@ -315,6 +317,7 @@ function evaluarAlertas() {
 async function entrarEmergencia({ a, porReal }) {
   emergencia = a;
   document.body.classList.add('modo-emergencia');
+  setModoMapa(true);
   $('selector-zona').disabled = true;
   $('selector-amenaza').disabled = true;
   rutaYaMostrada = false;
@@ -328,6 +331,8 @@ async function entrarEmergencia({ a, porReal }) {
 function salirEmergencia() {
   emergencia = null;
   document.body.classList.remove('modo-emergencia');
+  setModoMapa(false);
+  ocultarRuta();
   $('selector-zona').disabled = false;
   llenarSelectorAmenazas();
   if (amenazaActual) $('selector-amenaza').value = amenazaActual.id;
@@ -380,6 +385,8 @@ async function iniciar() {
     onRumbo: (rumbo, bearing) => setLinterna(rumbo, bearing),
     onError: (msg) => error(msg),
     onActivar: () => { const p = posicionActual(); if (p) mapa.setView(p, Math.max(mapa.getZoom(), 16)); },
+    centro: () => posicionActual(),
+    pausado: () => pinArrastrando(),
   });
   $('btn-simulacion').addEventListener('click', () => seleccionarModo('simulacion'));
   $('btn-gps').addEventListener('click', () => seleccionarModo('gps'));

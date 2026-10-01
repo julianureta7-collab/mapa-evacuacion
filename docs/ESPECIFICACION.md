@@ -86,7 +86,8 @@ La app maneja **dos puntos**:
 
 - Mapa de la zona con las capas de la amenaza elegida en el desplegable y la leyenda.
 - **Panel "Información"** por amenaza: qué hacer antes, durante y después, con fuente oficial citada. Es lo que evalúa O3.
-- Diagnóstico (dentro / cerca del límite / fuera del área de peligro) y ruta recomendada según la jerarquía de §6, **calculados desde el pin**.
+- Diagnóstico (dentro / cerca del límite / fuera del área de peligro), **calculado desde el pin**, con textos de preparación ("si llega una alerta…").
+- **Sin ruta personal en modo informativo:** la ruta solo aparece durante una alerta. En informativo se ven las capas oficiales (vías, puntos) como preparación.
 - Brújula con efecto linterna (hecha).
 - Si la amenaza no tiene capa geográfica en esa zona, se muestra solo la información pedagógica, con el aviso "Sin mapa de amenaza para esta zona".
 
@@ -97,6 +98,7 @@ La app maneja **dos puntos**:
 - **Si hay dos alertas que te aplican a la vez** (una por tu ubicación real y otra por tu pin), manda la de la ubicación real. La otra aparece como un aviso secundario que se puede tocar para verla.
 - **Si hay dos alertas en la misma zona** (p. ej. tsunami e incendio en Viña después de un terremoto), se muestran ambas en el banner. La ruta usa la amenaza de la alerta más reciente, pero **se valida contra las áreas de peligro de todas las alertas activas de la zona**, para no llevar a nadie de un peligro a otro.
 - **Si hay área de peligro y el punto de origen está fuera de ella** (a más de 100 m del borde): pantalla verde "Estás en zona segura, permanece aquí", sin ruta. **Si la amenaza no tiene área de peligro** (p. ej. el Campus antes de que el operador marque el edificio), se guía al punto de encuentro con ruta del operador si existe, y si no, se pasa a precaución.
+- **Pantalla mínima:** se ocultan la cabecera, los botones de modo, el panel de información, la leyenda, las fuentes, el control de capas y los detalles; en el mapa quedan solo el área de peligro, los puntos de encuentro y la ruta personal. Se ve: aviso de alerta, mapa, estado en una línea, distancia, tiempo y una instrucción.
 - **Lo primario es la alerta y la ruta:** banner con el mensaje del operador (y SIMULACRO si corresponde), ruta grande y clara, distancia y tiempo. La flecha, la voz y la vibración quedan **después del viernes**.
 - **Botón "Necesito ayuda"** disponible en cualquier momento de la alerta (§8). **Es la última feature.**
 - Vuelve sola a modo informativo cuando el operador cancela la alerta o cuando vence (**por defecto, a las 2 horas**).
@@ -210,7 +212,7 @@ Publicado en https://julianureta7-collab.github.io/mapa-evacuacion/
 
 - ✅ Datos SENAPRED de Viña (tsunami) en el mapa con procedencia y fecha.
 - ✅ Diagnóstico dentro / cerca / fuera, con pin arrastrable o GPS.
-- ✅ Brújula (norte arriba / brújula) con efecto linterna.
+- ✅ Brújula (norte arriba / brújula) con efecto linterna. En modo brújula el mapa gira en torno a la persona (la mantiene al centro), con suavizado por tiempo y zona muerta de 0,8°.
 - ✅ Motor de rutas: vía oficial → ORS sugerida → línea recta. En Viña, 77 % de los puntos del área obtienen ruta por vía oficial.
 - ✅ §10 punto 1: catálogo zonas × amenazas (`app/data/catalogo.json`), capas por rol con procedencia, desplegables de zona y amenaza, el pin decide la zona (y "fuera de cobertura"). Viña (tsunami, incendio forestal sin capa aún) y Campus (incendio estructural sin capa aún).
 - ✅ §10 punto 2: modelo de dos puntos (`js/posicion.js`): el GPS sigue activo si hay permiso aunque se use el pin; la ubicación real se dibuja como un punto azul.
@@ -252,5 +254,6 @@ Reportes para el informe del equipo: `docs/reportes/` (uno por hito).
 ## Anexo C — Registro de cambios
 
 - **v2.1 (30-sep-2026):** modelo de dos puntos: la ubicación real se sigue siempre si hay permiso, y el pin es lo que se mira; la alerta llega si cualquiera de los dos está en la zona (§5.1). La ruta de emergencia sale de la ubicación real si está en la zona alertada; con dos alertas simultáneas manda la de la ubicación real (§5.3). Validación común de rutas contra bloqueos y áreas de peligro del operador (§6). Vigencia permanente y amenaza "todas" para elementos del operador (§7). Roles genéricos de capa y contenido por amenaza (§3). Estado "zona segura" en emergencia (§5.3). El campus usa modo precaución hasta que el operador dibuje (§4).
+- **v2.2 (30-sep-2026):** ruta personal solo en emergencia; pantalla de emergencia mínima; textos de diagnóstico de preparación en modo informativo; brújula centrada en la persona.
 - **v2.1, revisión de coherencia:** se unificó el término "área de peligro" (distinto de "zona"); los usuarios leen las desactivaciones de vías; las rutas del operador pueden aplicar a "todas" las amenazas; la ruta informativa se calcula desde el pin; los desplegables quedan fijos durante la emergencia; "zona segura" solo aplica si existe área de peligro. Varias alertas en la misma zona: la ruta se valida contra todas. Las solicitudes de ayuda reemplazan a "ver usuarios" en las prioridades finales.
 - **v2 (30-sep-2026):** plataforma multiamenaza con app operador; reemplaza a la v1.

@@ -11,6 +11,7 @@ let alErrorGPS = () => {};
 let real = null;                  // { latlng, precision }
 let marcadorReal = null, circuloReal = null;
 let centrarAlPrimerFix = false;
+let arrastrandoPin = false;
 
 export let modo = 'simulacion';
 
@@ -47,8 +48,9 @@ export function iniciarPosicion(m, { onPin, onReal, onErrorGPS } = {}) {
 function moverPin(latlng, precision) {
   if (!pin) {
     pin = L.marker(latlng, { icon: ICONO, draggable: modo === 'simulacion', autoPan: true, title: 'Tu posición', zIndexOffset: 1000 }).addTo(mapa);
+    pin.on('dragstart', () => { arrastrandoPin = true; });
     pin.on('drag', () => alCambiarPin(pin.getLatLng(), null, true));
-    pin.on('dragend', () => alCambiarPin(pin.getLatLng(), null, false));
+    pin.on('dragend', () => { arrastrandoPin = false; alCambiarPin(pin.getLatLng(), null, false); });
   } else pin.setLatLng(latlng);
   if (circulo) { circulo.remove(); circulo = null; }
   if (precision != null) circulo = L.circle(latlng, { radius: precision, color: '#1565c0', weight: 1, fillOpacity: 0.1, interactive: false }).addTo(mapa);
@@ -144,7 +146,8 @@ export function setLinterna(rumbo, bearingMapa) {
 }
 
 export const posicionActual = () => pin?.getLatLng() || null;
-export const ubicacionReal = () => real;      // { latlng, precision } | null
+export const ubicacionReal = () => real;
+export const pinArrastrando = () => arrastrandoPin;      // { latlng, precision } | null
 
 export function quitarPin() {
   pin?.remove(); circulo?.remove(); pin = circulo = null;

@@ -93,7 +93,7 @@ body {
 }
 .control-brujula.activa { background: #1565c0; box-shadow: 0 0 0 3px rgba(21,101,192,.35); }
 .control-brujula.activa .brujula-aguja circle { fill: #1565c0; }
-.brujula-aguja { transition: transform .15s linear; }
+.brujula-aguja { /* sin transición: al cruzar 0°/360° daría una vuelta completa */ }
 
 /* Linterna en el pin: el SVG está centrado en el punto y rota alrededor de él */
 .pin-usuario { overflow: visible; }
@@ -162,4 +162,27 @@ body.modo-emergencia .ruta-info { border-width: 3px; }
 .ubicacion-real-punto {
   width: 16px; height: 16px; border-radius: 50%; background: #1e88e5;
   border: 3px solid #fff; box-shadow: 0 0 0 2px rgba(30,136,229,.4), 0 1px 4px rgba(0,0,0,.4);
+}
+
+/* Modo emergencia: solo lo esencial (alerta, mapa, estado y ruta) */
+body.modo-emergencia .cabecera,
+body.modo-emergencia .modos,
+body.modo-emergencia #ficha-titulo,
+body.modo-emergencia #ficha-texto,
+body.modo-emergencia #leyenda,
+body.modo-emergencia #fuente,
+body.modo-emergencia .leaflet-control-layers,
+body.modo-emergencia .estado-detalle,
+body.modo-emergencia .estado.peligro .estado-texto,
+body.modo-emergencia .estado.alerta .estado-texto,
+body.modo-emergencia .ruta-detalle div:not(:first-child) { display: none; }
+body.modo-emergencia .banner-pie { display: none; }
+body.modo-emergencia .estado { padding: 8px 12px; }
+body.modo-emergencia .estado-titulo { font-size: 18px; margin: 0; }
+body.modo-emergencia .ruta-info { margin-top: 8px; }
+body.modo-emergencia .ruta-cifras strong { font-size: 30px; }
+body.modo-emergencia .ruta-aviso { font-size: 12px; }
+@media (max-width: 760px) {
+  body.modo-emergencia #mapa { flex: 1 1 62%; }
+  body.modo-emergencia .ficha { max-height: 38vh; padding: 10px 14px; }
 }

@@ -1,7 +1,9 @@
 // Mapa Leaflet: fondo OSM y capas de la zona × amenaza actual.
-import { estiloDe } from './catalogo.js?v=7';
+import { estiloDe } from './catalogo.js?v=8';
 
 let mapa, controlCapas, grupoCapas;
+let capasDibujadas = [];        // [{ def, capa }]
+let modoEmergenciaMapa = false;
 let atribucionFuentes = '';
 
 export function crearMapa(idContenedor) {
@@ -39,7 +41,23 @@ function popupDe(nombreCapa, props) {
   return `<div class="popup-titulo">${titulo}</div><div>${nombreCapa}</div>${filas.map(x => `<div>${x}</div>`).join('')}${origen ? `<div class="popup-fuente">${origen}</div>` : ''}`;
 }
 
+// En emergencia el mapa muestra solo lo esencial: área de peligro y puntos de encuentro
+// (la ruta personal se dibuja aparte). En informativo, lo que diga el catálogo (visible).
+const ROLES_EMERGENCIA = ['area_peligro', 'punto_encuentro'];
+function aplicarVisibilidad() {
+  for (const { def, capa } of capasDibujadas) {
+    const ver = modoEmergenciaMapa ? ROLES_EMERGENCIA.includes(def.rol) : def.visible;
+    if (ver) capa.addTo(grupoCapas); else grupoCapas.removeLayer(capa);
+  }
+}
+
+export function setModoMapa(emergencia) {
+  modoEmergenciaMapa = emergencia;
+  if (grupoCapas) aplicarVisibilidad();
+}
+
 function limpiarCapas() {
+  capasDibujadas = [];
   if (grupoCapas) { grupoCapas.remove(); grupoCapas = null; }
   if (controlCapas) { controlCapas.remove(); controlCapas = null; }
   if (atribucionFuentes) { mapa.attributionControl.removeAttribution(atribucionFuentes); atribucionFuentes = ''; }
@@ -60,10 +78,11 @@ export function mostrarCapas(capas) {
       onEachFeature: (f, l) => l.bindPopup(popupDe(def.nombre, f.properties || {})),
     });
     controlCapas.addOverlay(capa, def.nombre);
-    if (def.visible) capa.addTo(grupoCapas);
+    capasDibujadas.push({ def, capa });
     const org = geo.features[0]?.properties?._fuente?.organismo;
     if (org) organismos.add(org);
   }
+  aplicarVisibilidad();
   if (organismos.size) {
     atribucionFuentes = `Capas de amenaza: ${[...organismos].join(', ')}`;
     mapa.attributionControl.addAttribution(atribucionFuentes);
