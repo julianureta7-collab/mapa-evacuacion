@@ -16,7 +16,7 @@
 //     dentro del área); a igualdad, la más corta en tiempo.
 //  5. Si ORS falla (sin clave, sin red, límite 429): dirección en línea recta al más cercano.
 
-import { ORS_API_KEY } from './claves.js?v=13';
+import { ORS_API_KEY } from './claves.js?v=14';
 
 // HeiGIT apagó api.openrouteservice.org el 28-sep-2026 (desde el 27-ago solo daba 10 % de cuota y luego 403).
 // Dirección vigente: api.heigit.org/<servicio>/<versión>/… con la MISMA clave, enviada en el encabezado Authorization.
@@ -34,6 +34,8 @@ const FINAL_A_PUNTO_M = 150;     // si la vía termina así de cerca de un punto
 let areas = [];                  // Features de polígono
 let puntos = [];                 // Features de punto de encuentro
 let vias = [];                   // Features de línea (vías de evacuación oficiales)
+let viasOperador = [];           // rutas dibujadas por operadores (prioridad 1, spec §6)
+let bloqueos = [];               // tramos bloqueados por operadores: ninguna ruta los puede cruzar
 const cache = new Map();         // origen redondeado → resultado
 
 export const hayClaveORS = () => !!ORS_API_KEY && ORS_API_KEY !== 'PEGAR_AQUI_LA_CLAVE';
@@ -45,6 +47,8 @@ export function prepararRutas(porRol, { area = 'área de peligro' } = {}) {
   areas = (porRol.area_peligro?.features || []).filter(f => f.geometry && /Polygon/.test(f.geometry.type));
   puntos = (porRol.punto_encuentro?.features || []).filter(f => f.geometry && f.geometry.type === 'Point');
   vias = (porRol.ruta?.features || []).filter(f => f.geometry && f.geometry.type === 'LineString');
+  viasOperador = (porRol.ruta_operador?.features || []).filter(f => f.geometry && f.geometry.type === 'LineString');
+  bloqueos = (porRol.bloqueo?.features || []).filter(f => f.geometry && /LineString|Polygon/.test(f.geometry.type));
   nombreArea = area;
   cache.clear();
 }
@@ -97,9 +101,9 @@ function largosHastaFinal(c) {
 // el mar para luego devolverse por la vía. Costo = acercamiento × 1,4 (desvío por cuadras) + resto.
 const FACTOR_DESVIO = 1.4;
 const MAX_VIAS_A_EVALUAR = 3;
-function opcionesViaOficial(origen) {
+function opcionesViaOficial(origen, lista = vias) {
   const opciones = [];
-  for (const v of vias) {
+  for (const v of lista) {
     const c = v.geometry.coordinates;
     const pr = proyectarEnLinea(origen, c);
     if (pr.distancia > RADIO_VIA_M) continue;
@@ -157,7 +161,7 @@ async function armarOpcion(origen, op, signal) {
   const final = op.puntoFinal && distM(fin, op.puntoFinal.p.geometry.coordinates) > 5 ? [fin, op.puntoFinal.p.geometry.coordinates] : null;
   const todo = [...ac, ...oficial.slice(1), ...(final ? final.slice(1) : [])];
   const analisis = analizarRuta(todo);
-  if (analisis.reentradas > 0) return null;
+  if (analisis.reentradas > 0 || analisis.cruzaBloqueo) return null;
   const acercamientoM = largo(ac), oficialM = largo(oficial);
   const distancia = acercamientoM + oficialM + (final ? largo(final) : 0);
   return {
@@ -178,8 +182,8 @@ async function armarOpcion(origen, op, signal) {
 }
 
 // Evalúa las mejores vías candidatas con el camino real por calles y elige la más corta a pie.
-async function rutaPorViaOficial(origen, signal) {
-  const ops = opcionesViaOficial(origen);
+async function rutaPorViaOficial(origen, signal, lista = vias) {
+  const ops = opcionesViaOficial(origen, lista);
   if (!ops.length) return null;
   // Ramificación y poda: se consulta ORS de a una opción. Una opción solo vale la pena si su cota
   // inferior (acercamiento en línea recta + resto de vía) puede ganarle a la mejor ya calculada.
@@ -272,7 +276,8 @@ export function analizarRuta(coords) {
     metrosTotales += d;
     prevDentro = dentro;
   }
-  return { metrosDentro, metrosTotales, reentradas, fraccionVias: metrosTotales ? metrosEnVia / metrosTotales : 0 };
+  const cruzaBloqueo = bloqueos.length > 0 && coords.length > 1 && bloqueos.some(b => turf.booleanIntersects(turf.lineString(coords), b));
+  return { metrosDentro, metrosTotales, reentradas, cruzaBloqueo, fraccionVias: metrosTotales ? metrosEnVia / metrosTotales : 0 };
 }
 
 function cercaDeVia(lngLat) {
@@ -296,6 +301,14 @@ export async function calcularRuta(origen, { signal } = {}) {
   const k = claveCache(origen);
   if (cache.has(k)) return cache.get(k);
 
+  // 0) Prioridad 1 (spec §6): rutas dibujadas por un operador
+  if (viasOperador.length) {
+    try {
+      const op = await rutaPorViaOficial(origen, signal, viasOperador);
+      if (op) { op.tipo = 'operador'; cache.set(k, op); return op; }
+    } catch (e) { if (e.name === 'AbortError') throw e; }
+  }
+
   // 1) Método principal: seguir una vía de evacuación oficial
   try {
     const oficial = await rutaPorViaOficial(origen, signal);
@@ -317,7 +330,7 @@ export async function calcularRuta(origen, { signal } = {}) {
           return { ...c, ruta: f, analisis, resumen: f.properties.summary || {} };
         } catch (e) { if (e.name === 'AbortError' || [0, 401, 403, 429].includes(e.codigo)) throw e; return null; }
       }));
-      const validas = rutas.filter(r => r && r.analisis.reentradas === 0);
+      const validas = rutas.filter(r => r && r.analisis.reentradas === 0 && !r.analisis.cruzaBloqueo);
       if (validas.length) {
         validas.sort((a, b) => (a.analisis.metrosDentro - b.analisis.metrosDentro) || (a.resumen.duration - b.resumen.duration));
         const g = validas[0];
@@ -354,6 +367,8 @@ export async function calcularRuta(origen, { signal } = {}) {
   cache.set(k, resultado);
   return resultado;
 }
+
+export const hayRutasOperador = () => viasOperador.length > 0;
 
 export function nombreVia(v) {
   const pr = v?.properties || {};

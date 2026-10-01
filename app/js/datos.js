@@ -14,11 +14,11 @@ const vacio = () => ({ type: 'FeatureCollection', features: [] });
  * la interfaz pueda decir de dónde viene cada cosa.
  * @returns {{ capas: Array<{def, geo}>, porRol: Object<string, FeatureCollection>, metadata }}
  */
-export async function cargarCapas(defAmenaza, fuentePorId) {
+export async function cargarCapas(defAmenaza, fuentePorId, base = '') {
   const capas = [];
   const porRol = {};
   await Promise.all((defAmenaza.capas || []).map(async (c) => {
-    const geo = await cargarJSON(`${defAmenaza.carpeta}/${c.archivo}`);
+    const geo = await cargarJSON(`${base}${defAmenaza.carpeta}/${c.archivo}`);
     const f = fuentePorId(c.fuente);
     for (const ft of geo.features) {
       ft.properties = { ...(ft.properties || {}), _procedencia: 'oficial', _fuente: f, _capa: c.nombre };
@@ -32,7 +32,7 @@ export async function cargarCapas(defAmenaza, fuentePorId) {
   }
   let metadata = null;
   if (defAmenaza.metadata) {
-    try { metadata = await cargarJSON(`${defAmenaza.carpeta}/${defAmenaza.metadata}`); } catch { /* opcional */ }
+    try { metadata = await cargarJSON(`${base}${defAmenaza.carpeta}/${defAmenaza.metadata}`); } catch { /* opcional */ }
   }
   return { capas, porRol, metadata };
 }

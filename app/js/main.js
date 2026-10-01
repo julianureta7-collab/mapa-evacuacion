@@ -2,15 +2,16 @@
 // Zonas × amenazas desde data/catalogo.json (spec §3). El pin decide la zona (spec §5.1):
 // al elegir una zona en el desplegable el pin va a su centro, y al arrastrar el pin a otra zona
 // la app cambia de zona sola.
-import { cargarCatalogo, zonas, zona as zonaPorId, amenazasDe, amenazaInfo, fuente, estiloDe, zonaEn } from './catalogo.js?v=13';
-import { cargarCapas } from './datos.js?v=13';
-import { crearMapa, mostrarCapas, centrarEn, dibujarRuta, limpiarRuta, setModoMapa } from './mapa.js?v=13';
-import { prepararRutas, calcularRuta, nombreDestino, nombreVia, organismoDe, rumboATexto } from './ruta.js?v=13';
-import { prepararAreas, diagnosticar, textosDiagnostico } from './diagnostico.js?v=13';
-import { iniciarPosicion, iniciarGPSSiHayPermiso, modoSimulacion, modoGPS, ubicarPin, setLinterna, posicionActual, ubicacionReal, pinArrastrando, bloquearPin } from './posicion.js?v=13';
-import { escucharAlertas } from './alertas.js?v=13';
-import { cargarContenido, dibujarInformacion as pintarInformacion, htmlPrecaucion } from './informacion.js?v=13';
-import { crearControlBrujula } from './brujula.js?v=13';
+import { cargarCatalogo, zonas, zona as zonaPorId, amenazasDe, amenazaInfo, fuente, estiloDe, zonaEn } from './catalogo.js?v=14';
+import { cargarCapas } from './datos.js?v=14';
+import { crearMapa, mostrarCapas, centrarEn, dibujarRuta, limpiarRuta, setModoMapa } from './mapa.js?v=14';
+import { prepararRutas, calcularRuta, nombreDestino, nombreVia, organismoDe, rumboATexto, hayRutasOperador } from './ruta.js?v=14';
+import { escucharOperador, capasOperador, codigosDesactivados, elementosActuales, desactivacionesActuales } from './capasOperador.js?v=14';
+import { prepararAreas, diagnosticar, textosDiagnostico } from './diagnostico.js?v=14';
+import { iniciarPosicion, iniciarGPSSiHayPermiso, modoSimulacion, modoGPS, ubicarPin, setLinterna, posicionActual, ubicacionReal, pinArrastrando, bloquearPin } from './posicion.js?v=14';
+import { escucharAlertas } from './alertas.js?v=14';
+import { cargarContenido, dibujarInformacion as pintarInformacion, htmlPrecaucion } from './informacion.js?v=14';
+import { crearControlBrujula } from './brujula.js?v=14';
 
 const $ = (id) => document.getElementById(id);
 let mapa = null;
@@ -42,16 +43,22 @@ function dibujarLeyenda(capas) {
   }).join('');
 }
 
-function dibujarFuente(capas, metadata) {
+function dibujarFuente(capas, metadata, nOperador = 0, nDesactivadas = 0) {
   const ids = [...new Set(capas.map(c => c.def.fuente).filter(Boolean))];
-  if (!ids.length) { $('fuente').textContent = 'Aún no hay capas oficiales cargadas para esta amenaza en esta zona.'; return; }
+  if (!ids.length) {
+    $('fuente').textContent = 'Aún no hay capas oficiales cargadas para esta amenaza en esta zona.'
+      + (nOperador ? ` Se muestran ${nOperador} elemento(s) dibujado(s) por operadores.` : '');
+    return;
+  }
   const descarga = metadata?.fecha_descarga
     ? `; datos descargados el ${new Date(metadata.fecha_descarga).toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' })}`
     : '';
   $('fuente').textContent = ids.map(id => {
     const f = fuente(id);
     return f ? `Fuente: ${f.organismo} — ${f.nombre}. Publicación ${f.publicacion}${descarga}.` : `Fuente: ${id}.`;
-  }).join(' ') + ' Pueden no reflejar cambios posteriores.';
+  }).join(' ') + ' Pueden no reflejar cambios posteriores.'
+    + (nOperador ? ` Incluye ${nOperador} elemento(s) dibujado(s) por operadores.` : '')
+    + (nDesactivadas ? ` ${nDesactivadas} vía(s) oficial(es) desactivada(s) por un operador.` : '');
 }
 
 let contenidoActual = null;      // antes / durante / después de la amenaza actual (+ agregados de la zona)
@@ -122,12 +129,32 @@ async function activarAmenaza(id, { refrescar = true } = {}) {
     datos = { capas: [], porRol: {}, metadata: null };
   }
   if (mio !== cargaId) return;           // el usuario ya eligió otra cosa
-  mostrarCapas(datos.capas);
-  dibujarLeyenda(datos.capas);
-  dibujarFuente(datos.capas, datos.metadata);
-  hayAreaPeligro = prepararAreas(datos.porRol.area_peligro) > 0;
-  prepararRutas(datos.porRol, { area: amenazaActual.area });
+  datosOficiales = datos;
+  aplicarCapas();
   if (refrescar) refrescarDiagnostico();
+}
+
+// Combina capas oficiales (menos las vías desactivadas por el operador) con lo que dibujó el operador
+// y prepara diagnóstico y rutas. Se llama al cambiar zona/amenaza y cada vez que el operador publica algo.
+let datosOficiales = { capas: [], porRol: {}, metadata: null };
+function aplicarCapas() {
+  if (!zonaActual || !amenazaActual) return;
+  const fc = (feats) => ({ type: 'FeatureCollection', features: feats });
+  const off = codigosDesactivados(desactivacionesActuales(), zonaActual.id, amenazaActual.id);
+  const capasOf = datosOficiales.capas.map(({ def, geo }) => def.rol === 'ruta' && off.size
+    ? { def, geo: fc(geo.features.filter(f => !off.has(f.properties?.name))) } : { def, geo });
+  const capasOp = capasOperador(elementosActuales(), zonaActual.id, amenazaActual.id);
+  const capas = [...capasOf, ...capasOp];
+  const porRol = {};
+  for (const { def, geo } of capas) {
+    const rol = def.operador && def.rol === 'ruta' ? 'ruta_operador' : def.rol;
+    (porRol[rol] ||= fc([])).features.push(...geo.features);
+  }
+  mostrarCapas(capas);
+  dibujarLeyenda(capas);
+  dibujarFuente(capasOf, datosOficiales.metadata, capasOp.reduce((n, c) => n + c.geo.features.length, 0), off.size);
+  hayAreaPeligro = prepararAreas(porRol.area_peligro) > 0;
+  prepararRutas(porRol, { area: amenazaActual.area });
 }
 
 // ---------------------------------------------------------------- Diagnóstico
@@ -143,6 +170,10 @@ function mostrarDiagnostico(latlng, precision) {
   if (!zonaActual) {
     pintarEstado('neutro', 'Fuera de cobertura', 'Aún no cubrimos esta ubicación. Elige una zona en el desplegable.');
     return { estado: 'fuera_cobertura' };
+  }
+  if (!hayAreaPeligro && emergencia && hayRutasOperador()) {
+    pintarEstado('peligro', 'Evacúa por la ruta marcada', 'Un operador marcó la ruta de evacuación para esta emergencia.');
+    return { estado: 'sin_mapa' };
   }
   if (!hayAreaPeligro) {
     pintarEstado('neutro', 'Sin mapa de amenaza para esta zona', emergencia
@@ -192,6 +223,23 @@ function mostrarInfoRuta(r) {
   el.hidden = false;
   el.classList.remove('precaucion');
   if (r.tipo === 'sin_candidatos') { mostrarPrecaucion(r.aviso); return; }
+  if (r.tipo === 'operador') {
+    const p = r.via.properties || {};
+    const min = Math.max(1, Math.round((Date.now() - new Date(p.creado)) / 60000));
+    const hace = min < 60 ? `hace ${min} min` : `hace ${Math.round(min / 60)} h`;
+    const pasos = [];
+    if (r.acercamientoM >= 10) pasos.push(`Camina ${fmtDist(r.acercamientoM)} hasta la ruta marcada.`);
+    pasos.push(`Síguela ${fmtDist(r.oficialM)}${r.destino ? ` hasta el ${nombreDestino(r.destino)}` : ''}.`);
+    el.innerHTML = `
+      <div class="ruta-titulo">Ruta verificada por operador${p.nombre ? ` · ${escaparHTML(p.nombre)}` : ''}</div>
+      <div class="ruta-cifras">
+        <div><strong>${fmtDist(r.distancia)}</strong><span>a pie</span></div>
+        <div><strong>${fmtMin(r.duracion)}</strong><span>caminando</span></div>
+      </div>
+      <div class="ruta-detalle">${pasos.map(d => `<div>${d}</div>`).join('')}<div>Motivo: ${escaparHTML(p.motivo || '')}</div></div>
+      <div class="ruta-aviso">Marcada ${hace} por ${escaparHTML(p.autor || 'un operador')} · fuente: ${escaparHTML(p.fuente_texto || '')}</div>`;
+    return;
+  }
   if (r.tipo === 'oficial') {
     const detalle = [];
     if (r.acercamientoM >= 10) detalle.push(`1. Camina ${fmtDist(r.acercamientoM)} hasta la vía de evacuación oficial${r.tramos[0].tipo === 'acercamiento_recto' ? ' (tramo en línea recta)' : ''}.`);
@@ -254,8 +302,9 @@ function mostrarPrecaucion(motivo) {
 
 async function actualizarRuta(latlng, estado, forzar) {
   if (!emergencia) { ocultarRuta(); return; }
-  if (estado === 'sin_mapa') { mostrarPrecaucion(null); return; }
-  if (estado !== 'evacuar' && estado !== 'limite') { ocultarRuta(); return; }
+  // Sin área de peligro: si el operador dibujó rutas, se guía por ellas (spec §5.3); si no, precaución.
+  if (estado === 'sin_mapa' && !hayRutasOperador()) { mostrarPrecaucion(null); return; }
+  if (estado !== 'evacuar' && estado !== 'limite' && estado !== 'sin_mapa') { ocultarRuta(); return; }
   const origen = [latlng.lng, latlng.lat];
   if (!forzar && ultimoOrigenRuta && turf.distance(ultimoOrigenRuta, origen, { units: 'meters' }) < DISTANCIA_RECALCULO_M) return;
   ultimoOrigenRuta = origen;
@@ -420,6 +469,7 @@ async function iniciar() {
   $('selector-amenaza').addEventListener('change', (e) => activarAmenaza(e.target.value));
   await activarZona(zonas()[0].id, { moverPin: true });
   iniciarGPSSiHayPermiso();          // ubicación real en segundo plano si ya había permiso
+  escucharOperador(() => { aplicarCapas(); rutaYaMostrada = true; refrescarDiagnostico(); });
   escucharAlertas({
     onCambio: (lista) => { alertasActivas = lista; evaluarAlertas(); },
     onEstado: mostrarEstadoAlertas,

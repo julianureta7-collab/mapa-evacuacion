@@ -2,7 +2,7 @@
 // - Se reciben TODAS las alertas vigentes; cada teléfono decide localmente cuáles le aplican.
 // - Tiempo real (Supabase Realtime) + consulta cada 15 s como respaldo.
 // - Una alerta deja de contar sola cuando pasa su vigente_hasta, aunque nadie la cancele.
-import { nube, ahoraISO } from './nube.js?v=13';
+import { nube, ahoraISO } from './nube.js?v=14';
 
 const POLLING_MS = 15000;
 let alertas = [];

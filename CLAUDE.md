@@ -54,11 +54,12 @@
 | `js/main.js` | Desplegables zona/amenaza, el pin decide la zona, diagnóstico, tarjeta de ruta |
 | `js/claves.js` | Clave de ORS (pública a propósito) |
 | `data/<zona>/<amenaza>/` | Capas oficiales + `metadata.json` (hoy: `data/vina/tsunami/`) |
-| `operador/` | **App operador** (login, alertas). Publicada en `/operador/`. Importa `../js/catalogo.js` y `../js/nube.js` |
+| `operador/` | **App operador** (login, alertas, dibujo en el mapa). Publicada en `/operador/`. `dibujo.js` usa Leaflet-Geoman (`vendor/geoman`, MIT) |
+| `js/capasOperador.js` | Lee y escucha en tiempo real `elementos_operador` y `desactivaciones_oficiales`; los convierte en capas por rol |
 | `js/nube.js` | Cliente Supabase compartido (`vendor/supabase.js`, claves en `js/claves.js`) |
 | `js/alertas.js` | Alertas vigentes en tiempo real + consulta cada 15 s (app usuario) |
 | `supabase/esquema.sql` | Esquema de la base de datos (correr en el SQL Editor de Supabase) |
 
 ## Próximo paso
 
-Spec §10, **punto 6**: herramienta de dibujo del operador (rutas, puntos, áreas de peligro, bloqueos) y jerarquía en la app usuario. Puntos 1 a 5 hechos (ver spec §12). Candidatos de puntos de encuentro del Campus: Patio Norte y Patio Sur (reporte 03). Revisa §13 para ver qué falta del equipo (Supabase y clave ORS bloquean los puntos 3 y 6).
+Spec §10, **punto 7**: datos de zonas (Viña incendio forestal: verificar capa CONAF/SENAPRED; Campus: el equipo dibuja zonas de seguridad con la app operador, candidatos Patio Norte y Patio Sur). Después: preparación del testeo (QR, guion). Puntos 1 a 6 hechos (ver spec §12). Revisa §13 para ver qué falta del equipo (Supabase y clave ORS bloquean los puntos 3 y 6).

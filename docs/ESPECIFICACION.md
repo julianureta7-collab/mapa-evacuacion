@@ -189,7 +189,7 @@ App usuario (app/, GitHub Pages) ──realtime──▶ Supabase ◀──realt
 3. ✅ Supabase + app operador básica: login, **enviar y cancelar alertas** por zona × amenaza.
 4. Modo emergencia en la app usuario (banner, ruta primaria, simulacro, vencimiento).
 5. ✅ Panel "Información" y modo precaución, con contenido oficial por amenaza (`app/data/contenido/`, reporte 03).
-6. Operador: dibujar rutas, áreas de peligro, puntos y bloqueos, con motivo, fuente y vigencia; aplicar en la app usuario la jerarquía y la validación común de §6.
+6. ✅ Operador: dibujar rutas, áreas de peligro, puntos y bloqueos, con motivo, fuente y vigencia; desactivar vías oficiales; la app usuario aplica la jerarquía y la validación común de §6 en tiempo real (reporte 04).
 7. Viña incendio forestal y campus incendio estructural (dibujado por el operador).
 
 **Último, si alcanza** (en este orden): botón "Necesito ayuda" + ver solicitudes en el operador (§8) · aprobar rutas sugeridas · zona 3.
@@ -224,6 +224,8 @@ Publicado en https://julianureta7-collab.github.io/mapa-evacuacion/
 - ✅ §10 punto 3: Supabase conectado (`js/nube.js`, `supabase/esquema.sql`) y **app operador** en `app/operador/` (login, enviar y cancelar alertas, historial). URL: `/mapa-evacuacion/operador/`.
 - ✅ §10 punto 4 (base): modo emergencia en la app usuario (`js/alertas.js`): tiempo real + consulta cada 15 s, decisión local por los dos puntos, banner con SIMULACRO, desplegables bloqueados, la ruta sale de la ubicación real si está en la zona, vencimiento automático.
 - ⏳ Pendiente del punto 4: validar la ruta contra las áreas de peligro de **todas** las alertas activas de la zona (hoy solo usa la amenaza principal).
+- ✅ §10 punto 5: panel Información (antes/durante/después) y modo precaución con fuentes oficiales.
+- ✅ §10 punto 6: dibujo del operador (`app/operador/dibujo.js`, Leaflet-Geoman MIT) y jerarquía operador → oficial → sugerida → precaución en la app usuario (`js/capasOperador.js`, `js/ruta.js`).
 - ⏳ Todo lo demás de §10.
 
 Reportes para el informe del equipo: `docs/reportes/` (uno por hito).

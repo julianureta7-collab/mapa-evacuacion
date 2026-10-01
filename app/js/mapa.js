@@ -1,5 +1,5 @@
 // Mapa Leaflet: fondo OSM y capas de la zona × amenaza actual.
-import { estiloDe } from './catalogo.js?v=13';
+import { estiloDe } from './catalogo.js?v=14';
 
 let mapa, controlCapas, grupoCapas;
 let capasDibujadas = [];        // [{ def, capa }]
@@ -36,6 +36,13 @@ function popupDe(nombreCapa, props) {
   if (props.sector) filas.push(`Sector: ${props.sector}`);
   if (props.nom_com || props.comuna) filas.push(`Comuna: ${props.nom_com || props.comuna}`);
   if (props.name && titulo !== props.name) filas.push(`Código: ${props.name}`);
+  if (props._procedencia === 'operador') {
+    const e = (t) => String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const cuando = props.creado ? new Date(props.creado).toLocaleString('es-CL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
+    return `<div class="popup-titulo">${e(props.nombre || nombreCapa)}</div><div>${e(nombreCapa)}</div>`
+      + `<div>Motivo: ${e(props.motivo)}</div><div>Fuente: ${e(props.fuente_texto)}</div>`
+      + `<div class="popup-fuente">Marcado por ${e(props.autor)} · ${cuando}${props.vigente_hasta ? ` · vigente hasta ${new Date(props.vigente_hasta).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}` : ''}</div>`;
+  }
   const f = props._fuente;
   const origen = f ? `Fuente: ${f.organismo}${f.nombre ? ` — ${f.nombre}` : ''}` : '';
   return `<div class="popup-titulo">${titulo}</div><div>${nombreCapa}</div>${filas.map(x => `<div>${x}</div>`).join('')}${origen ? `<div class="popup-fuente">${origen}</div>` : ''}`;
@@ -43,7 +50,7 @@ function popupDe(nombreCapa, props) {
 
 // En emergencia el mapa muestra solo lo esencial: área de peligro y puntos de encuentro
 // (la ruta personal se dibuja aparte). En informativo, lo que diga el catálogo (visible).
-const ROLES_EMERGENCIA = ['area_peligro', 'punto_encuentro'];
+const ROLES_EMERGENCIA = ['area_peligro', 'punto_encuentro', 'bloqueo'];
 function aplicarVisibilidad() {
   for (const { def, capa } of capasDibujadas) {
     const ver = modoEmergenciaMapa ? ROLES_EMERGENCIA.includes(def.rol) : def.visible;
@@ -80,7 +87,7 @@ export function mostrarCapas(capas) {
     controlCapas.addOverlay(capa, def.nombre);
     capasDibujadas.push({ def, capa });
     const org = geo.features[0]?.properties?._fuente?.organismo;
-    if (org) organismos.add(org);
+    if (org && !def.operador) organismos.add(org);   // la atribución es solo para fuentes oficiales
   }
   aplicarVisibilidad();
   if (organismos.size) {

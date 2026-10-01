@@ -35,3 +35,35 @@ button.cancelar { background: #fff; color: var(--peligro); border: 2px solid var
 .etiqueta.sim { background: #ffeb3b; }
 .etiqueta.real { background: var(--peligro); color: #fff; }
 .vacio { color: var(--tenue); font-size: 14px; }
+
+/* Dibujo en el mapa */
+.dibujo { margin-top: 20px; }
+.dibujo-barra { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+.dibujo-barra label { margin-bottom: 0; min-width: 170px; }
+.herramientas { display: flex; gap: 6px; flex-wrap: wrap; }
+.herr { background: #fff; color: var(--texto); border: 2px solid var(--borde); padding: 8px 12px; font-size: 14px; display: inline-flex; align-items: center; gap: 6px; }
+.herr.activa { border-color: var(--marca); background: #e3ecf5; }
+.herr.secundaria { color: var(--peligro); }
+.ico { display: inline-block; width: 16px; height: 16px; border-radius: 3px; }
+.ico-ruta { background: #0d47a1; height: 5px; border-radius: 3px; }
+.ico-punto { background: #00897b; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px #00897b; width: 12px; height: 12px; }
+.ico-area { background: rgba(229,57,53,.35); border: 2px dashed #c62828; }
+.ico-bloqueo { height: 5px; background: repeating-linear-gradient(90deg, #b00020 0 3px, transparent 3px 7px); }
+.ayuda-dibujo { font-size: 13px; color: var(--tenue); margin: 10px 0; min-height: 18px; }
+.dibujo-cuerpo { display: grid; grid-template-columns: 1fr 320px; gap: 16px; }
+@media (max-width: 900px) { .dibujo-cuerpo { grid-template-columns: 1fr; } }
+#mapa-operador { height: 560px; border-radius: 10px; border: 1px solid var(--borde); }
+.dibujo-lateral h3 { margin-top: 4px; }
+.form-elemento { background: #f6f9fc; border: 2px solid var(--marca); border-radius: 10px; padding: 12px; margin-bottom: 14px; }
+.form-elemento h3 { margin: 0 0 10px; color: var(--marca); text-transform: none; letter-spacing: 0; font-size: 15px; }
+.req { color: var(--peligro); }
+.fila-botones { display: flex; gap: 8px; }
+.fila-botones button { flex: 1; }
+button.secundario-oscuro { background: #fff; color: var(--marca); border: 1px solid var(--marca); }
+.elementos li { border-left-width: 5px; font-size: 13px; }
+.elementos li.rol-ruta { border-left-color: #0d47a1; }
+.elementos li.rol-punto_encuentro { border-left-color: #00897b; }
+.elementos li.rol-area_peligro { border-left-color: #c62828; }
+.elementos li.rol-bloqueo { border-left-color: #b00020; }
+.elementos li.desact { border-left-color: #6b7b8c; }
+.elementos button { padding: 4px 8px; font-size: 12px; }
