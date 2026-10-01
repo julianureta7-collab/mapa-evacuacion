@@ -2,13 +2,14 @@
 // Zonas × amenazas desde data/catalogo.json (spec §3). El pin decide la zona (spec §5.1):
 // al elegir una zona en el desplegable el pin va a su centro, y al arrastrar el pin a otra zona
 // la app cambia de zona sola.
-import { cargarCatalogo, zonas, zona as zonaPorId, amenazasDe, amenazaInfo, fuente, estiloDe, zonaEn } from './catalogo.js?v=6';
-import { cargarCapas } from './datos.js?v=6';
-import { crearMapa, mostrarCapas, centrarEn, dibujarRuta, limpiarRuta } from './mapa.js?v=6';
-import { prepararRutas, calcularRuta, nombreDestino, nombreVia, organismoDe, rumboATexto } from './ruta.js?v=6';
-import { prepararAreas, diagnosticar, textosDiagnostico } from './diagnostico.js?v=6';
-import { iniciarPosicion, modoSimulacion, modoGPS, ubicarPin, setLinterna, posicionActual } from './posicion.js?v=6';
-import { crearControlBrujula } from './brujula.js?v=6';
+import { cargarCatalogo, zonas, zona as zonaPorId, amenazasDe, amenazaInfo, fuente, estiloDe, zonaEn } from './catalogo.js?v=7';
+import { cargarCapas } from './datos.js?v=7';
+import { crearMapa, mostrarCapas, centrarEn, dibujarRuta, limpiarRuta } from './mapa.js?v=7';
+import { prepararRutas, calcularRuta, nombreDestino, nombreVia, organismoDe, rumboATexto } from './ruta.js?v=7';
+import { prepararAreas, diagnosticar, textosDiagnostico } from './diagnostico.js?v=7';
+import { iniciarPosicion, iniciarGPSSiHayPermiso, modoSimulacion, modoGPS, ubicarPin, setLinterna, posicionActual, ubicacionReal } from './posicion.js?v=7';
+import { escucharAlertas } from './alertas.js?v=7';
+import { crearControlBrujula } from './brujula.js?v=7';
 
 const $ = (id) => document.getElementById(id);
 let mapa = null;
@@ -69,7 +70,7 @@ function llenarSelectorAmenazas() {
   const sel = $('selector-amenaza');
   const lista = zonaActual ? amenazasDe(zonaActual) : [];
   sel.innerHTML = lista.map(a => `<option value="${a.id}">${a.nombre}</option>`).join('');
-  sel.disabled = lista.length === 0;
+  sel.disabled = lista.length === 0 || !!emergencia;   // fijo durante una emergencia
 }
 
 // Cambia la zona activa. moverPin=true cuando viene del desplegable (el pin va al centro).
@@ -264,10 +265,12 @@ async function alCambiarPosicion(latlng, precision, arrastrando) {
   if (latlng) {
     const z = zonaEn([latlng.lng, latlng.lat]);
     if ((z?.id || null) !== (zonaActual?.id || null)) {
-      await activarZona(z?.id || null);   // activarZona recalcula diagnóstico y ruta
+      await activarZona(z?.id || null, { amenazaId: emergencia?.zona === z?.id ? emergencia.amenaza : null });
+      evaluarAlertas();
       return;
     }
   }
+  evaluarAlertas();
   const r = mostrarDiagnostico(latlng, precision);
   if (latlng) actualizarRuta(latlng, r.estado, precision == null);  // pin: siempre; GPS: si te moviste
   else ocultarRuta();
@@ -281,7 +284,81 @@ function marcarModo(m) {
 function seleccionarModo(m) {
   marcarModo(m);
   if (m === 'simulacion') modoSimulacion(zonaActual?.centro || zonas()[0].centro);
-  else modoGPS((msg) => { error(msg); seleccionarModo('simulacion'); });
+  else modoGPS((msg, codigo) => { error(msg); if (codigo === 1) seleccionarModo('simulacion'); });
+}
+
+// ---------------------------------------------------------------- Alertas y modo emergencia (spec §5.1, §5.3)
+
+let alertasActivas = [];
+let emergencia = null;          // alerta principal que se está mostrando
+
+function zonaContiene(zonaId, latlng) {
+  const z = zonaPorId(zonaId);
+  return !!(z?.cobertura && latlng && turf.booleanPointInPolygon([latlng.lng, latlng.lat], z.cobertura));
+}
+
+// Decide localmente qué alertas aplican: las de las zonas donde está la ubicación real O el pin.
+function evaluarAlertas() {
+  const pinLL = posicionActual();
+  const realLL = ubicacionReal()?.latlng || null;
+  const aplican = alertasActivas
+    .map(a => ({ a, porReal: zonaContiene(a.zona, realLL), porPin: zonaContiene(a.zona, pinLL) }))
+    .filter(x => x.porReal || x.porPin)
+    // Manda la de la ubicación real (ahí corre peligro la persona); luego la más reciente
+    .sort((x, y) => (y.porReal - x.porReal) || (new Date(y.a.creada) - new Date(x.a.creada)));
+  const principal = aplican[0] || null;
+  dibujarBanner(principal, aplican.slice(1));
+  if (!principal) { if (emergencia) salirEmergencia(); return; }
+  if (emergencia?.id !== principal.a.id) entrarEmergencia(principal);
+}
+
+async function entrarEmergencia({ a, porReal }) {
+  emergencia = a;
+  document.body.classList.add('modo-emergencia');
+  $('selector-zona').disabled = true;
+  $('selector-amenaza').disabled = true;
+  rutaYaMostrada = false;
+  const z = zonaPorId(a.zona);
+  await activarZona(a.zona, { amenazaId: a.amenaza, moverPin: false });
+  $('selector-amenaza').disabled = true;           // activarZona lo rehabilita al llenarlo
+  if (porReal) seleccionarModo('gps');              // la ruta sale de la ubicación real
+  else if (z) centrarEn(posicionActual() || z.centro, Math.max(mapa.getZoom(), z.zoom));
+}
+
+function salirEmergencia() {
+  emergencia = null;
+  document.body.classList.remove('modo-emergencia');
+  $('selector-zona').disabled = false;
+  llenarSelectorAmenazas();
+  if (amenazaActual) $('selector-amenaza').value = amenazaActual.id;
+  refrescarDiagnostico();
+}
+
+function dibujarBanner(principal, otras) {
+  const el = $('banner-alerta');
+  if (!principal) { el.hidden = true; el.innerHTML = ''; return; }
+  const a = principal.a;
+  const am = amenazaInfo(a.amenaza);
+  const z = zonaPorId(a.zona);
+  const hasta = new Date(a.vigente_hasta).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
+  el.hidden = false;
+  el.innerHTML = `
+    <div class="banner-fila">
+      ${a.simulacro ? '<span class="etiqueta-simulacro">SIMULACRO</span>' : ''}
+      <strong>Alerta de ${am.nombre.toLowerCase()} · ${z?.nombre || a.zona}</strong>
+    </div>
+    ${a.mensaje ? `<div class="banner-mensaje">${escaparHTML(a.mensaje)}</div>` : ''}
+    <div class="banner-pie">Emitida por el operador · vigente hasta las ${hasta}${principal.porReal ? ' · aplica a tu ubicación actual' : ''}</div>
+    ${otras.map(o => `<div class="banner-otra">También: alerta de ${amenazaInfo(o.a.amenaza).nombre.toLowerCase()} en ${zonaPorId(o.a.zona)?.nombre || o.a.zona}${o.porReal ? ' (tu ubicación)' : ' (zona que estás mirando)'}</div>`).join('')}`;
+}
+
+const escaparHTML = (t) => t.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+function mostrarEstadoAlertas(estado) {
+  const textos = { ok: 'Conectado al sistema de alertas', error: 'Sin conexión al sistema de alertas (reintentando)', sin_configurar: 'Sistema de alertas no configurado' };
+  const el = $('estado-alertas');
+  el.textContent = textos[estado] || '';
+  el.className = `estado-alertas ${estado}`;
 }
 
 // ---------------------------------------------------------------- Inicio
@@ -294,7 +371,11 @@ async function iniciar() {
     error(`No se pudo cargar el catálogo de zonas: ${e.message}`);
     return;
   }
-  iniciarPosicion(mapa, alCambiarPosicion);
+  iniciarPosicion(mapa, {
+    onPin: alCambiarPosicion,
+    onReal: () => evaluarAlertas(),
+    onErrorGPS: (msg, codigo) => { if (codigo === 1) error(msg); },
+  });
   crearControlBrujula(mapa, {
     onRumbo: (rumbo, bearing) => setLinterna(rumbo, bearing),
     onError: (msg) => error(msg),
@@ -304,9 +385,14 @@ async function iniciar() {
   $('btn-gps').addEventListener('click', () => seleccionarModo('gps'));
   $('diagnostico').hidden = false;   // el panel (modos, estado, ruta) siempre visible
   llenarSelectorZonas();
-  $('selector-zona').addEventListener('change', (e) => activarZona(e.target.value, { moverPin: true }));
+  $('selector-zona').addEventListener('change', (e) => { if (!emergencia) activarZona(e.target.value, { moverPin: true }); });
   $('selector-amenaza').addEventListener('change', (e) => activarAmenaza(e.target.value));
   await activarZona(zonas()[0].id, { moverPin: true });
+  iniciarGPSSiHayPermiso();          // ubicación real en segundo plano si ya había permiso
+  escucharAlertas({
+    onCambio: (lista) => { alertasActivas = lista; evaluarAlertas(); },
+    onEstado: mostrarEstadoAlertas,
+  });
 }
 
 iniciar();

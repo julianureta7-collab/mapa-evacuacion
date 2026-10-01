@@ -16,7 +16,7 @@
 //     dentro del área); a igualdad, la más corta en tiempo.
 //  5. Si ORS falla (sin clave, sin red, límite 429): dirección en línea recta al más cercano.
 
-import { ORS_API_KEY } from './claves.js?v=6';
+import { ORS_API_KEY } from './claves.js?v=7';
 
 const ORS_URL = 'https://api.openrouteservice.org/v2/directions/foot-walking/geojson';
 const RADIO_CANDIDATOS_M = 3000;

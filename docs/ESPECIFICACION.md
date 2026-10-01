@@ -155,7 +155,7 @@ Mientras el operador todavía no dibuja nada, los niveles 2 y 3 cubren usando in
 ## 9. Arquitectura
 
 ```
-App usuario (GitHub Pages) ──realtime──▶ Supabase ◀──realtime/escritura── App operador (login)
+App usuario (app/, GitHub Pages) ──realtime──▶ Supabase ◀──realtime/escritura── App operador (app/operador/, login)
        │                                   │
        ├── capas oficiales estáticas (app/data, precargadas)
        └── ORS (rutas sugeridas y acercamientos)
@@ -178,8 +178,8 @@ App usuario (GitHub Pages) ──realtime──▶ Supabase ◀──realtime/es
 **Imprescindible** (en este orden):
 
 1. ✅ Reestructurar a **zonas × amenazas** con catálogo y procedencia.
-2. Dos puntos (ubicación real siempre activa si hay permiso + pin de referencia) que deciden zona y alerta (§5.1), con los desplegables de zona y amenaza.
-3. Supabase + app operador básica: login, **enviar y cancelar alertas** por zona × amenaza.
+2. ✅ Dos puntos (ubicación real siempre activa si hay permiso + pin de referencia) que deciden zona y alerta (§5.1), con los desplegables de zona y amenaza.
+3. ✅ Supabase + app operador básica: login, **enviar y cancelar alertas** por zona × amenaza.
 4. Modo emergencia en la app usuario (banner, ruta primaria, simulacro, vencimiento).
 5. Panel "Información" y modo precaución, con contenido oficial por amenaza.
 6. Operador: dibujar rutas, áreas de peligro, puntos y bloqueos, con motivo, fuente y vigencia; aplicar en la app usuario la jerarquía y la validación común de §6.
@@ -213,6 +213,10 @@ Publicado en https://julianureta7-collab.github.io/mapa-evacuacion/
 - ✅ Brújula (norte arriba / brújula) con efecto linterna.
 - ✅ Motor de rutas: vía oficial → ORS sugerida → línea recta. En Viña, 77 % de los puntos del área obtienen ruta por vía oficial.
 - ✅ §10 punto 1: catálogo zonas × amenazas (`app/data/catalogo.json`), capas por rol con procedencia, desplegables de zona y amenaza, el pin decide la zona (y "fuera de cobertura"). Viña (tsunami, incendio forestal sin capa aún) y Campus (incendio estructural sin capa aún).
+- ✅ §10 punto 2: modelo de dos puntos (`js/posicion.js`): el GPS sigue activo si hay permiso aunque se use el pin; la ubicación real se dibuja como un punto azul.
+- ✅ §10 punto 3: Supabase conectado (`js/nube.js`, `supabase/esquema.sql`) y **app operador** en `app/operador/` (login, enviar y cancelar alertas, historial). URL: `/mapa-evacuacion/operador/`.
+- ✅ §10 punto 4 (base): modo emergencia en la app usuario (`js/alertas.js`): tiempo real + consulta cada 15 s, decisión local por los dos puntos, banner con SIMULACRO, desplegables bloqueados, la ruta sale de la ubicación real si está en la zona, vencimiento automático.
+- ⏳ Pendiente del punto 4: validar la ruta contra las áreas de peligro de **todas** las alertas activas de la zona (hoy solo usa la amenaza principal).
 - ⏳ Todo lo demás de §10.
 
 Reportes para el informe del equipo: `docs/reportes/` (uno por hito).

@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Operador · Mapa de Evacuación</title>
+  <link rel="stylesheet" href="operador.css?v=7">
+</head>
+<body>
+  <header class="cabecera">
+    <h1>Mapa de Evacuación · <span>Operador</span></h1>
+    <div id="sesion" class="sesion" hidden>
+      <span id="usuario"></span>
+      <button type="button" id="btn-salir" class="secundario">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Login -->
+    <section id="vista-login" class="tarjeta login" hidden>
+      <h2>Ingreso de operadores</h2>
+      <p class="nota">Solo cuentas autorizadas. Cada acción queda registrada con tu nombre.</p>
+      <form id="form-login">
+        <label>Correo <input type="email" id="login-correo" required autocomplete="username"></label>
+        <label>Contraseña <input type="password" id="login-clave" required autocomplete="current-password"></label>
+        <button type="submit" id="btn-entrar">Entrar</button>
+        <p class="error" id="login-error" hidden></p>
+      </form>
+    </section>
+
+    <!-- Panel -->
+    <section id="vista-panel" hidden>
+      <div class="columnas">
+        <section class="tarjeta">
+          <h2>Enviar alerta</h2>
+          <form id="form-alerta">
+            <label>Zona <select id="alerta-zona" required></select></label>
+            <label>Amenaza <select id="alerta-amenaza" required></select></label>
+            <label>Mensaje para la población
+              <textarea id="alerta-mensaje" rows="3" maxlength="280" placeholder="Ej.: Evacúe de inmediato hacia su punto de encuentro."></textarea>
+            </label>
+            <div class="fila">
+              <label class="check"><input type="checkbox" id="alerta-simulacro" checked> Es un simulacro</label>
+              <label>Vigencia
+                <select id="alerta-vigencia">
+                  <option value="30">30 minutos</option>
+                  <option value="60">1 hora</option>
+                  <option value="120" selected>2 horas</option>
+                  <option value="240">4 horas</option>
+                </select>
+              </label>
+            </div>
+            <p class="aviso-real" id="aviso-real" hidden>⚠️ Alerta REAL (no simulacro). Las personas en la zona la verán sin la marca de simulacro.</p>
+            <button type="submit" class="peligro" id="btn-enviar">Activar alerta</button>
+            <p class="error" id="alerta-error" hidden></p>
+          </form>
+        </section>
+
+        <section class="tarjeta">
+          <h2>Alertas activas <span class="contador" id="contador-activas">0</span></h2>
+          <ul class="lista" id="lista-activas"></ul>
+          <p class="vacio" id="sin-activas">No hay alertas activas.</p>
+          <h3>Historial reciente</h3>
+          <ul class="lista historial" id="lista-historial"></ul>
+          <p class="nota" id="estado-conexion"></p>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <script src="../vendor/supabase.js"></script>
+  <script type="module" src="operador.js?v=7"></script>
+</body>
+</html>

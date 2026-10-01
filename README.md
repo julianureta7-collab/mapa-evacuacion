@@ -34,8 +34,8 @@ app/                  la app pública (se publica tal cual en GitHub Pages)
   js/posicion.js      pin de simulación, GPS y linterna
   js/brujula.js       brújula: rota el mapa según hacia dónde mira el teléfono
   data/<zona>/<amenaza>/  GeoJSON + metadata.json (generados por el script)
+  operador/           app operador (login, alertas) → /operador/
   vendor/             Leaflet 1.9.4, Turf 7.4 y leaflet-rotate 0.2.8 (GPL-3.0) copiados localmente
-panel/                app operador: alertas y dibujo de rutas (por crear)
 scripts/
   descargar_capas.mjs descarga desde el FeatureServer de SENAPRED
   servidor.mjs        servidor estático de desarrollo

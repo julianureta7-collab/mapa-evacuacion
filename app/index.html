@@ -6,10 +6,12 @@
   <meta name="theme-color" content="#12324a">
   <title>Mapa de Evacuación</title>
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
-  <link rel="stylesheet" href="css/estilos.css?v=6">
+  <link rel="stylesheet" href="css/estilos.css?v=7">
 </head>
 <body>
   <div class="aviso-simulacro" id="aviso-simulacro">PROTOTIPO · SIMULACRO · No reemplaza las instrucciones de la autoridad</div>
+
+  <div class="banner-alerta" id="banner-alerta" role="alert" hidden></div>
 
   <header class="cabecera">
     <div class="titulo">
@@ -41,6 +43,7 @@
       <p id="ficha-texto"></p>
       <ul class="leyenda" id="leyenda"></ul>
       <p class="fuente" id="fuente"></p>
+      <p class="estado-alertas" id="estado-alertas"></p>
     </section>
   </main>
 
@@ -48,7 +51,8 @@
 
   <script src="vendor/leaflet/leaflet.js"></script>
   <script src="vendor/leaflet-rotate.js"></script>
+  <script src="vendor/supabase.js"></script>
   <script src="vendor/turf.min.js"></script>
-  <script type="module" src="js/main.js?v=6"></script>
+  <script type="module" src="js/main.js?v=7"></script>
 </body>
 </html>
