@@ -20,6 +20,10 @@
 - Al terminar un hito, escribe `docs/reportes/NN-tema.md` (qué se hizo, capturas, decisiones, limitaciones). El equipo lo usa para su informe.
 - Si se toma una decisión nueva con Julián, **actualiza `docs/ESPECIFICACION.md`** en el mismo cambio.
 
+## Servicios externos
+- **OpenRouteService:** usar `https://api.heigit.org/openrouteservice/v2/...` con la clave en el encabezado `Authorization`. `api.openrouteservice.org` está apagado desde el 28-sep-2026 (responde 403 sin cabeceras CORS: en el navegador se ve como "error de CORS").
+- **Supabase:** URL y clave publicable en `app/js/claves.js`; esquema en `supabase/esquema.sql`.
+
 ## Comandos
 
 - `node scripts/descargar_capas.mjs`: descarga las capas SENAPRED (necesita red hacia ArcGIS).

@@ -1,5 +1,5 @@
 // Mapa Leaflet: fondo OSM y capas de la zona × amenaza actual.
-import { estiloDe } from './catalogo.js?v=10';
+import { estiloDe } from './catalogo.js?v=12';
 
 let mapa, controlCapas, grupoCapas;
 let capasDibujadas = [];        // [{ def, capa }]

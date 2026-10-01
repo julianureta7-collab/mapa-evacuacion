@@ -2,7 +2,7 @@
 // qué amenazas tiene cada una y qué capas oficiales las describen" vive en data/catalogo.json.
 // El resto del código trabaja con roles genéricos y nunca pregunta por una zona por su nombre.
 
-import { cargarJSON } from './datos.js?v=10';
+import { cargarJSON } from './datos.js?v=12';
 
 export const ROLES = ['area_peligro', 'ruta', 'punto_encuentro', 'referencia', 'bloqueo'];
 
@@ -10,7 +10,7 @@ let cat = null;
 
 // base: ruta hasta la carpeta app/ ('' desde la app usuario, '../' desde la app operador)
 export async function cargarCatalogo(base = '') {
-  cat = await cargarJSON(`${base}data/catalogo.json?v=10`);   // subir junto con los ?v= de los scripts
+  cat = await cargarJSON(`${base}data/catalogo.json?v=12`);   // subir junto con los ?v= de los scripts
   return cat;
 }
 

@@ -16,9 +16,12 @@
 //     dentro del área); a igualdad, la más corta en tiempo.
 //  5. Si ORS falla (sin clave, sin red, límite 429): dirección en línea recta al más cercano.
 
-import { ORS_API_KEY } from './claves.js?v=10';
+import { ORS_API_KEY } from './claves.js?v=12';
 
-const ORS_URL = 'https://api.openrouteservice.org/v2/directions/foot-walking/geojson';
+// HeiGIT apagó api.openrouteservice.org el 28-sep-2026 (desde el 27-ago solo daba 10 % de cuota y luego 403).
+// Dirección vigente: api.heigit.org/<servicio>/<versión>/… con la MISMA clave, enviada en el encabezado Authorization.
+// https://ask.openrouteservice.org/t/deprecating-api-openrouteservice-org-in-favour-of-api-heigit-org/7912
+const ORS_URL = 'https://api.heigit.org/openrouteservice/v2/directions/foot-walking/geojson';
 const RADIO_CANDIDATOS_M = 3000;
 const MAX_CANDIDATOS = 3;
 const TOLERANCIA_VIA_M = 20;     // un tramo "sigue la vía oficial" si está a menos de esto
@@ -218,12 +221,23 @@ const MOTIVOS_ORS = {
 
 async function pedirRutaORS(origen, destino, signal) {
   if (Date.now() < pausaHasta) throw Object.assign(new Error(ultimoErrorORS?.motivo || 'servicio de rutas en pausa'), { codigo: ultimoErrorORS?.codigo || 0 });
-  const resp = await fetch(ORS_URL, {
-    method: 'POST',
-    signal,
-    headers: { 'Authorization': ORS_API_KEY, 'Content-Type': 'application/json', 'Accept': 'application/geo+json' },
-    body: JSON.stringify({ coordinates: [origen, destino], instructions: true, language: 'es', units: 'm' }),
-  });
+  let resp;
+  try {
+    resp = await fetch(ORS_URL, {
+      method: 'POST',
+      signal,
+      headers: { 'Authorization': ORS_API_KEY, 'Content-Type': 'application/json', 'Accept': 'application/geo+json' },
+      body: JSON.stringify({ coordinates: [origen, destino], instructions: true, language: 'es', units: 'm' }),
+    });
+  } catch (e) {
+    if (e.name === 'AbortError') throw e;
+    // Cuando ORS rechaza la clave (403) o la cuota, su respuesta NO trae cabeceras CORS:
+    // el navegador la bloquea y aquí solo llega un "Failed to fetch". Se trata igual que un rechazo.
+    ultimoErrorORS = { codigo: 0, motivo: 'el servicio de rutas no respondió (clave rechazada, cuota agotada o sin internet)', cuando: new Date() };
+    console.warn('[rutas] OpenRouteService no respondió o bloqueó la consulta (revisar clave y cuota):', e.message);
+    pausaHasta = Date.now() + PAUSA_TRAS_RECHAZO_MS;
+    throw Object.assign(new Error(ultimoErrorORS.motivo), { codigo: 0 });
+  }
   if (!resp.ok) {
     let detalle = '';
     try { const j = await resp.json(); detalle = j?.error?.message || j?.error || ''; } catch { /* sin cuerpo */ }
@@ -301,7 +315,7 @@ export async function calcularRuta(origen, { signal } = {}) {
           const f = await pedirRutaORS(origen, c.punto.geometry.coordinates, signal);
           const analisis = analizarRuta(f.geometry.coordinates);
           return { ...c, ruta: f, analisis, resumen: f.properties.summary || {} };
-        } catch (e) { if (e.name === 'AbortError' || [401, 403, 429].includes(e.codigo)) throw e; return null; }
+        } catch (e) { if (e.name === 'AbortError' || [0, 401, 403, 429].includes(e.codigo)) throw e; return null; }
       }));
       const validas = rutas.filter(r => r && r.analisis.reentradas === 0);
       if (validas.length) {
