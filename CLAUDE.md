@@ -1,6 +1,6 @@
 # Contexto para Claude (Cowork o Claude Code)
 
-**Lee primero `docs/ESPECIFICACION.md`.** Es la fuente única de verdad: visión, decisiones acordadas, prioridades y pendientes. Este archivo solo explica cómo trabajar en el repo.
+**Lee primero `docs/ESPECIFICACION.md`.** Para el motor de rutas, lee también `docs/PLAN_RUTAS.md` (plan v3, pendiente de aprobación/implementación). Es la fuente única de verdad: visión, decisiones acordadas, prioridades y pendientes. Este archivo solo explica cómo trabajar en el repo.
 
 - Usuario: Julián (julianureta7-collab en GitHub). Equipo de 5, curso UC.
 - **Hito: viernes 2-oct-2026**, versión para testear con entrevistados (spec §1 y §10).
@@ -16,7 +16,7 @@
 - La ubicación del usuario **solo sale del teléfono con el botón "Necesito ayuda"**.
 - Usa "área de peligro" para el polígono de una amenaza y "zona" solo para el territorio cubierto (spec §3).
 - El banner de SIMULACRO y el aviso "no reemplaza a la autoridad" no se quitan.
-- **Caché de GitHub Pages (max-age 600):** al cambiar JS o CSS, sube el número `?v=N` en `app/index.html` **y** en todos los `import` de `app/js/*.js` (busca `?v=`).
+- **Caché de GitHub Pages (max-age 600):** al cambiar JS o CSS, sube el número `?v=N` en `app/index.html`, `app/operador/`, en todos los `import` de `app/js/*.js` **y** en la carga de `catalogo.json` (`js/catalogo.js`). Busca `?v=`.
 - Al terminar un hito, escribe `docs/reportes/NN-tema.md` (qué se hizo, capturas, decisiones, limitaciones). El equipo lo usa para su informe.
 - Si se toma una decisión nueva con Julián, **actualiza `docs/ESPECIFICACION.md`** en el mismo cambio.
 

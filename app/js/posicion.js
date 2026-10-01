@@ -50,8 +50,10 @@ function moverPin(latlng, precision) {
   if (!pin) {
     pin = L.marker(latlng, {
       icon: ICONO, draggable: modo === 'simulacion' && !bloqueado, title: 'Tu posición', zIndexOffset: 1000,
-      // Al acercar el dedo al borde el mapa se desplaza, pero despacio (el valor por defecto es muy rápido en celular)
-      autoPan: true, autoPanPadding: L.point(24, 24), autoPanSpeed: 4,
+      // SIN desplazamiento automático en los bordes: con leaflet-rotate calcula mal la posición y el
+      // pin "se teletransporta" o el mapa se dispara. Para ir más lejos: soltar, mover el mapa, volver a arrastrar
+      // (o tocar el mapa donde se quiere el pin).
+      autoPan: false,
     }).addTo(mapa);
     pin.on('dragstart', () => { arrastrandoPin = true; });
     pin.on('drag', () => alCambiarPin(pin.getLatLng(), null, true));

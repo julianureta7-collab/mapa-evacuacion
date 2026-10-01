@@ -1,6 +1,6 @@
 // Conexión a Supabase, compartida por la app usuario y la app operador.
 // Requiere vendor/supabase.js cargado antes (define el global `supabase`).
-import { SUPABASE_URL, SUPABASE_KEY } from './claves.js?v=8';
+import { SUPABASE_URL, SUPABASE_KEY } from './claves.js?v=9';
 
 export const nube = (window.supabase && SUPABASE_URL && SUPABASE_KEY)
   ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
