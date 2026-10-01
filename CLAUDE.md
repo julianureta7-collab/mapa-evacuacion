@@ -21,7 +21,7 @@
 - Si se toma una decisión nueva con Julián, **actualiza `docs/ESPECIFICACION.md`** en el mismo cambio.
 
 ## Servicios externos
-- **OpenRouteService:** usar `https://api.heigit.org/openrouteservice/v2/...` con la clave en el encabezado `Authorization`. `api.openrouteservice.org` está apagado desde el 28-sep-2026 (responde 403 sin cabeceras CORS: en el navegador se ve como "error de CORS").
+- **OpenRouteService:** la app NO tiene la clave. Pide rutas a la Edge Function `supabase/functions/rutas` (`<SUPABASE_URL>/functions/v1/rutas`), que guarda la clave como secreto `ORS_API_KEY` y valida origen, coordenadas en Chile y distancia ≤5 km. **Nunca poner claves secretas en `app/`**: todo lo que está ahí es público. La función usa `https://api.heigit.org/openrouteservice/v2/...` (`api.openrouteservice.org` se apagó el 28-sep-2026).
 - **Supabase:** URL y clave publicable en `app/js/claves.js`; esquema en `supabase/esquema.sql`.
 
 ## Comandos

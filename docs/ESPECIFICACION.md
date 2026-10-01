@@ -178,7 +178,7 @@ App usuario (app/, GitHub Pages) ──realtime──▶ Supabase ◀──realt
   - `auditoria` (quién, qué, cuándo)
 - **Seguridad (RLS):** el público solo lee `alertas`, `elementos_operador` y `desactivaciones_oficiales`, y solo inserta en `solicitudes_ayuda`. El resto requiere un operador autenticado.
 - **Respaldo:** si se cae el realtime, consulta cada 15 s.
-- **Claves en el cliente:** la de ORS y la anon de Supabase quedan visibles en el sitio. Se usan claves gratuitas, y la seguridad real la dan las reglas RLS.
+- **Claves:** en el sitio solo está la clave **publicable** de Supabase (pública por diseño; la seguridad la dan las reglas RLS). La clave de **OpenRouteService** vive únicamente como secreto de Supabase y la usa la Edge Function `rutas` (`supabase/functions/rutas/index.ts`), que además valida el origen, que las coordenadas estén en Chile y que la distancia sea ≤5 km. La clave antigua de ORS quedó en el historial público de git y debe regenerarse.
 
 ## 10. Prioridades hasta el viernes
 

@@ -2,8 +2,10 @@
 // OJO: en una app web estas claves quedan visibles para cualquiera que abra el sitio.
 // Usar solo claves gratuitas, sin tarjeta asociada. Si se abusa de una, se genera otra.
 
-// OpenRouteService — https://openrouteservice.org/dev/#/api-keys
-export const ORS_API_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImViMzU3YmE4Y2IyNDRkZTZiYWY3ZjZjZDY1MWZlNWJjIiwiaCI6Im11cm11cjY0In0=';
+// OpenRouteService: la clave YA NO va aquí (quedaría pública en el sitio).
+// Vive como secreto ORS_API_KEY en Supabase y la usa la Edge Function supabase/functions/rutas.
+// Solo para desarrollo local sin la función se puede poner una clave aquí; nunca hacer commit de ella.
+export const ORS_API_KEY = '';
 
 // Supabase (alertas y datos del operador). Esta es la clave PUBLICABLE: va en el sitio por diseño;
 // lo que protege los datos son las reglas RLS de supabase/esquema.sql.

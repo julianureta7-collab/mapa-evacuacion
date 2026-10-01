@@ -16,7 +16,7 @@
 //     dentro del área); a igualdad, la más corta en tiempo.
 //  5. Si ORS falla (sin clave, sin red, límite 429): dirección en línea recta al más cercano.
 
-import { ORS_API_KEY } from './claves.js?v=14';
+import { ORS_API_KEY, SUPABASE_URL, SUPABASE_KEY } from './claves.js?v=14';
 
 // HeiGIT apagó api.openrouteservice.org el 28-sep-2026 (desde el 27-ago solo daba 10 % de cuota y luego 403).
 // Dirección vigente: api.heigit.org/<servicio>/<versión>/… con la MISMA clave, enviada en el encabezado Authorization.
@@ -38,7 +38,11 @@ let viasOperador = [];           // rutas dibujadas por operadores (prioridad 1,
 let bloqueos = [];               // tramos bloqueados por operadores: ninguna ruta los puede cruzar
 const cache = new Map();         // origen redondeado → resultado
 
-export const hayClaveORS = () => !!ORS_API_KEY && ORS_API_KEY !== 'PEGAR_AQUI_LA_CLAVE';
+// Las rutas por calles se piden a la Edge Function "rutas" de Supabase, que guarda la clave de ORS
+// como secreto. Si en desarrollo local hay una clave en claves.js, se usa directo.
+const ORS_PROXY = SUPABASE_URL ? `${SUPABASE_URL}/functions/v1/rutas` : null;
+const usarDirecto = () => !!ORS_API_KEY && ORS_API_KEY !== 'PEGAR_AQUI_LA_CLAVE';
+export const hayClaveORS = () => usarDirecto() || !!ORS_PROXY;
 
 let nombreArea = 'área de peligro';
 
@@ -218,7 +222,10 @@ let ultimoErrorORS = null;
 export const errorORS = () => ultimoErrorORS;
 
 const MOTIVOS_ORS = {
-  401: 'el servicio de rutas rechazó la clave (cuota agotada o clave desactivada)',
+  400: 'pedido de ruta inválido',
+  404: 'falta desplegar la función "rutas" en Supabase',
+  500: 'falta configurar la clave de rutas en Supabase',
+  401: 'el servicio de rutas rechazó la clave (o la función "rutas" tiene activada la verificación JWT)',
   403: 'clave de rutas inválida',
   429: 'se alcanzó el límite de consultas de rutas por minuto',
 };
@@ -227,12 +234,17 @@ async function pedirRutaORS(origen, destino, signal) {
   if (Date.now() < pausaHasta) throw Object.assign(new Error(ultimoErrorORS?.motivo || 'servicio de rutas en pausa'), { codigo: ultimoErrorORS?.codigo || 0 });
   let resp;
   try {
-    resp = await fetch(ORS_URL, {
-      method: 'POST',
-      signal,
-      headers: { 'Authorization': ORS_API_KEY, 'Content-Type': 'application/json', 'Accept': 'application/geo+json' },
-      body: JSON.stringify({ coordinates: [origen, destino], instructions: true, language: 'es', units: 'm' }),
-    });
+    resp = usarDirecto()
+      ? await fetch(ORS_URL, {
+          method: 'POST', signal,
+          headers: { 'Authorization': ORS_API_KEY, 'Content-Type': 'application/json', 'Accept': 'application/geo+json' },
+          body: JSON.stringify({ coordinates: [origen, destino], instructions: true, language: 'es', units: 'm' }),
+        })
+      : await fetch(ORS_PROXY, {
+          method: 'POST', signal,
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+          body: JSON.stringify({ coordinates: [origen, destino] }),
+        });
   } catch (e) {
     if (e.name === 'AbortError') throw e;
     // Cuando ORS rechaza la clave (403) o la cuota, su respuesta NO trae cabeceras CORS:
