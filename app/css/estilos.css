@@ -167,8 +167,7 @@ body.modo-emergencia .ruta-info { border-width: 3px; }
 /* Modo emergencia: solo lo esencial (alerta, mapa, estado y ruta) */
 body.modo-emergencia .cabecera,
 body.modo-emergencia .modos,
-body.modo-emergencia #ficha-titulo,
-body.modo-emergencia #ficha-texto,
+body.modo-emergencia #informacion,
 body.modo-emergencia #leyenda,
 body.modo-emergencia #fuente,
 body.modo-emergencia .leaflet-control-layers,
@@ -186,3 +185,29 @@ body.modo-emergencia .ruta-aviso { font-size: 12px; }
   body.modo-emergencia #mapa { flex: 1 1 62%; }
   body.modo-emergencia .ficha { max-height: 38vh; padding: 10px 14px; }
 }
+
+
+/* Panel Información (spec §5.2) */
+.informacion { margin-bottom: 14px; }
+.info-titulo { font-size: 17px; margin: 0 0 10px; }
+.info-pestanas { display: flex; gap: 4px; background: #e8edf1; padding: 4px; border-radius: 10px; margin-bottom: 10px; }
+.info-pestanas button {
+  flex: 1; font: inherit; font-size: 14px; font-weight: 600; padding: 7px 4px; border: 0; border-radius: 7px;
+  background: transparent; color: var(--tenue); cursor: pointer;
+}
+.info-pestanas button.activa { background: #fff; color: var(--texto); box-shadow: 0 1px 3px rgba(0,0,0,.15); }
+.info-lista { margin: 0; padding-left: 20px; }
+.info-lista li { margin-bottom: 9px; line-height: 1.4; font-size: 15px; }
+.info-lista li span:first-child { display: block; }
+.info-cita { display: block; font-size: 11px; margin-top: 2px; }
+.info-cita a { color: var(--tenue); }
+.info-nota { font-size: 13px; background: #fff3cd; color: #5c4400; border-radius: 6px; padding: 6px 8px; margin: 0 0 8px; }
+.info-vacio { color: var(--tenue); font-size: 14px; }
+
+/* Modo precaución (spec §5.4) */
+.ruta-info.precaucion { border-color: #e65100; background: #fff8f0; }
+.ruta-info.precaucion .ruta-titulo { color: #b33f00; }
+.precaucion-motivo { font-size: 13px; color: #5c4400; margin-bottom: 6px; }
+.precaucion-lista { margin: 4px 0 0; padding-left: 22px; }
+.precaucion-lista li { font-size: 17px; font-weight: 600; line-height: 1.35; margin-bottom: 6px; }
+.precaucion-fuente { font-size: 11px; color: var(--tenue); margin-top: 4px; }

@@ -1,0 +1,18 @@
+{
+  "amenaza": "incendio_forestal",
+  "antes": [
+    { "texto": "Mantén los alrededores de tu vivienda despejados de vegetación y desechos que puedan quemarse.", "fuentes": ["senapred_if"] },
+    { "texto": "No hagas fogatas, asados ni quemas, ni uses herramientas que generen chispas cerca de vegetación.", "fuentes": ["senapred_if"] },
+    { "texto": "Evacúa de inmediato si el humo o el fuego avanzan hacia ti, si caen cenizas o pavesas, o si una autoridad lo indica.", "fuentes": ["conaf_senales"] },
+    { "texto": "Si ves humo o fuego en vegetación, avisa: CONAF 130, Bomberos 132, Carabineros 133.", "fuentes": ["minsal_if"] }
+  ],
+  "durante": [
+    { "texto": "Aléjate a pie del fuego y del humo: puede avanzar muy rápido.", "fuentes": ["senapred_if"] },
+    { "texto": "Cubre nariz y boca con un paño húmedo.", "fuentes": ["senapred_if", "minsal_if"] },
+    { "texto": "Sigue las instrucciones de los equipos de emergencia.", "fuentes": ["senapred_if"] }
+  ],
+  "despues": [
+    { "texto": "No vuelvas al área quemada hasta que la autoridad lo autorice: el fuego puede reactivarse.", "fuentes": ["senapred_if", "minsal_if"] },
+    { "texto": "Mantente informado por la Dirección Meteorológica de Chile y SENAPRED.", "fuentes": ["senapred_if"] }
+  ]
+}

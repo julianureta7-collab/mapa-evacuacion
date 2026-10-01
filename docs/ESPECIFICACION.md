@@ -85,7 +85,7 @@ La app maneja **dos puntos**:
 ### 5.2 Modo informativo
 
 - Mapa de la zona con las capas de la amenaza elegida en el desplegable y la leyenda.
-- **Panel "Información"** por amenaza: qué hacer antes, durante y después, con fuente oficial citada. Es lo que evalúa O3.
+- **Panel "Información"** por amenaza: pestañas Antes / Durante / Después, cada frase con su fuente oficial enlazada (`app/data/contenido/<amenaza>.json` + `fuentes.json`; agregados por zona en `info_zona` del catálogo). Es lo que evalúa O3. **"Durante" tiene máximo 3 frases cortas**: en una alerta la pantalla es casi solo el mapa.
 - Diagnóstico (dentro / cerca del límite / fuera del área de peligro), **calculado desde el pin**, con textos de preparación ("si llega una alerta…").
 - **Sin ruta personal en modo informativo:** la ruta solo aparece durante una alerta. En informativo se ven las capas oficiales (vías, puntos) como preparación.
 - Brújula con efecto linterna (hecha).
@@ -107,7 +107,7 @@ La app maneja **dos puntos**:
 
 ### 5.4 Modo precaución
 
-Cuando no existe una ruta válida (no hay ruta del operador ni oficial, y no se puede justificar una sugerida), se muestran las **instrucciones oficiales de qué hacer según la amenaza**, sin ruta, con su fuente.
+Cuando no existe una ruta válida (no hay ruta del operador ni oficial, y no se puede justificar una sugerida), se muestra la tarjeta **"Qué hacer ahora"** con las frases "durante" de la amenaza (máximo 3, letra grande) y su fuente. Implementado en `js/informacion.js` (`htmlPrecaucion`).
 
 ## 6. Jerarquía de rutas
 
@@ -188,7 +188,7 @@ App usuario (app/, GitHub Pages) ──realtime──▶ Supabase ◀──realt
 2. ✅ Dos puntos (ubicación real siempre activa si hay permiso + pin de referencia) que deciden zona y alerta (§5.1), con los desplegables de zona y amenaza.
 3. ✅ Supabase + app operador básica: login, **enviar y cancelar alertas** por zona × amenaza.
 4. Modo emergencia en la app usuario (banner, ruta primaria, simulacro, vencimiento).
-5. Panel "Información" y modo precaución, con contenido oficial por amenaza.
+5. ✅ Panel "Información" y modo precaución, con contenido oficial por amenaza (`app/data/contenido/`, reporte 03).
 6. Operador: dibujar rutas, áreas de peligro, puntos y bloqueos, con motivo, fuente y vigencia; aplicar en la app usuario la jerarquía y la validación común de §6.
 7. Viña incendio forestal y campus incendio estructural (dibujado por el operador).
 

@@ -1,0 +1,18 @@
+{
+  "amenaza": "incendio_estructural",
+  "antes": [
+    { "texto": "Revisa las instalaciones eléctricas y no sobrecargues los enchufes.", "fuentes": ["senapred_ie"] },
+    { "texto": "No acumules basura ni desechos, y no descuides la cocina ni la plancha encendidas.", "fuentes": ["senapred_ie"] },
+    { "texto": "Si sientes olor a gas: cierra la llave de paso, no enciendas fósforos ni aparatos eléctricos y ventila.", "fuentes": ["senapred_ie"] },
+    { "texto": "Conoce las salidas y el punto de encuentro de tu edificio.", "fuentes": ["uc_ingenieria"] }
+  ],
+  "durante": [
+    { "texto": "Sal de inmediato. Si hay humo, agáchate y avanza cerca del piso. No uses ascensores.", "fuentes": ["senapred_ie", "uc_ingenieria"] },
+    { "texto": "Antes de abrir una puerta, tócala con el dorso de la mano: si está caliente, no la abras.", "fuentes": ["senapred_ie"] },
+    { "texto": "Ve al punto de encuentro y no lo dejes sin avisar.", "fuentes": ["uc_ingenieria"] }
+  ],
+  "despues": [
+    { "texto": "Ya afuera, llama a Bomberos (132) o pide que alguien lo haga.", "fuentes": ["senapred_ie", "minsal_ie"] },
+    { "texto": "No vuelvas a entrar hasta que la autoridad indique que es seguro.", "fuentes": ["senapred_ie", "minsal_ie"] }
+  ]
+}

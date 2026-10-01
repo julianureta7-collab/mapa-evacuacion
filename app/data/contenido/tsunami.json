@@ -1,0 +1,19 @@
+{
+  "amenaza": "tsunami",
+  "antes": [
+    { "texto": "Revisa si vives, trabajas o estudias en un área de evacuación: en la costa, todo lo que está bajo la línea de seguridad (unos 30 m sobre el nivel del mar).", "fuentes": ["minsal_tsunami", "senapred_tsunami"] },
+    { "texto": "Identifica las vías de evacuación, los puntos de encuentro y las zonas de seguridad de tu sector. Este mapa los muestra.", "fuentes": ["senapred_tsunami"] },
+    { "texto": "Prepara un plan con tu familia, trabajo o lugar de estudio para llegar a pie a una zona segura en unos 15 minutos. Ten más de una vía: las calles pueden quedar bloqueadas.", "fuentes": ["minsal_tsunami"] },
+    { "texto": "Evacúa sin esperar la alarma si sientes un sismo que te dificulta mantenerte en pie, o si el mar se retira de forma inusual y deja ver el fondo.", "fuentes": ["senapred_tsunami", "minsal_tsunami"] },
+    { "texto": "La evacuación es a pie. Si vas en vehículo, déjalo sin bloquear las vías de evacuación.", "fuentes": ["senapred_tsunami", "minsal_tsunami"] }
+  ],
+  "durante": [
+    { "texto": "Evacúa a pie, de inmediato, hacia zona alta.", "fuentes": ["senapred_tsunami"] },
+    { "texto": "Aléjate de ríos y esteros. No los cruces.", "fuentes": ["senapred_tsunami"] },
+    { "texto": "Si no alcanzas zona alta, sube a un edificio de al menos 8 pisos.", "fuentes": ["senapred_tsunami"] }
+  ],
+  "despues": [
+    { "texto": "Regresa solo cuando las autoridades lo indiquen.", "fuentes": ["senapred_tsunami"] },
+    { "texto": "Infórmate por los canales oficiales de alertas y avisos.", "fuentes": ["senapred_tsunami"] }
+  ]
+}

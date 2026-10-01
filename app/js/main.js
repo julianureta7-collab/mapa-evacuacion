@@ -2,14 +2,15 @@
 // Zonas × amenazas desde data/catalogo.json (spec §3). El pin decide la zona (spec §5.1):
 // al elegir una zona en el desplegable el pin va a su centro, y al arrastrar el pin a otra zona
 // la app cambia de zona sola.
-import { cargarCatalogo, zonas, zona as zonaPorId, amenazasDe, amenazaInfo, fuente, estiloDe, zonaEn } from './catalogo.js?v=12';
-import { cargarCapas } from './datos.js?v=12';
-import { crearMapa, mostrarCapas, centrarEn, dibujarRuta, limpiarRuta, setModoMapa } from './mapa.js?v=12';
-import { prepararRutas, calcularRuta, nombreDestino, nombreVia, organismoDe, rumboATexto } from './ruta.js?v=12';
-import { prepararAreas, diagnosticar, textosDiagnostico } from './diagnostico.js?v=12';
-import { iniciarPosicion, iniciarGPSSiHayPermiso, modoSimulacion, modoGPS, ubicarPin, setLinterna, posicionActual, ubicacionReal, pinArrastrando, bloquearPin } from './posicion.js?v=12';
-import { escucharAlertas } from './alertas.js?v=12';
-import { crearControlBrujula } from './brujula.js?v=12';
+import { cargarCatalogo, zonas, zona as zonaPorId, amenazasDe, amenazaInfo, fuente, estiloDe, zonaEn } from './catalogo.js?v=13';
+import { cargarCapas } from './datos.js?v=13';
+import { crearMapa, mostrarCapas, centrarEn, dibujarRuta, limpiarRuta, setModoMapa } from './mapa.js?v=13';
+import { prepararRutas, calcularRuta, nombreDestino, nombreVia, organismoDe, rumboATexto } from './ruta.js?v=13';
+import { prepararAreas, diagnosticar, textosDiagnostico } from './diagnostico.js?v=13';
+import { iniciarPosicion, iniciarGPSSiHayPermiso, modoSimulacion, modoGPS, ubicarPin, setLinterna, posicionActual, ubicacionReal, pinArrastrando, bloquearPin } from './posicion.js?v=13';
+import { escucharAlertas } from './alertas.js?v=13';
+import { cargarContenido, dibujarInformacion as pintarInformacion, htmlPrecaucion } from './informacion.js?v=13';
+import { crearControlBrujula } from './brujula.js?v=13';
 
 const $ = (id) => document.getElementById(id);
 let mapa = null;
@@ -53,9 +54,15 @@ function dibujarFuente(capas, metadata) {
   }).join(' ') + ' Pueden no reflejar cambios posteriores.';
 }
 
-function dibujarInformacion() {
-  $('ficha-titulo').textContent = `${amenazaActual.nombre}: qué hacer si suena la alarma`;
-  $('ficha-texto').textContent = amenazaActual.resumen || 'Información oficial para esta amenaza en preparación.';
+let contenidoActual = null;      // antes / durante / después de la amenaza actual (+ agregados de la zona)
+
+async function dibujarInformacion() {
+  const am = amenazaActual;
+  try { contenidoActual = await cargarContenido(am.contenido, am.def?.info_zona); }
+  catch { contenidoActual = null; }
+  if (amenazaActual !== am) return;     // cambió mientras cargaba
+  pintarInformacion($('informacion'), am, contenidoActual);
+  if ($('ruta-info').classList.contains('precaucion')) mostrarPrecaucion(null);
 }
 
 // ---------------------------------------------------------------- Selección de zona y amenaza
@@ -99,8 +106,8 @@ async function activarAmenaza(id, { refrescar = true } = {}) {
     prepararAreas(null); prepararRutas({});
     mostrarCapas([]); dibujarLeyenda([]);
     $('fuente').textContent = '';
-    $('ficha-titulo').textContent = 'Aún no cubrimos esta ubicación';
-    $('ficha-texto').textContent = 'Elige una zona en el desplegable o mueve el pin a una zona cubierta.';
+    contenidoActual = null;
+    $('informacion').innerHTML = '<h2 class="info-titulo">Aún no cubrimos esta ubicación</h2><p class="info-vacio">Elige una zona en el desplegable o mueve el pin a una zona cubierta.</p>';
     if (refrescar) refrescarDiagnostico();
     return;
   }
@@ -138,8 +145,9 @@ function mostrarDiagnostico(latlng, precision) {
     return { estado: 'fuera_cobertura' };
   }
   if (!hayAreaPeligro) {
-    pintarEstado('neutro', 'Sin mapa de amenaza para esta zona',
-      `No hay un mapa oficial de ${amenazaActual.nombre.toLowerCase()} para ${zonaActual.nombre}. Revisa la información de abajo.`);
+    pintarEstado('neutro', 'Sin mapa de amenaza para esta zona', emergencia
+      ? 'Sigue estas indicaciones oficiales.'
+      : `No hay un mapa oficial de ${amenazaActual.nombre.toLowerCase()} para ${zonaActual.nombre}. Revisa la información de abajo.`);
     return { estado: 'sin_mapa' };
   }
   const r = diagnosticar(latlng ? [latlng.lng, latlng.lat] : null, precision);
@@ -182,10 +190,8 @@ function mostrarInfoRuta(r) {
   const el = $('ruta-info');
   const area = amenazaActual.area;
   el.hidden = false;
-  if (r.tipo === 'sin_candidatos') {
-    el.innerHTML = `<div class="ruta-titulo">Sin punto de encuentro cercano</div><div class="ruta-aviso">${r.aviso}</div>`;
-    return;
-  }
+  el.classList.remove('precaucion');
+  if (r.tipo === 'sin_candidatos') { mostrarPrecaucion(r.aviso); return; }
   if (r.tipo === 'oficial') {
     const detalle = [];
     if (r.acercamientoM >= 10) detalle.push(`1. Camina ${fmtDist(r.acercamientoM)} hasta la vía de evacuación oficial${r.tramos[0].tipo === 'acercamiento_recto' ? ' (tramo en línea recta)' : ''}.`);
@@ -237,8 +243,19 @@ function mostrarInfoRuta(r) {
   }
 }
 
+// Modo precaución (spec §5.4): sin ruta válida, solo las indicaciones "durante" oficiales.
+function mostrarPrecaucion(motivo) {
+  limpiarRuta();
+  const el = $('ruta-info');
+  el.hidden = false;
+  el.classList.add('precaucion');
+  el.innerHTML = htmlPrecaucion(amenazaActual, contenidoActual, motivo);
+}
+
 async function actualizarRuta(latlng, estado, forzar) {
-  if (!emergencia || (estado !== 'evacuar' && estado !== 'limite')) { ocultarRuta(); return; }
+  if (!emergencia) { ocultarRuta(); return; }
+  if (estado === 'sin_mapa') { mostrarPrecaucion(null); return; }
+  if (estado !== 'evacuar' && estado !== 'limite') { ocultarRuta(); return; }
   const origen = [latlng.lng, latlng.lat];
   if (!forzar && ultimoOrigenRuta && turf.distance(ultimoOrigenRuta, origen, { units: 'meters' }) < DISTANCIA_RECALCULO_M) return;
   ultimoOrigenRuta = origen;

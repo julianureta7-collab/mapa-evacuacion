@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#12324a">
   <title>Mapa de Evacuación</title>
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
-  <link rel="stylesheet" href="css/estilos.css?v=12">
+  <link rel="stylesheet" href="css/estilos.css?v=13">
 </head>
 <body>
   <div class="aviso-simulacro" id="aviso-simulacro">PROTOTIPO · SIMULACRO · No reemplaza las instrucciones de la autoridad</div>
@@ -39,8 +39,7 @@
         </div>
         <div class="ruta-info" id="ruta-info" hidden aria-live="polite"></div>
       </div>
-      <h2 id="ficha-titulo">Qué hacer si suena la alarma</h2>
-      <p id="ficha-texto"></p>
+      <section class="informacion" id="informacion" aria-label="Información sobre la amenaza"></section>
       <ul class="leyenda" id="leyenda"></ul>
       <p class="fuente" id="fuente"></p>
       <p class="estado-alertas" id="estado-alertas"></p>
@@ -53,6 +52,6 @@
   <script src="vendor/leaflet-rotate.js"></script>
   <script src="vendor/supabase.js"></script>
   <script src="vendor/turf.min.js"></script>
-  <script type="module" src="js/main.js?v=12"></script>
+  <script type="module" src="js/main.js?v=13"></script>
 </body>
 </html>

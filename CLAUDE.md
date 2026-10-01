@@ -42,6 +42,8 @@
 | --- | --- |
 | `index.html`, `css/estilos.css` | Interfaz de la app usuario |
 | `data/catalogo.json` | **Zonas × amenazas**, fuentes, estilos por rol y capas oficiales (spec §3). Agregar zona o amenaza = editar esto |
+| `js/informacion.js` | Panel Información (pestañas) y tarjeta de modo precaución |
+| `data/contenido/` | Contenido oficial por amenaza (antes/durante/después) y `fuentes.json`. Solo fuentes oficiales, citadas |
 | `js/catalogo.js` | Lee el catálogo; `zonaEn(lngLat)` decide la zona por cobertura |
 | `js/datos.js` | Carga las capas de una zona × amenaza, agrupadas por rol y marcadas con procedencia (`_procedencia`, `_fuente`) |
 | `js/mapa.js` | Leaflet: capas, ruta, redimensionado |
@@ -59,4 +61,4 @@
 
 ## Próximo paso
 
-Spec §10, **punto 5**: panel "Información" y modo precaución con contenido oficial por amenaza; luego el punto 6 (dibujo del operador). Los puntos 1 a 4 están hechos (ver spec §12). Revisa §13 para ver qué falta del equipo (Supabase y clave ORS bloquean los puntos 3 y 6).
+Spec §10, **punto 6**: herramienta de dibujo del operador (rutas, puntos, áreas de peligro, bloqueos) y jerarquía en la app usuario. Puntos 1 a 5 hechos (ver spec §12). Candidatos de puntos de encuentro del Campus: Patio Norte y Patio Sur (reporte 03). Revisa §13 para ver qué falta del equipo (Supabase y clave ORS bloquean los puntos 3 y 6).
