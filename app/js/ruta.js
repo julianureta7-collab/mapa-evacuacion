@@ -16,7 +16,7 @@
 //     dentro del área); a igualdad, la más corta en tiempo.
 //  5. Si ORS falla (sin clave, sin red, límite 429): dirección en línea recta al más cercano.
 
-import { ORS_API_KEY } from './claves.js?v=9';
+import { ORS_API_KEY } from './claves.js?v=10';
 
 const ORS_URL = 'https://api.openrouteservice.org/v2/directions/foot-walking/geojson';
 const RADIO_CANDIDATOS_M = 3000;
@@ -170,7 +170,7 @@ async function armarOpcion(origen, op, signal) {
     distancia, duracion: distancia / VELOCIDAD_PIE,
     acercamientoM, oficialM,
     metrosDentro: analisis.metrosDentro,
-    aviso: fallo ? 'El tramo hasta la vía oficial se muestra en línea recta (sin servicio de rutas).' : null,
+    aviso: fallo ? `El tramo hasta la vía oficial se muestra en línea recta: ${ultimoErrorORS?.motivo || 'sin servicio de rutas'}.` : null,
   };
 }
 
@@ -178,9 +178,18 @@ async function armarOpcion(origen, op, signal) {
 async function rutaPorViaOficial(origen, signal) {
   const ops = opcionesViaOficial(origen);
   if (!ops.length) return null;
-  const armadas = (await Promise.all(ops.map(op => armarOpcion(origen, op, signal)))).filter(Boolean);
-  armadas.sort((a, b) => a.distancia - b.distancia);
-  return armadas[0] || null;
+  // Ramificación y poda: se consulta ORS de a una opción. Una opción solo vale la pena si su cota
+  // inferior (acercamiento en línea recta + resto de vía) puede ganarle a la mejor ya calculada.
+  // Resultado igual de óptimo, con 1 consulta en la mayoría de los casos (antes siempre 3).
+  const cota = (op) => op.acercamiento + op.largoResto;
+  ops.sort((a, b) => cota(a) - cota(b));
+  let mejor = null;
+  for (const op of ops) {
+    if (mejor && cota(op) >= mejor.distancia) break;
+    const r = await armarOpcion(origen, op, signal);
+    if (r && (!mejor || r.distancia < mejor.distancia)) mejor = r;
+  }
+  return mejor;
 }
 
 const dentroDeArea = (lngLat) => areas.some(a => turf.booleanPointInPolygon(lngLat, a));
@@ -194,15 +203,37 @@ function candidatos(origen) {
     .slice(0, MAX_CANDIDATOS);
 }
 
+// Si ORS rechaza la clave (401/403) o la cuota (429), no seguir consultando por un rato:
+// cada consulta fallida gasta cuota y la app igual muestra el respaldo.
+const PAUSA_TRAS_RECHAZO_MS = 60000;
+let pausaHasta = 0;
+let ultimoErrorORS = null;
+export const errorORS = () => ultimoErrorORS;
+
+const MOTIVOS_ORS = {
+  401: 'el servicio de rutas rechazó la clave (cuota agotada o clave desactivada)',
+  403: 'clave de rutas inválida',
+  429: 'se alcanzó el límite de consultas de rutas por minuto',
+};
+
 async function pedirRutaORS(origen, destino, signal) {
+  if (Date.now() < pausaHasta) throw Object.assign(new Error(ultimoErrorORS?.motivo || 'servicio de rutas en pausa'), { codigo: ultimoErrorORS?.codigo || 0 });
   const resp = await fetch(ORS_URL, {
     method: 'POST',
     signal,
     headers: { 'Authorization': ORS_API_KEY, 'Content-Type': 'application/json', 'Accept': 'application/geo+json' },
     body: JSON.stringify({ coordinates: [origen, destino], instructions: true, language: 'es', units: 'm' }),
   });
-  if (resp.status === 429) throw Object.assign(new Error('Límite de consultas de ruteo alcanzado'), { codigo: 429 });
-  if (!resp.ok) throw Object.assign(new Error(`Ruteo no disponible (HTTP ${resp.status})`), { codigo: resp.status });
+  if (!resp.ok) {
+    let detalle = '';
+    try { const j = await resp.json(); detalle = j?.error?.message || j?.error || ''; } catch { /* sin cuerpo */ }
+    const motivo = MOTIVOS_ORS[resp.status] || `servicio de rutas no disponible (HTTP ${resp.status})`;
+    ultimoErrorORS = { codigo: resp.status, motivo, detalle: String(detalle), cuando: new Date() };
+    console.warn('[rutas] OpenRouteService respondió', resp.status, detalle);
+    if ([401, 403, 429].includes(resp.status)) pausaHasta = Date.now() + PAUSA_TRAS_RECHAZO_MS;
+    throw Object.assign(new Error(motivo), { codigo: resp.status });
+  }
+  ultimoErrorORS = null;
   const json = await resp.json();
   const f = json.features?.[0];
   if (!f) throw new Error('El servicio no devolvió ruta');
@@ -270,7 +301,7 @@ export async function calcularRuta(origen, { signal } = {}) {
           const f = await pedirRutaORS(origen, c.punto.geometry.coordinates, signal);
           const analisis = analizarRuta(f.geometry.coordinates);
           return { ...c, ruta: f, analisis, resumen: f.properties.summary || {} };
-        } catch (e) { if (e.name === 'AbortError' || e.codigo === 429) throw e; return null; }
+        } catch (e) { if (e.name === 'AbortError' || [401, 403, 429].includes(e.codigo)) throw e; return null; }
       }));
       const validas = rutas.filter(r => r && r.analisis.reentradas === 0);
       if (validas.length) {
@@ -290,7 +321,7 @@ export async function calcularRuta(origen, { signal } = {}) {
       }
     } catch (e) {
       if (e.name === 'AbortError') throw e;
-      aviso = e.codigo === 429 ? 'Servicio de rutas saturado.' : 'Sin conexión al servicio de rutas.';
+      aviso = ultimoErrorORS?.motivo ? `Sin ruta por calles: ${ultimoErrorORS.motivo}.` : 'Sin conexión al servicio de rutas.';
     }
   } else {
     aviso = 'Ruteo por calles no configurado (falta la clave de OpenRouteService).';

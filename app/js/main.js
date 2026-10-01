@@ -2,14 +2,14 @@
 // Zonas × amenazas desde data/catalogo.json (spec §3). El pin decide la zona (spec §5.1):
 // al elegir una zona en el desplegable el pin va a su centro, y al arrastrar el pin a otra zona
 // la app cambia de zona sola.
-import { cargarCatalogo, zonas, zona as zonaPorId, amenazasDe, amenazaInfo, fuente, estiloDe, zonaEn } from './catalogo.js?v=9';
-import { cargarCapas } from './datos.js?v=9';
-import { crearMapa, mostrarCapas, centrarEn, dibujarRuta, limpiarRuta, setModoMapa } from './mapa.js?v=9';
-import { prepararRutas, calcularRuta, nombreDestino, nombreVia, organismoDe, rumboATexto } from './ruta.js?v=9';
-import { prepararAreas, diagnosticar, textosDiagnostico } from './diagnostico.js?v=9';
-import { iniciarPosicion, iniciarGPSSiHayPermiso, modoSimulacion, modoGPS, ubicarPin, setLinterna, posicionActual, ubicacionReal, pinArrastrando, bloquearPin } from './posicion.js?v=9';
-import { escucharAlertas } from './alertas.js?v=9';
-import { crearControlBrujula } from './brujula.js?v=9';
+import { cargarCatalogo, zonas, zona as zonaPorId, amenazasDe, amenazaInfo, fuente, estiloDe, zonaEn } from './catalogo.js?v=10';
+import { cargarCapas } from './datos.js?v=10';
+import { crearMapa, mostrarCapas, centrarEn, dibujarRuta, limpiarRuta, setModoMapa } from './mapa.js?v=10';
+import { prepararRutas, calcularRuta, nombreDestino, nombreVia, organismoDe, rumboATexto } from './ruta.js?v=10';
+import { prepararAreas, diagnosticar, textosDiagnostico } from './diagnostico.js?v=10';
+import { iniciarPosicion, iniciarGPSSiHayPermiso, modoSimulacion, modoGPS, ubicarPin, setLinterna, posicionActual, ubicacionReal, pinArrastrando, bloquearPin } from './posicion.js?v=10';
+import { escucharAlertas } from './alertas.js?v=10';
+import { crearControlBrujula } from './brujula.js?v=10';
 
 const $ = (id) => document.getElementById(id);
 let mapa = null;
