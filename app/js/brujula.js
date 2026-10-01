@@ -22,6 +22,7 @@ let ultimoEvento = 0;
 let ultimoAplicado = null;
 let obtenerCentro = () => null;   // posición del usuario: el mapa gira en torno a ella
 let estaPausado = () => false;    // p. ej. mientras se arrastra el pin
+let alCambiarModo = () => {};     // (modo) → la app bloquea el pin en modo brújula
 const difCircular = (a, b) => ((a - b + 540) % 360) - 180;   // en [-180, 180)
 
 function anguloPantalla() {
@@ -113,6 +114,7 @@ export async function activarBrujula() {
   rumbo = null;
   ultimoAplicado = null;
   mapa.dragging.disable();          // modo navegación: el mapa sigue a la persona
+  alCambiarModo('brujula');
   control?.classList.add('activa');
   control?.setAttribute('aria-pressed', 'true');
   control?.setAttribute('title', 'Brújula activa: toca para volver a norte arriba');
@@ -126,6 +128,7 @@ export function activarNorte() {
   ultimoAplicado = null;
   mapa.dragging.enable();
   mapa.setBearing(0);
+  alCambiarModo('norte');
   control?.classList.remove('activa');
   control?.setAttribute('aria-pressed', 'false');
   control?.setAttribute('title', 'Norte arriba: toca para activar la brújula');
@@ -136,7 +139,8 @@ export function activarNorte() {
 export const modoBrujula = () => modo;
 
 // Botón bajo el zoom. Muestra una aguja que siempre apunta al norte real.
-export function crearControlBrujula(m, { onRumbo, onError, onActivar, centro, pausado }) {
+export function crearControlBrujula(m, { onRumbo, onError, onActivar, centro, pausado, onModo }) {
+  alCambiarModo = onModo || alCambiarModo;
   mapa = m; alRumbo = onRumbo || alRumbo; alError = onError || alError;
   obtenerCentro = centro || obtenerCentro;
   estaPausado = pausado || estaPausado;

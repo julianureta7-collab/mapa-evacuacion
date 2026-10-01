@@ -12,6 +12,7 @@ let real = null;                  // { latlng, precision }
 let marcadorReal = null, circuloReal = null;
 let centrarAlPrimerFix = false;
 let arrastrandoPin = false;
+let bloqueado = false;          // con la brújula activa el pin no se arrastra (el mapa rotado lo hace saltar)
 
 export let modo = 'simulacion';
 
@@ -42,12 +43,16 @@ export function iniciarPosicion(m, { onPin, onReal, onErrorGPS } = {}) {
   alCambiarPin = onPin || alCambiarPin;
   alCambiarReal = onReal || alCambiarReal;
   alErrorGPS = onErrorGPS || alErrorGPS;
-  mapa.on('click', (e) => { if (modo === 'simulacion') moverPin(e.latlng, null); });
+  mapa.on('click', (e) => { if (modo === 'simulacion' && !bloqueado) moverPin(e.latlng, null); });
 }
 
 function moverPin(latlng, precision) {
   if (!pin) {
-    pin = L.marker(latlng, { icon: ICONO, draggable: modo === 'simulacion', autoPan: true, title: 'Tu posición', zIndexOffset: 1000 }).addTo(mapa);
+    pin = L.marker(latlng, {
+      icon: ICONO, draggable: modo === 'simulacion' && !bloqueado, title: 'Tu posición', zIndexOffset: 1000,
+      // Al acercar el dedo al borde el mapa se desplaza, pero despacio (el valor por defecto es muy rápido en celular)
+      autoPan: true, autoPanPadding: L.point(24, 24), autoPanSpeed: 4,
+    }).addTo(mapa);
     pin.on('dragstart', () => { arrastrandoPin = true; });
     pin.on('drag', () => alCambiarPin(pin.getLatLng(), null, true));
     pin.on('dragend', () => { arrastrandoPin = false; alCambiarPin(pin.getLatLng(), null, false); });
@@ -107,7 +112,7 @@ export async function iniciarGPSSiHayPermiso() {
 export function modoSimulacion(latlngInicial) {
   modo = 'simulacion';                     // el GPS sigue corriendo (dos puntos)
   moverPin(pin ? pin.getLatLng() : L.latLng(latlngInicial), null);
-  pin.dragging.enable();
+  if (!bloqueado) pin.dragging.enable();
   dibujarReal();
 }
 
@@ -115,8 +120,15 @@ export function modoSimulacion(latlngInicial) {
 export function ubicarPin(latlng) {
   modo = 'simulacion';
   moverPin(L.latLng(latlng), null);
-  pin.dragging.enable();
+  if (!bloqueado) pin.dragging.enable();
   dibujarReal();
+}
+
+// La brújula bloquea el arrastre del pin mientras está activa.
+export function bloquearPin(si) {
+  bloqueado = si;
+  if (!pin) return;
+  if (si || modo === 'gps') pin.dragging.disable(); else pin.dragging.enable();
 }
 
 export function modoGPS(onError) {

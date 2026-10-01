@@ -82,65 +82,105 @@ function puntoMasCercanoFuera(lngLat, maxM) {
   return mejor;
 }
 
-// Elige la vía oficial a tomar. Costo = acercamiento (con factor de desvío por cuadras)
-// + lo que queda de vía desde el punto de entrada hasta su final.
-function elegirViaOficial(origen) {
+// Largo desde cada vértice hasta el final de la vía (para costear entradas en cualquier punto).
+function largosHastaFinal(c) {
+  const S = new Array(c.length).fill(0);
+  for (let i = c.length - 2; i >= 0; i--) S[i] = S[i + 1] + distM(c[i], c[i + 1]);
+  return S;
+}
+
+// Opciones de vía oficial, ordenadas por costo estimado. Para cada vía se elige el MEJOR punto de
+// entrada (cualquier vértice o la proyección), no solo el más cercano: así la ruta no camina hacia
+// el mar para luego devolverse por la vía. Costo = acercamiento × 1,4 (desvío por cuadras) + resto.
+const FACTOR_DESVIO = 1.4;
+const MAX_VIAS_A_EVALUAR = 3;
+function opcionesViaOficial(origen) {
   const opciones = [];
   for (const v of vias) {
     const c = v.geometry.coordinates;
     const pr = proyectarEnLinea(origen, c);
     if (pr.distancia > RADIO_VIA_M) continue;
-    const resto = [pr.punto, ...c.slice(pr.i + 1)];
-    const fin = resto[resto.length - 1];
-    const finSeguro = !dentroDeArea(fin);
+    const fin = c[c.length - 1];
     const puntoFinal = puntoMasCercanoFuera(fin, FINAL_A_PUNTO_M);
-    if (!finSeguro && !puntoFinal) continue;           // la vía no saca de la zona
-    const largoResto = largo(resto);
-    if (largoResto < 5 && dentroDeArea(origen)) continue;  // ya al final de una vía pero aún dentro
-    opciones.push({ via: v, entrada: pr.punto, acercamiento: pr.distancia, resto, largoResto, puntoFinal,
-      costo: pr.distancia * 1.4 + largoResto });
+    if (dentroDeArea(fin) && !puntoFinal) continue;             // la vía no saca de la zona
+    const S = v._largos || (v._largos = largosHastaFinal(c));
+    // Candidata 1: la proyección; candidatas 2..n: cada vértice (salvo el final)
+    let mejor = { entrada: pr.punto, i: pr.i, acercamiento: pr.distancia, resto: S[pr.i + 1] + distM(pr.punto, c[pr.i + 1]) };
+    mejor.costo = mejor.acercamiento * FACTOR_DESVIO + mejor.resto;
+    for (let i = 0; i < c.length - 1; i++) {
+      const d = distM(origen, c[i]);
+      if (d > RADIO_VIA_M) continue;
+      const costo = d * FACTOR_DESVIO + S[i];
+      if (costo < mejor.costo) mejor = { entrada: c[i], i: i - 1, acercamiento: d, resto: S[i], costo, vertice: true };
+    }
+    const resto = mejor.vertice ? c.slice(mejor.i + 1) : [mejor.entrada, ...c.slice(mejor.i + 1)];
+    if (mejor.resto < 5 && dentroDeArea(origen)) continue;     // ya al final de una vía pero aún dentro
+    opciones.push({ via: v, entrada: mejor.entrada, acercamiento: mejor.acercamiento, resto, largoResto: mejor.resto, puntoFinal, costo: mejor.costo });
   }
   opciones.sort((a, b) => a.costo - b.costo);
-  return opciones[0] || null;
+  return opciones.slice(0, MAX_VIAS_A_EVALUAR);
 }
 
-async function rutaPorViaOficial(origen, signal) {
-  const op = elegirViaOficial(origen);
-  if (!op) return null;
-  // 1) Acercamiento hasta la vía
-  let acercamiento = [origen, op.entrada], acercamientoPorCalles = false, aviso = null;
-  if (op.acercamiento > ACERCAMIENTO_RECTO_M && hayClaveORS()) {
-    try {
-      const f = await pedirRutaORS(origen, op.entrada, signal);
-      acercamiento = f.geometry.coordinates; acercamientoPorCalles = true;
-    } catch (e) {
-      if (e.name === 'AbortError') throw e;
-      aviso = 'El tramo hasta la vía oficial se muestra en línea recta (sin servicio de rutas).';
+// Une el camino por calles con la vía: en cuanto el camino pasa a menos de 20 m de la vía,
+// la persona se "sube" a ella y la sigue hasta el final. Evita retrocesos y saltos.
+const TOLERANCIA_UNION_M = 20;
+function unirConVia(camino, viaCoords) {
+  for (let k = 0; k < camino.length; k++) {
+    const pr = proyectarEnLinea(camino[k], viaCoords);
+    if (pr.distancia <= TOLERANCIA_UNION_M) {
+      return { acercamiento: [...camino.slice(0, k + 1), pr.punto], oficial: [pr.punto, ...viaCoords.slice(pr.i + 1)] };
     }
   }
-  // 2) Vía oficial desde la entrada hasta su final; 3) unión al punto de encuentro si está cerca
-  const oficial = op.resto;
+  return null;
+}
+
+async function armarOpcion(origen, op, signal) {
+  let camino = [origen, op.entrada], porCalles = false, fallo = false;
+  if (op.acercamiento > ACERCAMIENTO_RECTO_M && hayClaveORS()) {
+    try {
+      camino = (await pedirRutaORS(origen, op.entrada, signal)).geometry.coordinates;
+      porCalles = true;
+    } catch (e) {
+      if (e.name === 'AbortError') throw e;
+      fallo = true;
+    }
+  }
+  const viaCoords = op.via.geometry.coordinates;
+  const unido = (porCalles && unirConVia(camino, viaCoords)) || { acercamiento: [...camino, op.entrada], oficial: op.resto };
+  // quitar el punto duplicado si el camino ya terminaba en la entrada
+  const ac = unido.acercamiento.filter((p, i, arr) => i === 0 || distM(p, arr[i - 1]) > 0.5);
+  const oficial = unido.oficial;
   const fin = oficial[oficial.length - 1];
-  const final = op.puntoFinal && op.puntoFinal.d > 5 ? [fin, op.puntoFinal.p.geometry.coordinates] : null;
-  const todo = [...acercamiento, ...oficial.slice(1), ...(final ? final.slice(1) : [])];
+  const final = op.puntoFinal && distM(fin, op.puntoFinal.p.geometry.coordinates) > 5 ? [fin, op.puntoFinal.p.geometry.coordinates] : null;
+  const todo = [...ac, ...oficial.slice(1), ...(final ? final.slice(1) : [])];
   const analisis = analizarRuta(todo);
-  if (analisis.reentradas > 0) return null;           // no debería pasar, pero se valida igual
-  const distancia = largo(acercamiento) + op.largoResto + (final ? largo(final) : 0);
+  if (analisis.reentradas > 0) return null;
+  const acercamientoM = largo(ac), oficialM = largo(oficial);
+  const distancia = acercamientoM + oficialM + (final ? largo(final) : 0);
   return {
     tipo: 'oficial',
     via: op.via,
     destino: op.puntoFinal?.p || null,
     geometria: { type: 'LineString', coordinates: todo },
     tramos: [
-      { tipo: acercamientoPorCalles ? 'acercamiento' : 'acercamiento_recto', coords: acercamiento },
+      { tipo: porCalles ? 'acercamiento' : 'acercamiento_recto', coords: ac },
       { tipo: 'oficial', coords: oficial },
       ...(final ? [{ tipo: 'final', coords: final }] : []),
     ],
     distancia, duracion: distancia / VELOCIDAD_PIE,
-    acercamientoM: largo(acercamiento), oficialM: op.largoResto,
+    acercamientoM, oficialM,
     metrosDentro: analisis.metrosDentro,
-    aviso,
+    aviso: fallo ? 'El tramo hasta la vía oficial se muestra en línea recta (sin servicio de rutas).' : null,
   };
+}
+
+// Evalúa las mejores vías candidatas con el camino real por calles y elige la más corta a pie.
+async function rutaPorViaOficial(origen, signal) {
+  const ops = opcionesViaOficial(origen);
+  if (!ops.length) return null;
+  const armadas = (await Promise.all(ops.map(op => armarOpcion(origen, op, signal)))).filter(Boolean);
+  armadas.sort((a, b) => a.distancia - b.distancia);
+  return armadas[0] || null;
 }
 
 const dentroDeArea = (lngLat) => areas.some(a => turf.booleanPointInPolygon(lngLat, a));

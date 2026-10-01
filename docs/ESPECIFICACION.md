@@ -128,7 +128,12 @@ Mientras el operador todavía no dibuja nada, los niveles 2 y 3 cubren usando in
 
 **Motor de rutas actual** (hecho, `app/js/ruta.js`):
 
-- **Método oficial:** acercarse a la vía oficial más conveniente (costo = acercamiento × 1,4 + resto de la vía) y seguirla tal cual hasta su final o el punto de encuentro. Las vías SENAPRED están digitalizadas en el sentido de la evacuación (costa → zona segura).
+- **Método oficial:** las vías SENAPRED están digitalizadas en el sentido de la evacuación (costa → zona segura).
+  1. Para cada vía a menos de 500 m se elige el **mejor punto de entrada a lo largo de toda la vía** (cualquier vértice o la proyección), con costo = acercamiento × 1,4 + lo que queda de vía. Así la ruta no camina hacia el mar para devolverse.
+  2. Se evalúan las **3 mejores vías** con el camino real por calles (ORS) y gana la más corta a pie.
+  3. **Unión:** en cuanto el camino por calles pasa a menos de 20 m de la vía, la persona se sube a ella y la sigue hasta el final. No hay saltos ni retrocesos.
+  4. Si la vía termina a menos de 150 m de un punto de encuentro, se une hasta él.
+  5. Costo: hasta 3 consultas a ORS por ruta (cacheadas por posición, ~10 m).
 - **Sugerida:** ORS `foot-walking` a los 3 puntos más cercanos, validación "sale y no vuelve a entrar", y gana la que menos metros recorre dentro del área. **No usar `avoid_polygons` con el área donde está el usuario**: ORS no encuentra ruta. Sí se puede usar para áreas de peligro y bloqueos del operador donde el usuario no está.
 - **Respaldo sin servicio:** línea recta punteada con dirección.
 - Las rutas del operador deben seguir el mismo camino que las vías oficiales: acercarse a la ruta y seguirla.
@@ -212,7 +217,7 @@ Publicado en https://julianureta7-collab.github.io/mapa-evacuacion/
 
 - ✅ Datos SENAPRED de Viña (tsunami) en el mapa con procedencia y fecha.
 - ✅ Diagnóstico dentro / cerca / fuera, con pin arrastrable o GPS.
-- ✅ Brújula (norte arriba / brújula) con efecto linterna. En modo brújula el mapa gira en torno a la persona (la mantiene al centro), con suavizado por tiempo y zona muerta de 0,8°.
+- ✅ Brújula (norte arriba / brújula) con efecto linterna. Con la brújula activa el pin queda fijo en la persona (arrastrarlo en un mapa rotado lo hacía saltar). En modo brújula el mapa gira en torno a la persona (la mantiene al centro), con suavizado por tiempo y zona muerta de 0,8°.
 - ✅ Motor de rutas: vía oficial → ORS sugerida → línea recta. En Viña, 77 % de los puntos del área obtienen ruta por vía oficial.
 - ✅ §10 punto 1: catálogo zonas × amenazas (`app/data/catalogo.json`), capas por rol con procedencia, desplegables de zona y amenaza, el pin decide la zona (y "fuera de cobertura"). Viña (tsunami, incendio forestal sin capa aún) y Campus (incendio estructural sin capa aún).
 - ✅ §10 punto 2: modelo de dos puntos (`js/posicion.js`): el GPS sigue activo si hay permiso aunque se use el pin; la ubicación real se dibuja como un punto azul.
@@ -254,6 +259,7 @@ Reportes para el informe del equipo: `docs/reportes/` (uno por hito).
 ## Anexo C — Registro de cambios
 
 - **v2.1 (30-sep-2026):** modelo de dos puntos: la ubicación real se sigue siempre si hay permiso, y el pin es lo que se mira; la alerta llega si cualquiera de los dos está en la zona (§5.1). La ruta de emergencia sale de la ubicación real si está en la zona alertada; con dos alertas simultáneas manda la de la ubicación real (§5.3). Validación común de rutas contra bloqueos y áreas de peligro del operador (§6). Vigencia permanente y amenaza "todas" para elementos del operador (§7). Roles genéricos de capa y contenido por amenaza (§3). Estado "zona segura" en emergencia (§5.3). El campus usa modo precaución hasta que el operador dibuje (§4).
+- **v2.3 (30-sep-2026):** rutas oficiales con mejor punto de entrada, 3 vías evaluadas con ORS y unión sin saltos; con la brújula activa el pin queda fijo (se mueve en norte arriba).
 - **v2.2 (30-sep-2026):** ruta personal solo en emergencia; pantalla de emergencia mínima; textos de diagnóstico de preparación en modo informativo; brújula centrada en la persona.
 - **v2.1, revisión de coherencia:** se unificó el término "área de peligro" (distinto de "zona"); los usuarios leen las desactivaciones de vías; las rutas del operador pueden aplicar a "todas" las amenazas; la ruta informativa se calcula desde el pin; los desplegables quedan fijos durante la emergencia; "zona segura" solo aplica si existe área de peligro. Varias alertas en la misma zona: la ruta se valida contra todas. Las solicitudes de ayuda reemplazan a "ver usuarios" en las prioridades finales.
 - **v2 (30-sep-2026):** plataforma multiamenaza con app operador; reemplaza a la v1.

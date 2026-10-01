@@ -7,7 +7,7 @@ import { cargarCapas } from './datos.js?v=8';
 import { crearMapa, mostrarCapas, centrarEn, dibujarRuta, limpiarRuta, setModoMapa } from './mapa.js?v=8';
 import { prepararRutas, calcularRuta, nombreDestino, nombreVia, organismoDe, rumboATexto } from './ruta.js?v=8';
 import { prepararAreas, diagnosticar, textosDiagnostico } from './diagnostico.js?v=8';
-import { iniciarPosicion, iniciarGPSSiHayPermiso, modoSimulacion, modoGPS, ubicarPin, setLinterna, posicionActual, ubicacionReal, pinArrastrando } from './posicion.js?v=8';
+import { iniciarPosicion, iniciarGPSSiHayPermiso, modoSimulacion, modoGPS, ubicarPin, setLinterna, posicionActual, ubicacionReal, pinArrastrando, bloquearPin } from './posicion.js?v=8';
 import { escucharAlertas } from './alertas.js?v=8';
 import { crearControlBrujula } from './brujula.js?v=8';
 
@@ -190,9 +190,15 @@ function mostrarInfoRuta(r) {
     const detalle = [];
     if (r.acercamientoM >= 10) detalle.push(`1. Camina ${fmtDist(r.acercamientoM)} hasta la vía de evacuación oficial${r.tramos[0].tipo === 'acercamiento_recto' ? ' (tramo en línea recta)' : ''}.`);
     const hasta = r.destino ? `hasta el ${nombreDestino(r.destino)}` : 'hasta cruzar a la zona segura';
-    detalle.push(r.acercamientoM >= 10
-      ? `2. Síguela ${fmtDist(r.oficialM)} ${hasta}.`
-      : `Sigue la vía de evacuación oficial ${fmtDist(r.oficialM)} ${hasta}.`);
+    if (r.oficialM < 20) {
+      // la mejor opción es llegar directo al final de la vía (ya en zona segura)
+      detalle.length = 0;
+      detalle.push(`Camina ${fmtDist(r.acercamientoM)} hasta el final de la vía de evacuación oficial${r.destino ? `, en el ${nombreDestino(r.destino)}` : ', en zona segura'}.`);
+    } else {
+      detalle.push(r.acercamientoM >= 10
+        ? `2. Síguela ${fmtDist(r.oficialM)} ${hasta}.`
+        : `Sigue la vía de evacuación oficial ${fmtDist(r.oficialM)} ${hasta}.`);
+    }
     if (r.metrosDentro > 0) detalle.push(`Sales de la ${area} en ~${fmtDist(r.metrosDentro)}.`);
     el.innerHTML = `
       <div class="ruta-titulo">Ruta oficial ${organismoDe(r.via)} · vía ${nombreVia(r.via)}</div>
@@ -387,6 +393,7 @@ async function iniciar() {
     onActivar: () => { const p = posicionActual(); if (p) mapa.setView(p, Math.max(mapa.getZoom(), 16)); },
     centro: () => posicionActual(),
     pausado: () => pinArrastrando(),
+    onModo: (m) => bloquearPin(m === 'brujula'),
   });
   $('btn-simulacion').addEventListener('click', () => seleccionarModo('simulacion'));
   $('btn-gps').addEventListener('click', () => seleccionarModo('gps'));
