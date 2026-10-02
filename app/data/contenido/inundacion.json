@@ -1,0 +1,81 @@
+{
+  "amenaza": "inundacion",
+  "antes": [
+    {
+      "texto": "Infórmate de las inundaciones y desbordes que han ocurrido en tu sector; consulta al municipio por las zonas de riesgo.",
+      "fuentes": [
+        "senapred_inundaciones"
+      ]
+    },
+    {
+      "texto": "No botes basura en canales, acequias ni sumideros de aguas lluvias, aunque estén secos: se tapan y provocan desbordes.",
+      "fuentes": [
+        "senapred_inundaciones",
+        "minsal_inundaciones"
+      ]
+    },
+    {
+      "texto": "Revisa el techo de tu casa una vez al año (de preferencia en verano) y, periódicamente, las canaletas y bajadas de agua.",
+      "fuentes": [
+        "minsal_sistema_frontal"
+      ]
+    },
+    {
+      "texto": "Identifica lugares seguros, altos y alejados de canales y quebradas.",
+      "fuentes": [
+        "minsal_inundaciones"
+      ]
+    },
+    {
+      "texto": "Sigue el pronóstico en meteochile.gob.cl y las alertas vigentes en senapred.cl.",
+      "fuentes": [
+        "senapred_inundaciones"
+      ]
+    }
+  ],
+  "durante": [
+    {
+      "texto": "No camines ni conduzcas por calles anegadas o inundadas, ni cruces pasos bajo nivel.",
+      "fuentes": [
+        "senapred_inundaciones",
+        "minsal_sistema_frontal"
+      ]
+    },
+    {
+      "texto": "Aléjate de canales y quebradas; si el agua sube, ve a un lugar alto o a un piso superior.",
+      "fuentes": [
+        "senapred_inundaciones",
+        "minsal_inundaciones"
+      ]
+    },
+    {
+      "texto": "Si el agua entra a tu casa, corta la electricidad, el gas y el agua.",
+      "fuentes": [
+        "senapred_inundaciones",
+        "minsal_inundaciones"
+      ]
+    }
+  ],
+  "despues": [
+    {
+      "texto": "Vuelve a tu casa solo cuando las autoridades lo indiquen y revisa las instalaciones de luz, gas y agua.",
+      "fuentes": [
+        "senapred_inundaciones",
+        "minsal_inundaciones"
+      ]
+    },
+    {
+      "texto": "No consumas agua hasta que las autoridades indiquen que es segura, y bota los alimentos que tocaron el agua de la inundación.",
+      "fuentes": [
+        "minsal_inundaciones",
+        "senapred_inundaciones"
+      ]
+    },
+    {
+      "texto": "Si ves personas en peligro, avisa a Bomberos (132) o Carabineros (133).",
+      "fuentes": [
+        "senapred_inundaciones"
+      ]
+    }
+  ]
+}

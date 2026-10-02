@@ -1,5 +1,5 @@
 {
-  "_doc": "Catálogo de zonas × amenazas (spec §3). Agregar una zona o amenaza = editar este archivo y agregar sus capas en data/<zona>/<amenaza>/. El código no conoce zonas por nombre. Roles válidos: area_peligro, ruta, punto_encuentro, referencia, bloqueo. Opcionales por capa: estilo_por {campo, valores: {valor: estilo}} colorea por clase (también en la leyenda); consulta {campo, etiqueta} muestra el valor en el punto del pin (diagnóstico informativo) y en el popup; aviso: texto bajo el diagnóstico cuando la amenaza no tiene área de peligro.",
+  "_doc": "Catálogo de zonas × amenazas (spec §3). Agregar una zona o amenaza = editar este archivo y agregar sus capas en data/<zona>/<amenaza>/. El código no conoce zonas por nombre. Roles válidos: area_peligro, ruta, punto_encuentro, referencia, bloqueo. La cobertura de una zona puede ser un polígono o la ruta a un GeoJSON (p. ej. un límite comunal oficial); el centro es opcional. Las zonas pequeñas van antes que las que las contienen (zonaEn devuelve la primera). Opcionales por capa: estilo_por {campo, valores: {valor: estilo}} colorea por clase (también en la leyenda); consulta {campo, etiqueta} muestra el valor en el punto del pin (diagnóstico informativo) y en el popup; aviso: texto bajo el diagnóstico cuando la amenaza no tiene área de peligro. popup [{campo, etiqueta}]: filas extra en el popup. En capas de puntos, consulta {campo, etiqueta, detalle} muestra el punto más cercano.",
   "version": 1,
   "amenazas": {
     "tsunami": {
@@ -16,6 +16,11 @@
       "nombre": "Incendio estructural",
       "area": "zona afectada por el incendio",
       "contenido": "data/contenido/incendio_estructural.json"
+    },
+    "inundacion": {
+      "nombre": "Inundación y anegamiento",
+      "area": "zona afectada por la inundación",
+      "contenido": "data/contenido/inundacion.json"
     }
   },
   "fuentes": {
@@ -33,6 +38,13 @@
       "url": "https://www.arcgis.com/home/item.html?id=19268f2baaaf4cfdb8ad93f083c2c437",
       "_publicacion": "Última modificación del servicio en ArcGIS Online (creado el 2024-04-10).",
       "publicacion": "2025-10-27"
+    },
+    "senapred_puntos_criticos_2022": {
+      "organismo": "SENAPRED",
+      "nombre": "Puntos Críticos Programa Invierno 2022",
+      "detalle": "Puntos críticos ante lluvias informados por cada municipio a la ex ONEMI (hoy SENAPRED) en el Programa Invierno 2022",
+      "url": "https://www.arcgis.com/home/item.html?id=09b724392dec47b2972d290e110b7dfc",
+      "publicacion": "2022-04-27"
     }
   },
   "estilos": {
@@ -260,6 +272,114 @@
                 "texto": "Avisa también al anexo de emergencia del campus (5000).",
                 "fuentes": [
                   "uc_ingenieria"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "macul",
+      "nombre": "Macul",
+      "_centro": "Centroide de la comuna (capa Comunas, Ministerio del Medio Ambiente, SIMBIO).",
+      "centro": [
+        -33.48931,
+        -70.59991
+      ],
+      "zoom": 15,
+      "_cobertura": "Límite comunal oficial (SUBDERE/IGM/INE 2018, servicio DPA del MOP). Se descarga con: node scripts/descargar_capas.mjs macul/cobertura. Va DESPUÉS de campus_sj, que queda dentro de Macul.",
+      "cobertura": "data/macul/cobertura/limite_comunal.geojson",
+      "amenazas": [
+        {
+          "id": "inundacion",
+          "carpeta": "data/macul/inundacion",
+          "metadata": "metadata.json",
+          "_nota": "No hay área oficial de inundación para Macul: los puntos críticos 2022 van como 'referencia'. En una emergencia, el operador marca calles cortadas (bloqueo) y zonas afectadas (área de peligro).",
+          "capas": [
+            {
+              "archivo": "puntos_criticos_2022.geojson",
+              "rol": "referencia",
+              "nombre": "Puntos críticos ante lluvias (2022)",
+              "fuente": "senapred_puntos_criticos_2022",
+              "visible": true,
+              "estilo": {
+                "radius": 7,
+                "color": "#ffffff",
+                "weight": 2,
+                "fillColor": "#0277bd",
+                "fillOpacity": 1
+              },
+              "estilo_por": {
+                "campo": "nivel_de_riesgo_2022",
+                "valores": {
+                  "Muy Alto": {
+                    "fillColor": "#b71c1c"
+                  },
+                  "Alto": {
+                    "fillColor": "#e65100"
+                  },
+                  "Medio": {
+                    "fillColor": "#f9a825"
+                  },
+                  "Bajo": {
+                    "fillColor": "#0277bd"
+                  },
+                  "En Evaluación": {
+                    "fillColor": "#7b1fa2"
+                  },
+                  "Solucionado": {
+                    "fillColor": "#9e9e9e"
+                  }
+                }
+              },
+              "popup": [
+                {
+                  "campo": "causa_punt",
+                  "etiqueta": "Causa"
+                },
+                {
+                  "campo": "nivel_de_riesgo_2022",
+                  "etiqueta": "Nivel de riesgo 2022"
+                }
+              ],
+              "consulta": {
+                "campo": "sector",
+                "etiqueta": "Punto crítico más cercano",
+                "detalle": "causa_punt"
+              },
+              "aviso": "El mapa muestra los puntos críticos ante lluvias que la Municipalidad de Macul informó a SENAPRED en 2022 (pueden haber cambiado). No es un área de evacuación: en una emergencia, el operador marcará las calles cortadas y las zonas afectadas."
+            }
+          ],
+          "info_zona": {
+            "antes": [
+              {
+                "texto": "En Macul, avisa cualquier emergencia a la central de comunicaciones del municipio: 1444.",
+                "fuentes": [
+                  "muni_macul"
+                ]
+              }
+            ],
+            "despues": [
+              {
+                "texto": "Mantén despejados los sumideros cercanos a tu casa y no arrojes basura a la calle.",
+                "fuentes": [
+                  "muni_macul"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "incendio_estructural",
+          "_nota": "Sin capas oficiales: el área afectada, los puntos de encuentro y las rutas los dibuja un operador.",
+          "capas": [],
+          "info_zona": {
+            "antes": [
+              {
+                "texto": "En Macul, avisa cualquier emergencia a la central de comunicaciones del municipio: 1444.",
+                "fuentes": [
+                  "muni_macul"
                 ]
               }
             ]

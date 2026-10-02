@@ -1,8 +1,8 @@
-# Mapa de Evacuación — Especificación (v2.6)
+# Mapa de Evacuación — Especificación (v2.7)
 
 > **Fuente única de verdad del proyecto.** Si algo en otro archivo contradice esto, manda este documento.
 > Ubicación: `docs/ESPECIFICACION.md` del repo `julianureta7-collab/mapa-evacuacion`.
-> Versión 2.6 · acordada el 30 de septiembre de 2026, actualizada el 2 de octubre de 2026 · reemplaza a la especificación v1 (archivo en OneDrive, ya retirado).
+> Versión 2.7 · acordada el 30 de septiembre de 2026, actualizada el 2 de octubre de 2026 · reemplaza a la especificación v1 (archivo en OneDrive, ya retirado).
 
 ## 1. Qué es y para cuándo
 
@@ -60,6 +60,8 @@ Los elementos del operador usan los mismos roles. Así, una zona o amenaza nueva
 | Viña del Mar | Tsunami | SENAPRED, *Amenaza por Tsunami 2024* (vías, puntos, área, línea segura) | ✅ datos cargados |
 | Viña del Mar | Incendio forestal | SENAPRED, *Amenaza por Incendio Forestal 2024* (densidad de incendios 2020–2024, por recurrencia) como **referencia**: no es un área a evacuar. El área de peligro de una emergencia la dibuja el operador | ✅ código listo (reporte 05); falta descargar la capa con `node scripts/descargar_capas.mjs vina/incendio_forestal` |
 | Campus San Joaquín | Incendio estructural | No hay datos digitales ni respuesta de prevención de riesgos. **Las zonas de seguridad (puntos de encuentro, vigencia permanente, amenaza "todas") y las rutas las dibuja un operador** con la app operador. Durante una alerta, el operador marca el edificio afectado como área de peligro. Mientras no haya nada dibujado, el Campus muestra modo precaución | ✅ dibujado por el equipo (2-oct); confirmar en terreno |
+| Macul (comuna completa) | Inundación y anegamiento | SENAPRED, *Puntos Críticos Programa Invierno 2022* (31 puntos informados por la municipalidad) como **referencia**. Sin área oficial: en una emergencia el operador marca calles cortadas (bloqueo), sectores afectados (área de peligro) y albergues (punto de encuentro) | ✅ código (reporte 06); falta descargar límite y puntos |
+| Macul (comuna completa) | Incendio estructural | Sin capas: lo dibuja el operador. Cobertura: límite comunal oficial (SUBDERE/IGM/INE 2018). Contiene al Campus, que va antes en el catálogo | ✅ código (reporte 06) |
 | Zona 3 | Por decidir | Criterio: **más de un tipo de amenaza, distintas a tsunami e incendio, con bastante información oficial**, para lucir la función multiamenaza | ⏳ decisión del equipo |
 
 - **Sismo no se incluye** en esta versión.
@@ -81,6 +83,7 @@ La app maneja **dos puntos**:
 - Ejemplo: estoy físicamente en el Campus con GPS activo y tengo el pin en Viña. Me salta la alerta tanto si hay alarma en Viña como si la hay en el Campus.
 - **Una alerta nunca afecta a quien no tiene ninguno de sus dos puntos dentro de la zona alertada.** Una alerta en el Campus no cambia nada para quien está mirando Viña desde Santiago con el GPS apagado.
 - Si el pin cae fuera de todas las zonas cubiertas, se muestra el selector de zona con el mensaje "Aún no cubrimos esta ubicación".
+- **Zonas una dentro de otra** (el Campus está dentro de Macul): el pin muestra la zona más pequeña, que va antes en el catálogo. Una alerta de Macul llega también a quien está en el Campus (está dentro de la comuna); una alerta del Campus no llega a quien está en otra parte de Macul. **Durante una alerta manda su zona**: si la alerta es de Macul y la persona está en el Campus, la app se queda en Macul aunque el pin se mueva dentro del Campus.
 - **La decisión se toma en el teléfono:** la app recibe todas las alertas activas y compara localmente sus dos puntos con cada zona. El servidor nunca sabe dónde está nadie.
 
 ### 5.2 Modo informativo
@@ -139,7 +142,7 @@ Mientras el operador todavía no dibuja nada, los niveles 2 y 3 cubren usando in
   3. **Unión:** en cuanto el camino por calles pasa a menos de 20 m de la vía, la persona se sube a ella y la sigue hasta el final. No hay saltos ni retrocesos.
   4. Si la vía termina a menos de 150 m de un punto de encuentro, se une hasta él.
   5. Costo: hasta 3 consultas a ORS por ruta (cacheadas por posición, ~10 m).
-- **Sugerida:** ORS `foot-walking` a los 3 puntos más cercanos, validación "sale y no vuelve a entrar", y gana la que menos metros recorre dentro del área. **No usar `avoid_polygons` con el área donde está el usuario**: ORS no encuentra ruta. Sí se puede usar para áreas de peligro y bloqueos del operador donde el usuario no está.
+- **Sugerida:** ORS `foot-walking` a los 3 puntos más cercanos, validación "sale y no vuelve a entrar", y gana la que menos metros recorre dentro del área. **No usar `avoid_polygons` con el área donde está el usuario**: ORS no encuentra ruta. Sí se usa (hecho, reporte 06) para los **tramos bloqueados** (con un margen de 8 m) y las **áreas de otras alertas** que no contienen el origen ni el destino; la Edge Function los recibe en `evitar` y los valida (MultiPolygon en Chile, máx. 2000 vértices). Si ORS no encuentra ruta con ellos, se reintenta sin ellos y la validación común descarta la que cruce un bloqueo.
 - **Respaldo sin servicio:** línea recta punteada con dirección.
 - Las rutas del operador deben seguir el mismo camino que las vías oficiales: acercarse a la ruta y seguirla.
 
@@ -230,6 +233,7 @@ Publicado en https://julianureta7-collab.github.io/mapa-evacuacion/
 - ✅ §10 punto 4 (base): modo emergencia en la app usuario (`js/alertas.js`): tiempo real + consulta cada 15 s, decisión local por los dos puntos, banner con SIMULACRO, desplegables bloqueados, la ruta sale de la ubicación real si está en la zona, vencimiento automático.
 - ✅ Pendiente del punto 4 (2-oct): la ruta se valida contra las áreas de peligro de **todas** las alertas activas de la zona (§5.3, reporte 05).
 - ✅ §10 punto 7: Viña incendio forestal con la capa SENAPRED 2024 como referencia (coloreada por recurrencia, valor en el pin) y área de peligro del operador. Campus dibujado por el equipo. `scripts/descargar_capas.mjs` ahora es genérico: cada escenario declara servicio, capas, filtro, recorte al bbox y generalización.
+- ✅ Después del MVP (`PLAN_ZONAS.md` ítems 3 y 4): zona Macul con inundación y anegamiento (puntos críticos 2022 como referencia, punto crítico más cercano en el diagnóstico) e incendio estructural; rutas que esquivan bloqueos (reporte 06). Falta descargar el límite comunal y los puntos, y volver a desplegar la Edge Function `rutas`.
 - ✅ §10 punto 5: panel Información (antes/durante/después) y modo precaución con fuentes oficiales.
 - ✅ §10 punto 6: dibujo del operador (`app/operador/dibujo.js`, Leaflet-Geoman MIT) y jerarquía operador → oficial → sugerida → precaución en la app usuario (`js/capasOperador.js`, `js/ruta.js`).
 - ⏳ Todo lo demás de §10.
@@ -246,7 +250,7 @@ Reportes para el informe del equipo: `docs/reportes/` (uno por hito).
 | Ubicar las zonas de seguridad del campus en terreno | Equipo | Campus |
 | Tareas de O4, O5 y buscador de direcciones | Otro integrante | Guion de testeo |
 | Revisar el contenido informativo | Equipo | O3 |
-| Entrevista Gestión del Riesgo de Macul: pedir plan comunal, anexos, puntos críticos, albergues (ver `docs/PLAN_ZONAS.md` ítem 4) | Equipo | Macul inundación |
+| Entrevista Gestión del Riesgo de Macul: pedir plan comunal, anexos, puntos críticos **actualizados** (los oficiales son de 2022), albergues (ver `docs/PLAN_ZONAS.md` ítem 4) | Equipo | Macul inundación |
 
 ## Anexo A — Fuentes de datos verificadas
 
@@ -255,6 +259,8 @@ Reportes para el informe del equipo: `docs/reportes/` (uno por hito).
 - **Incendio forestal:** `Amenaza_por_Incendio_Forestal_2024/FeatureServer/0` (mismo servidor que el tsunami; ítem ArcGIS `19268f2baaaf4cfdb8ad93f083c2c437`, creado el 2024-04-10, modificado el 2025-10-27). Polígonos "Densidad de Incendios Forestales 2020-2024 (Inc./Km2)" con campos `gridcode` (1–5) y `recurrencia` (Muy baja, Baja, Media, Alta, Muy alta). En el recuadro de Viña hay **23 polígonos** (2 Muy baja, 5 Baja, 8 Media, 6 Alta, 1 Muy alta); uno "Muy baja" es enorme (≈330 km²), por eso el script los **recorta al recuadro** y los generaliza (~5 m). Mide incendios pasados, así que se usa solo como `referencia` (verificado el 2-oct-2026). La ficha antigua del Geoportal (publicación 2020) queda reemplazada.
 - **Volcánica (SENAPRED 2024):** `AMENAZA_VOLCÁNICA_2024` (capas 0 puntos de encuentro, 1 vías, 2 áreas de peligro Alto/Medio/Bajo, 3 volcanes) y `Área_de_Evacuación_Volcanes`, en el mismo servidor que el tsunami. Detalle en `docs/PLAN_ZONAS.md` ítem 5.
 - **Remoción en masa / aluvión:** en el Geoportal solo hay un boletín de SERNAGEOMIN, no capa vectorial.
+- **Límites comunales:** División Político Administrativa, Comunas (SUBDERE, IGM e INE, 2018), servicio `rest-sit.mop.gob.cl/arcgis/rest/services/INTEROP/SERVICIO_DPA/MapServer/1` (solo JSON de Esri; el script lo convierte). Macul = `CUT_COM='13118'`, 12,8 km². Descarga: `node scripts/descargar_capas.mjs macul/cobertura`.
+- **Puntos críticos ante lluvias:** `Puntos_Críticos_Programa_Invierno_2022/FeatureServer/0` (SENAPRED, ex ONEMI; editado el 2022-04-27). Campo `comuna` = código CUT. **Macul tiene 31 puntos** (consultado el 2-oct-2026), la mayoría "Colapso colectores de aguas lluvia/alcantarillados", con nivel 2022 Bajo o Medio; uno Alto ("Campus San Joaquín DICTUC") y uno por desborde del Zanjón de la Aguada. Los códigos de causa y nivel se traducen con los dominios del servicio. No se guarda el campo `responsabl` (nombre de una persona). Los registros 2021–2022 (`Registro_Puntos_Críticos_2021_2022`) no tienen Macul. Descarga: `node scripts/descargar_capas.mjs macul/inundacion`.
 - **Visor web vs. descarga:** apuntan al mismo recurso del catálogo; no son productos distintos.
 - **Quién elabora los mapas de amenaza** (Ley 21.364): los Organismos Técnicos de Monitoreo de Amenazas (SHOA tsunami, CONAF incendio forestal, DGA inundación, CSN sísmica, SMA marejadas); SENAPRED los publica. Fuente: senapred.gov.cl/mapas-de-amenaza.
 - Desde el entorno de Claude no hay acceso de red a ArcGIS ni a ORS: las descargas y las pruebas reales las corre Julián en su PC.
@@ -269,6 +275,7 @@ Reportes para el informe del equipo: `docs/reportes/` (uno por hito).
 ## Anexo C — Registro de cambios
 
 - **v2.1 (30-sep-2026):** modelo de dos puntos: la ubicación real se sigue siempre si hay permiso, y el pin es lo que se mira; la alerta llega si cualquiera de los dos está en la zona (§5.1). La ruta de emergencia sale de la ubicación real si está en la zona alertada; con dos alertas simultáneas manda la de la ubicación real (§5.3). Validación común de rutas contra bloqueos y áreas de peligro del operador (§6). Vigencia permanente y amenaza "todas" para elementos del operador (§7). Roles genéricos de capa y contenido por amenaza (§3). Estado "zona segura" en emergencia (§5.3). El campus usa modo precaución hasta que el operador dibuje (§4).
+- **v2.7 (2-oct-2026):** zona Macul (comuna completa) con inundación y anegamiento e incendio estructural (§4). Cobertura desde un archivo oficial; zonas anidadas y "durante una alerta manda su zona" (§5.1). Rutas por calles que esquivan bloqueos y áreas de otras alertas (`avoid_polygons`, §6). Contenido oficial de inundación (SENAPRED, MINSAL) y central municipal 1444.
 - **v2.6 (2-oct-2026):** Viña incendio forestal: capa SENAPRED 2024 como referencia, coloreada por recurrencia y con su valor en el pin (§5.2, §4). Validación de la ruta contra las áreas de todas las alertas activas de la zona, área por área (§5.3). Script de descarga genérico. El área de los incendios se llama "zona afectada por el incendio" en los textos.
 - **v2.5 (1-oct-2026):** prioridades de zonas y amenazas después del MVP en `docs/PLAN_ZONAS.md` (§4, §13, Anexo A).
 - **v2.4 (1-oct-2026):** el pin de Viña parte en 4 Norte con Av. Libertad; sin desplazamiento automático al arrastrar el pin a los bordes (con el mapa rotable hacía saltar el pin). Se mantiene el motor de rutas actual; `docs/PLAN_RUTAS.md` queda como propuesta futura.

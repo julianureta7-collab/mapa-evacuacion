@@ -26,7 +26,7 @@
 
 ## Comandos
 
-- `node scripts/descargar_capas.mjs [zona/amenaza]`: descarga capas oficiales de servicios ArcGIS (necesita red hacia ArcGIS). Cada escenario declara servicio, capas, fuente y, por capa, `where`, `campos`, `recortar` (al bbox) y `generalizar`. Escenarios: `vina/tsunami`, `vina/incendio_forestal`.
+- `node scripts/descargar_capas.mjs [zona/amenaza]`: descarga capas oficiales de servicios ArcGIS (necesita red hacia ArcGIS). Cada escenario declara servicio, capas, fuente y, por capa, `where`, `campos`, `recortar` (al bbox) y `generalizar`. Escenarios: `vina/tsunami`, `vina/incendio_forestal`, `macul/cobertura` (límite comunal, JSON de Esri), `macul/inundacion` (puntos críticos 2022, con dominios traducidos).
 - `node scripts/servidor.mjs`: abre http://localhost:8080 (con `PORT=xxxx` para otro puerto).
 - Publicar: `git add . && git commit -m "..." && git push` (GitHub Actions publica en Pages).
 
@@ -53,7 +53,7 @@
 | `js/ruta.js` | Motor de rutas por rol: ruta oficial → ORS sugerida → línea recta |
 | `js/main.js` | Desplegables zona/amenaza, el pin decide la zona, diagnóstico, tarjeta de ruta |
 | `js/claves.js` | Clave de ORS (pública a propósito) |
-| `data/<zona>/<amenaza>/` | Capas oficiales + `metadata.json` (hoy: `data/vina/tsunami/`, `data/vina/incendio_forestal/`) |
+| `data/<zona>/<amenaza>/` | Capas oficiales + `metadata.json` (hoy: `data/vina/tsunami/`, `data/vina/incendio_forestal/`, `data/macul/inundacion/`) y coberturas descargadas (`data/macul/cobertura/`) |
 | `docs/PLAN_ZONAS.md` | Prioridades de zonas × amenazas después del MVP, con estado e instrucciones. **Al terminar un ítem, marca su estado ahí** |
 | `operador/` | **App operador** (login, alertas, dibujo en el mapa). Publicada en `/operador/`. `dibujo.js` usa Leaflet-Geoman (`vendor/geoman`, MIT) |
 | `js/capasOperador.js` | Lee y escucha en tiempo real `elementos_operador` y `desactivaciones_oficiales`; los convierte en capas por rol |
@@ -63,6 +63,6 @@
 
 ## Próximo paso
 
-Spec §10 puntos 1 a 7 hechos (ver spec §12 y reporte 05; falta que Julián descargue la capa de incendio forestal de Viña). Siguiente: preparación del testeo (QR, guion) y `docs/PLAN_ZONAS.md` ítem 3 (Macul comuna completa). Revisa §13 para ver qué falta del equipo.
+Spec §10 puntos 1 a 7 hechos, y `PLAN_ZONAS.md` ítems 1 a 4 (reportes 05 y 06; falta que Julián descargue con el script: `vina/incendio_forestal`, `macul/cobertura`, `macul/inundacion`, y que vuelva a desplegar la Edge Function `rutas`). Siguiente: preparación del testeo (QR, guion) y `PLAN_ZONAS.md` ítem 5 (Pucón). Revisa §13 para ver qué falta del equipo.
 
-**Zonas y amenazas nuevas:** sigue la tabla de `docs/PLAN_ZONAS.md` en orden (1 Campus incendio estructural ✅ → 2 Viña incendio forestal ✅ → 3 Macul comuna completa → 4 Macul inundación → 5 Pucón volcánica → …). Cada ítem trae datos, archivos a tocar y cómo verificar. Contexto: entrevista con la Dirección de Gestión del Riesgo de Macul y posible cliente minero (Tiltil, relaves).
+**Zonas y amenazas nuevas:** sigue la tabla de `docs/PLAN_ZONAS.md` en orden (1 Campus incendio estructural ✅ → 2 Viña incendio forestal ✅ → 3 Macul comuna completa ✅ → 4 Macul inundación ✅ → 5 Pucón volcánica → …). Cada ítem trae datos, archivos a tocar y cómo verificar. Contexto: entrevista con la Dirección de Gestión del Riesgo de Macul y posible cliente minero (Tiltil, relaves).

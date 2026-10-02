@@ -21,8 +21,8 @@ Estados: ⏳ pendiente · 🔨 en curso · ✅ hecho · 💤 en espera (depende 
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | Macul (Campus SJ) | Incendio estructural | Tríptico Ingeniería UC + lo que dibuje el operador | Bajo, se dibuja en la app | Testeo 2-oct | ✅ dibujado por el equipo; confirmar en terreno |
 | 2 | Viña del Mar | Incendio forestal | Contenido ya hecho. Área: la dibuja el operador. Capa SENAPRED IF 2024 solo como `referencia` | Bajo | Testeo 2-oct | ✅ código (reporte 05); falta correr la descarga |
-| 3 | Macul (comuna completa) | Zona nueva (reutiliza incendio estructural) | Límite comunal oficial | Muy bajo, solo catálogo | Antes de la entrevista | ⏳ |
-| 4 | Macul | Inundación / anegamiento | Contenido SENAPRED. Puntos críticos: los entrega la municipalidad | Medio | Entrevista | ⏳ |
+| 3 | Macul (comuna completa) | Zona nueva (reutiliza incendio estructural) | Límite comunal oficial | Muy bajo, solo catálogo | Antes de la entrevista | ✅ código (reporte 06); falta descargar el límite |
+| 4 | Macul | Inundación / anegamiento | Contenido SENAPRED y MINSAL. Puntos críticos 2022 de SENAPRED (31); los actuales, la municipalidad | Medio | Entrevista | ✅ código (reporte 06); falta descargar los puntos |
 | 5 | Pucón | Volcánica (V. Villarrica) | Vías, puntos y área de evacuación SENAPRED 2024 | Medio | 2ª ronda de testeo | ⏳ |
 | 6 | Santiago | Anegamiento + incendio estructural | 5 puntos críticos oficiales (Gobierno de Santiago, jul-2026) + contenido ya hecho | Bajo, después del 4 | 2ª ronda | ⏳ |
 | 7 | Tiltil | Relave (cliente minero) | Depósitos SERNAGEOMIN. Rutas y zonas seguras: las entrega la minera como operador | Medio | Cuando haya contacto minero | 💤 |
@@ -59,16 +59,16 @@ Reglas comunes (ver `CLAUDE.md`): nada hardcodeado por zona; al tocar JS/CSS o `
 ### 3. Macul: comuna completa como zona
 
 - **Qué:** zona `macul` en `catalogo.json`, para la entrevista con la municipalidad.
-- **Cobertura:** límite comunal oficial (BCN, "Mapas vectoriales", límites comunales, o IDE Chile). Simplificar a pocos cientos de vértices (turf `simplify` o mapshaper) y guardarlo en `cobertura`.
+- **Hecho (2-oct):** la cobertura es el límite comunal oficial SUBDERE/IGM/INE 2018 (servicio DPA del MOP), descargado y simplificado (~5 m) con `node scripts/descargar_capas.mjs macul/cobertura` a `app/data/macul/cobertura/limite_comunal.geojson`. En el catálogo, `cobertura` puede ser la ruta a ese archivo; si falta, la zona se omite con un aviso en la consola.
 - **Orden:** `zonaEn()` devuelve **la primera zona** que contiene el punto. **`campus_sj` debe ir antes que `macul`** en `zonas`, para que el pin en el Campus muestre el Campus.
-- **Alertas:** `main.js` (≈ línea 371) decide si una alerta aplica con la cobertura de la zona alertada, así que alguien en el Campus recibe también las alertas de Macul. Es lo correcto; verificarlo con una alerta de prueba.
+- **Alertas:** alguien en el Campus recibe también las alertas de Macul (verificado con una alerta de prueba). Durante una alerta manda su zona: `zonaEn(punto, zonaDeLaAlerta)`; si no, el pin dentro del Campus devolvía la app al Campus a mitad de la alerta de Macul.
 - **Amenazas iniciales:** `incendio_estructural` (sin capas, operador) e `inundacion` (ítem 4).
 
 ### 4. Macul: inundación / anegamiento
 
 - **Contenido:** crear `app/data/contenido/inundacion.json` desde SENAPRED (https://senapred.cl/inundaciones/) y MINSAL si aplica. Agregar la amenaza `inundacion` en `amenazas` del catálogo y las fuentes en `fuentes.json`.
-- **Datos oficiales:** Macul **no aparece** en el listado de 175 puntos críticos del Gobierno de Santiago (jul-2026). Los datos deben venir de la **Dirección de Gestión del Riesgo de Desastres de Macul** (central 1444).
-- **Representación:** los puntos críticos son peligros puntuales, y no hay rol para eso. Cargarlos como `referencia` (los puntos ya se dibujan, `pointToLayer` en `mapa.js`). Durante una alerta de lluvia, el operador los marca como `bloqueo`. **No** inventar áreas haciendo buffers.
+- **Datos oficiales:** Macul **no aparece** en el listado de 175 puntos críticos del Gobierno de Santiago (jul-2026), pero **sí en SENAPRED**: `Puntos_Críticos_Programa_Invierno_2022` tiene **31 puntos de Macul** informados por la municipalidad (spec Anexo A). Son de 2022: los actuales deben venir de la **Dirección de Gestión del Riesgo de Desastres de Macul** (central 1444).
+- **Representación (hecho):** puntos críticos 2022 como `referencia`, coloreados por nivel de riesgo 2022, con causa en el popup y "punto crítico más cercano" en el diagnóstico informativo. Durante una alerta de lluvia, el operador marca `bloqueo` (calles anegadas), `area_peligro` (sector afectado) y `punto_encuentro` (albergues). Las rutas por calles esquivan los bloqueos (`avoid_polygons`). **No** inventar áreas haciendo buffers.
 - **Demo para la entrevista:** alerta de simulacro "temporal" en Macul + bloqueos dibujados en vivo + ruta que los esquiva.
 - **Qué pedir en la entrevista:**
   1. Plan Comunal de Emergencia y sus **anexos por amenaza** (Ley 21.364). Ejemplo de formato: el anexo de inundaciones de La Reina 2025–2027, con 28 puntos críticos.

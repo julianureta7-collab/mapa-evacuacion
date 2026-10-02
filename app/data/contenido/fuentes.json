@@ -1,11 +1,15 @@
 {
-  "_doc": "Fuentes oficiales del contenido informativo (spec §2.2). Cada recomendación cita una o más de estas. Consultadas el 1-oct-2026.",
-  "senapred_tsunami":      { "organismo": "SENAPRED", "titulo": "Tsunami: recomendaciones", "url": "https://senapred.cl/tsunami/" },
-  "senapred_if":           { "organismo": "SENAPRED", "titulo": "Incendios forestales: recomendaciones", "url": "https://senapred.cl/incendios-forestales/" },
-  "senapred_ie":           { "organismo": "SENAPRED", "titulo": "Incendios estructurales: recomendaciones", "url": "https://senapred.cl/incendios-estructurales/" },
-  "minsal_tsunami":        { "organismo": "Ministerio de Salud", "titulo": "Tsunami: recomendaciones generales si estás en la costa", "url": "https://degreyd.minsal.cl/recomendaciones-generales-2/" },
-  "minsal_if":             { "organismo": "Ministerio de Salud", "titulo": "Qué hacer en caso de incendios forestales", "url": "https://degreyd.minsal.cl/que-hacer-en-caso-de-incendios-forestales/" },
-  "minsal_ie":             { "organismo": "Ministerio de Salud", "titulo": "Qué hacer en caso de incendios estructurales", "url": "https://degreyd.minsal.cl/que-hacer-en-caso-de-incendios-estructurales/" },
-  "conaf_senales":         { "organismo": "CONAF", "titulo": "Cuatro señales para evacuar de inmediato ante un incendio forestal (vía CNN Chile)", "url": "https://www.cnnchile.com/pais/cuatro-senales-evacuar-inmediato-incendio-forestal-conaf/" },
-  "uc_ingenieria":         { "organismo": "Escuela de Ingeniería UC", "titulo": "Tríptico plan de emergencia (Campus San Joaquín)", "url": "https://deg.ing.uc.cl/wp-content/uploads/2023/11/triptico-plan-de-emergencia.pdf" }
+  "_doc": "Fuentes oficiales del contenido informativo (spec §2.2). Cada recomendación cita una o más de estas. Consultadas el 1-oct-2026 (inundación y Macul: 2-oct-2026).",
+  "senapred_tsunami":     { "organismo": "SENAPRED", "titulo": "Tsunami: recomendaciones", "url": "https://senapred.cl/tsunami/" },
+  "senapred_if":          { "organismo": "SENAPRED", "titulo": "Incendios forestales: recomendaciones", "url": "https://senapred.cl/incendios-forestales/" },
+  "senapred_ie":          { "organismo": "SENAPRED", "titulo": "Incendios estructurales: recomendaciones", "url": "https://senapred.cl/incendios-estructurales/" },
+  "minsal_tsunami":       { "organismo": "Ministerio de Salud", "titulo": "Tsunami: recomendaciones generales si estás en la costa", "url": "https://degreyd.minsal.cl/recomendaciones-generales-2/" },
+  "minsal_if":            { "organismo": "Ministerio de Salud", "titulo": "Qué hacer en caso de incendios forestales", "url": "https://degreyd.minsal.cl/que-hacer-en-caso-de-incendios-forestales/" },
+  "minsal_ie":            { "organismo": "Ministerio de Salud", "titulo": "Qué hacer en caso de incendios estructurales", "url": "https://degreyd.minsal.cl/que-hacer-en-caso-de-incendios-estructurales/" },
+  "conaf_senales":        { "organismo": "CONAF", "titulo": "Cuatro señales para evacuar de inmediato ante un incendio forestal (vía CNN Chile)", "url": "https://www.cnnchile.com/pais/cuatro-senales-evacuar-inmediato-incendio-forestal-conaf/" },
+  "uc_ingenieria":        { "organismo": "Escuela de Ingeniería UC", "titulo": "Tríptico plan de emergencia (Campus San Joaquín)", "url": "https://deg.ing.uc.cl/wp-content/uploads/2023/11/triptico-plan-de-emergencia.pdf" },
+  "senapred_inundaciones":{ "organismo": "SENAPRED", "titulo": "Inundaciones: recomendaciones", "url": "https://senapred.cl/inundaciones/" },
+  "minsal_inundaciones":  { "organismo": "Ministerio de Salud", "titulo": "Qué hacer en caso de inundaciones", "url": "https://degreyd.minsal.cl/que-hacer-en-caso-de-inundaciones/" },
+  "minsal_sistema_frontal":{ "organismo": "Ministerio de Salud", "titulo": "¿Qué hacer en caso de un sistema frontal?", "url": "https://degreyd.minsal.cl/que-hacer-en-caso-de-un-sistema-frontal/" },
+  "muni_macul":           { "organismo": "Municipalidad de Macul", "titulo": "Macul refuerza medidas preventivas ante sistema frontal (9-jun-2026)", "url": "https://www.munimacul.cl/portalnv/index.php/2026/06/09/macul-refuerza-medidas-preventivas-ante-sistema-frontal-y-llama-a-la-comunidad-a-colaborar/" }
 }

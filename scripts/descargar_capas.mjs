@@ -12,16 +12,21 @@ import { fileURLToPath } from 'node:url';
 
 const RAIZ = join(dirname(fileURLToPath(import.meta.url)), '..');
 const SENAPRED = 'https://services5.arcgis.com/i7S5PSnIJAUcWvSE/ArcGIS/rest/services';
+// División Político Administrativa (SUBDERE, IGM e INE, 2018), publicada por el MOP. Solo responde en JSON de Esri.
+const DPA_MOP = 'https://rest-sit.mop.gob.cl/arcgis/rest/services/INTEROP/SERVICIO_DPA/MapServer';
 
 // bbox = [oeste, sur, este, norte] en grados (EPSG:4326)
 const BBOX_VINA = [-71.60, -33.06, -71.48, -32.93];
 
-// Clave = "<zona>/<amenaza>", igual que la carpeta de destino y los ids del catálogo.
+// Clave = "<zona>/<amenaza>", igual que la carpeta de destino y los ids del catálogo
+// ("<zona>/cobertura" para el límite de una zona). bbox es opcional si la capa trae "where".
 // Por capa (opcionales):
-//   campos      lista de campos a guardar (por defecto, todos)
-//   where       filtro ArcGIS (por defecto '1=1'), p. ej. "volcan='Villarrica'"
+//   campos      lista de campos a guardar (por defecto, todos). Úsalo también para NO guardar datos personales
+//   where       filtro ArcGIS (por defecto '1=1'), p. ej. "volcan='Villarrica'" o "CUT_COM='13118'"
 //   recortar    true = recortar los polígonos al bbox (para capas nacionales con polígonos enormes)
 //   generalizar tolerancia en grados para simplificar la geometría en el servidor (0.00005 ≈ 5 m)
+//   decodificar true = reemplazar los códigos de los dominios de ArcGIS por su nombre (p. ej. 9 → "Colapso colectores…")
+//   esri        true = el servicio no entrega GeoJSON (f=json de Esri): se convierte aquí
 const ESCENARIOS = {
   'vina/tsunami': {
     nombre: 'Viña del Mar',
@@ -51,6 +56,29 @@ const ESCENARIOS = {
       // Mide incendios pasados: en el catálogo va con rol "referencia", nunca como área de peligro.
       { id: 0, archivo: 'recurrencia_2020_2024', nombre: 'Densidad de Incendios Forestales 2020-2024',
         campos: ['gridcode', 'recurrencia'], recortar: true, generalizar: 0.00005 },
+    ],
+  },
+  'macul/cobertura': {
+    nombre: 'Macul (límite comunal)',
+    servicio: DPA_MOP,
+    fuente: 'SUBDERE, IGM e INE (2018) — División Político Administrativa, Comunas (servicio del MOP)',
+    ficha: `${DPA_MOP}/1`,
+    publicacion: '2018',
+    capas: [
+      { id: 1, archivo: 'limite_comunal', nombre: 'Comunas', where: "CUT_COM='13118'",
+        campos: ['CUT_COM', 'COMUNA'], generalizar: 0.00005, esri: true },
+    ],
+  },
+  'macul/inundacion': {
+    nombre: 'Macul',
+    servicio: `${SENAPRED}/Puntos_Cr%C3%ADticos_Programa_Invierno_2022/FeatureServer`,
+    fuente: 'SENAPRED (ex ONEMI) — Puntos Críticos Programa Invierno 2022 (levantamiento comunal)',
+    ficha: 'https://www.arcgis.com/home/item.html?id=09b724392dec47b2972d290e110b7dfc',
+    publicacion: '2022-04-27',
+    capas: [
+      // 31 puntos de Macul (consultado el 2-oct-2026). No se guarda "responsabl" (nombre de una persona).
+      { id: 0, archivo: 'puntos_criticos_2022', nombre: 'Puntos Críticos Programa Invierno', where: "comuna='13118'",
+        campos: ['sector', 'causa_punt', 'nivel_de_riesgo_2022'], decodificar: true },
     ],
   },
 };
@@ -105,38 +133,79 @@ function recortarGeometria(g, bbox) {
   return g;   // puntos y líneas no se recortan
 }
 
+// ---- JSON de Esri → GeoJSON (servicios que no entregan f=geojson) ----
+// Esri: anillo exterior en sentido horario, agujeros antihorario.
+const areaFirmada = (r) => { let a = 0; for (let i = 1; i < r.length; i++) a += (r[i][0] - r[i - 1][0]) * (r[i][1] + r[i - 1][1]); return a; };
+function esriAGeoJSON(g) {
+  if (!g) return null;
+  if (g.x != null) return { type: 'Point', coordinates: [g.x, g.y] };
+  if (g.paths) return g.paths.length === 1 ? { type: 'LineString', coordinates: g.paths[0] } : { type: 'MultiLineString', coordinates: g.paths };
+  if (g.rings) {
+    const poligonos = [];
+    for (const r of g.rings) {
+      if (areaFirmada(r) > 0 || !poligonos.length) poligonos.push([r]);   // horario = exterior
+      else poligonos[poligonos.length - 1].push(r);                       // agujero del último exterior
+    }
+    return poligonos.length === 1 ? { type: 'Polygon', coordinates: poligonos[0] } : { type: 'MultiPolygon', coordinates: poligonos };
+  }
+  return null;
+}
+
+// Dominios de ArcGIS (código → nombre) de una capa, para guardar textos legibles.
+async function dominios(servicio, capa) {
+  const resp = await fetch(`${servicio}/${capa.id}?f=json`);
+  const json = await resp.json();
+  const mapas = {};
+  for (const campo of json.fields || []) {
+    if (campo.domain?.codedValues) mapas[campo.name] = Object.fromEntries(campo.domain.codedValues.map(v => [String(v.code), v.name]));
+  }
+  return mapas;
+}
+
 async function consultarCapa(servicio, capa, bbox) {
   const features = [];
   let offset = 0;
   const tam = 1000;
+  const paginar = !!bbox;          // con un "where" puntual (sin bbox) basta una consulta
   while (true) {
     const params = new URLSearchParams({
       where: capa.where || '1=1',
-      geometry: bbox.join(','),
-      geometryType: 'esriGeometryEnvelope',
-      inSR: '4326',
-      spatialRel: 'esriSpatialRelIntersects',
       outFields: capa.campos ? capa.campos.join(',') : '*',
       outSR: '4326',
-      resultOffset: String(offset),
-      resultRecordCount: String(tam),
-      f: 'geojson',
+      f: capa.esri ? 'json' : 'geojson',
     });
+    if (bbox) {
+      params.set('geometry', bbox.join(','));
+      params.set('geometryType', 'esriGeometryEnvelope');
+      params.set('inSR', '4326');
+      params.set('spatialRel', 'esriSpatialRelIntersects');
+    }
+    if (paginar) { params.set('resultOffset', String(offset)); params.set('resultRecordCount', String(tam)); }
     if (capa.generalizar) params.set('maxAllowableOffset', String(capa.generalizar));
     const url = `${servicio}/${capa.id}/query?${params}`;
     const resp = await fetch(url);
     if (!resp.ok) throw new Error(`HTTP ${resp.status} en capa ${capa.nombre}`);
     const json = await resp.json();
     if (json.error) throw new Error(`ArcGIS: ${JSON.stringify(json.error)}`);
-    const nuevos = json.features ?? [];
+    const nuevos = (json.features ?? []).map(f => capa.esri
+      ? { type: 'Feature', properties: f.attributes || {}, geometry: esriAGeoJSON(f.geometry) } : f);
     features.push(...nuevos);
     const hayMas = json.exceededTransferLimit || json.properties?.exceededTransferLimit;
-    if (!hayMas || nuevos.length === 0) break;
+    if (!paginar || !hayMas || nuevos.length === 0) break;
     offset += nuevos.length;
+  }
+  if (capa.decodificar) {
+    const mapas = await dominios(servicio, capa);
+    for (const f of features) {
+      for (const [campo, mapa] of Object.entries(mapas)) {
+        const v = f.properties?.[campo];
+        if (v != null && mapa[String(v)] != null) f.properties[campo] = mapa[String(v)];
+      }
+    }
   }
   const salida = [];
   for (const f of features) {
-    if (f.geometry && capa.recortar) f.geometry = recortarGeometria(f.geometry, bbox);
+    if (f.geometry && capa.recortar && bbox) f.geometry = recortarGeometria(f.geometry, bbox);
     if (!f.geometry) continue;
     f.geometry.coordinates = redondear(f.geometry.coordinates);
     salida.push(f);
@@ -167,7 +236,7 @@ async function descargarEscenario(clave) {
     ficha_catalogo: esc.ficha,
     fecha_publicacion_fuente: esc.publicacion,
     fecha_descarga: new Date().toISOString(),
-    bbox: esc.bbox,
+    bbox: esc.bbox || null,
     capas: resumen,
   };
   await writeFile(join(carpeta, 'metadata.json'), JSON.stringify(metadata, null, 2));

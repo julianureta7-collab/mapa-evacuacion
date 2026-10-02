@@ -2,16 +2,16 @@
 // Zonas × amenazas desde data/catalogo.json (spec §3). El pin decide la zona (spec §5.1):
 // al elegir una zona en el desplegable el pin va a su centro, y al arrastrar el pin a otra zona
 // la app cambia de zona sola.
-import { cargarCatalogo, zonas, zona as zonaPorId, amenazasDe, amenazaInfo, fuente, estiloDe, clasesDe, zonaEn } from './catalogo.js?v=16';
-import { cargarCapas } from './datos.js?v=16';
-import { crearMapa, mostrarCapas, centrarEn, dibujarRuta, limpiarRuta, setModoMapa } from './mapa.js?v=16';
-import { prepararRutas, calcularRuta, nombreDestino, nombreVia, organismoDe, rumboATexto, hayRutasOperador } from './ruta.js?v=16';
-import { escucharOperador, capasOperador, codigosDesactivados, elementosActuales, desactivacionesActuales, aFeature, ROLES_OPERADOR } from './capasOperador.js?v=16';
-import { prepararAreas, diagnosticar, textosDiagnostico } from './diagnostico.js?v=16';
-import { iniciarPosicion, iniciarGPSSiHayPermiso, modoSimulacion, modoGPS, ubicarPin, setLinterna, posicionActual, ubicacionReal, pinArrastrando, bloquearPin } from './posicion.js?v=16';
-import { escucharAlertas } from './alertas.js?v=16';
-import { cargarContenido, dibujarInformacion as pintarInformacion, htmlPrecaucion } from './informacion.js?v=16';
-import { crearControlBrujula } from './brujula.js?v=16';
+import { cargarCatalogo, zonas, zona as zonaPorId, amenazasDe, amenazaInfo, fuente, estiloDe, clasesDe, zonaEn } from './catalogo.js?v=17';
+import { cargarCapas } from './datos.js?v=17';
+import { crearMapa, mostrarCapas, centrarEn, dibujarRuta, limpiarRuta, setModoMapa } from './mapa.js?v=17';
+import { prepararRutas, calcularRuta, nombreDestino, nombreVia, organismoDe, rumboATexto, hayRutasOperador } from './ruta.js?v=17';
+import { escucharOperador, capasOperador, codigosDesactivados, elementosActuales, desactivacionesActuales, aFeature, ROLES_OPERADOR } from './capasOperador.js?v=17';
+import { prepararAreas, diagnosticar, textosDiagnostico } from './diagnostico.js?v=17';
+import { iniciarPosicion, iniciarGPSSiHayPermiso, modoSimulacion, modoGPS, ubicarPin, setLinterna, posicionActual, ubicacionReal, pinArrastrando, bloquearPin } from './posicion.js?v=17';
+import { escucharAlertas } from './alertas.js?v=17';
+import { cargarContenido, dibujarInformacion as pintarInformacion, htmlPrecaucion } from './informacion.js?v=17';
+import { crearControlBrujula } from './brujula.js?v=17';
 
 const $ = (id) => document.getElementById(id);
 let mapa = null;
@@ -33,14 +33,17 @@ const fmtMin = (s) => `${Math.max(1, Math.round(s / 60))} min`;
 // ---------------------------------------------------------------- Leyenda, fuente, información
 
 function muestraDe(def, e) {
+  if (e.radius && def.rol !== 'punto_encuentro') return `<span class="muestra punto" style="background:${e.fillColor};border:1px solid rgba(0,0,0,.25)"></span>`;
   if (def.rol === 'area_peligro' || e.fill) return `<span class="muestra" style="background:${e.fillColor || e.color};opacity:.75;border:1px solid ${e.weight ? e.color : 'rgba(0,0,0,.25)'}"></span>`;
   if (def.rol === 'punto_encuentro') return `<span class="muestra punto" style="background:${e.fillColor}"></span>`;
   return `<span class="muestra linea" style="border-top-color:${e.color};border-top-style:${e.dashArray ? 'dashed' : 'solid'}"></span>`;
 }
 
 function dibujarLeyenda(capas) {
-  $('leyenda').innerHTML = capas.map(({ def }) => {
-    const clases = clasesDe(def);
+  $('leyenda').innerHTML = capas.map(({ def, geo }) => {
+    // Solo las clases que aparecen en los datos (p. ej. sin "Muy alto" si no hay ninguno)
+    const presentes = def.estilo_por ? new Set(geo.features.map(f => String(f.properties?.[def.estilo_por.campo]))) : null;
+    const clases = clasesDe(def).filter(c => !presentes || presentes.has(c.valor));
     if (clases.length) {
       return `<li class="leyenda-grupo">${def.nombre}</li>`
         + clases.map(c => `<li class="leyenda-clase">${muestraDe(def, c.estilo)}${c.valor}</li>`).join('');
@@ -215,22 +218,38 @@ function otraAreaQueContiene(latlng) {
   return areasOtras.find(x => turf.booleanPointInPolygon(pt, x.f)) || null;
 }
 
-// Valor de las capas con "consulta" en el punto (p. ej. recurrencia de incendios 2020–2024).
+// Valor de las capas con "consulta" en el punto: en polígonos, el valor del que contiene el punto
+// (p. ej. recurrencia de incendios 2020–2024); en puntos, el más cercano (p. ej. punto crítico de lluvias).
 let capasConsulta = [];
+const RADIO_CERCANO_M = 3000;
 function consultasEn(latlng) {
   if (!latlng) return [];
   const pt = turf.point([latlng.lng, latlng.lat]);
   const filas = [];
   for (const { def, geo } of capasConsulta) {
-    if (!def.consulta) continue;
+    const q = def.consulta;
+    if (!q) continue;
+    const puntos = geo.features.filter(ft => ft.geometry?.type === 'Point');
+    if (puntos.length) {
+      let mejor = null;
+      for (const ft of puntos) {
+        const d = turf.distance(pt, ft.geometry.coordinates, { units: 'meters' });
+        if (!mejor || d < mejor.d) mejor = { ft, d };
+      }
+      if (!mejor || mejor.d > RADIO_CERCANO_M) { filas.push(`${q.etiqueta}: ninguno a menos de ${fmtDist(RADIO_CERCANO_M)}.`); continue; }
+      const p = mejor.ft.properties || {};
+      const detalle = q.detalle && p[q.detalle] ? ` (${escaparHTML(String(p[q.detalle]).toLowerCase())})` : '';
+      filas.push(`${q.etiqueta}: <strong>${escaparHTML(String(p[q.campo] ?? 'sin nombre'))}</strong>, a ${fmtDist(mejor.d)}${detalle}.`);
+      continue;
+    }
     const f = geo.features.find(ft => {
       const [o, s, e, n] = ft._bbox || (ft._bbox = turf.bbox(ft));
       return latlng.lng >= o && latlng.lng <= e && latlng.lat >= s && latlng.lat <= n && turf.booleanPointInPolygon(pt, ft);
     });
-    const v = f?.properties?.[def.consulta.campo];
+    const v = f?.properties?.[q.campo];
     filas.push(v != null
-      ? `${def.consulta.etiqueta} en este punto: <strong>${escaparHTML(String(v))}</strong>.`
-      : `${def.consulta.etiqueta}: sin registro en este punto.`);
+      ? `${q.etiqueta} en este punto: <strong>${escaparHTML(String(v))}</strong>.`
+      : `${q.etiqueta}: sin registro en este punto.`);
   }
   return filas;
 }
@@ -428,7 +447,7 @@ async function alCambiarPosicion(latlng, precision, arrastrando) {
   }
   // El punto decide la zona: si cayó en otra zona (o fuera de cobertura), cambiarla.
   if (latlng) {
-    const z = zonaEn([latlng.lng, latlng.lat]);
+    const z = zonaEn([latlng.lng, latlng.lat], emergencia?.zona);   // durante una alerta manda su zona
     if ((z?.id || null) !== (zonaActual?.id || null)) {
       await activarZona(z?.id || null, { amenazaId: emergencia?.zona === z?.id ? emergencia.amenaza : null });
       evaluarAlertas();

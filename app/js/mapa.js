@@ -1,5 +1,5 @@
 // Mapa Leaflet: fondo OSM y capas de la zona × amenaza actual.
-import { estiloDe } from './catalogo.js?v=16';
+import { estiloDe } from './catalogo.js?v=17';
 
 let mapa, controlCapas, grupoCapas;
 let capasDibujadas = [];        // [{ def, capa }]
@@ -30,14 +30,17 @@ export function crearMapa(idContenedor) {
   return mapa;
 }
 
+const escHTML = (t) => String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
 function popupDe(def, props) {
   const nombreCapa = def.nombre;
   const titulo = props.nombre_pe?.trim() || props.nombre_ve?.trim() || props.name || props.sector || nombreCapa;
   const filas = [];
-  if (props.sector) filas.push(`Sector: ${props.sector}`);
+  if (props.sector && titulo !== props.sector) filas.push(`Sector: ${props.sector}`);
   if (props.nom_com || props.comuna) filas.push(`Comuna: ${props.nom_com || props.comuna}`);
   if (props.name && titulo !== props.name) filas.push(`Código: ${props.name}`);
-  if (def.consulta && props[def.consulta.campo] != null) filas.push(`${def.consulta.etiqueta}: ${props[def.consulta.campo]}`);
+  if (def.popup) { for (const c of def.popup) if (props[c.campo] != null) filas.push(`${c.etiqueta}: ${props[c.campo]}`); }
+  else if (def.consulta && props[def.consulta.campo] != null) filas.push(`${def.consulta.etiqueta}: ${props[def.consulta.campo]}`);
   if (props._procedencia === 'operador') {
     const e = (t) => String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const cuando = props.creado ? new Date(props.creado).toLocaleString('es-CL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
@@ -47,7 +50,7 @@ function popupDe(def, props) {
   }
   const f = props._fuente;
   const origen = f ? `Fuente: ${f.organismo}${f.nombre ? ` — ${f.nombre}` : ''}` : '';
-  return `<div class="popup-titulo">${titulo}</div>${titulo !== nombreCapa ? `<div>${nombreCapa}</div>` : ''}${filas.map(x => `<div>${x}</div>`).join('')}${origen ? `<div class="popup-fuente">${origen}</div>` : ''}`;
+  return `<div class="popup-titulo">${escHTML(titulo)}</div>${titulo !== nombreCapa ? `<div>${escHTML(nombreCapa)}</div>` : ''}${filas.map(x => `<div>${escHTML(x)}</div>`).join('')}${origen ? `<div class="popup-fuente">${escHTML(origen)}</div>` : ''}`;
 }
 
 // En emergencia el mapa muestra solo lo esencial: área de peligro y puntos de encuentro

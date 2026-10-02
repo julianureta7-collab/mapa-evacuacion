@@ -16,7 +16,7 @@
 //     dentro del área); a igualdad, la más corta en tiempo.
 //  5. Si ORS falla (sin clave, sin red, límite 429): dirección en línea recta al más cercano.
 
-import { ORS_API_KEY, SUPABASE_URL, SUPABASE_KEY } from './claves.js?v=16';
+import { ORS_API_KEY, SUPABASE_URL, SUPABASE_KEY } from './claves.js?v=17';
 
 // HeiGIT apagó api.openrouteservice.org el 28-sep-2026 (desde el 27-ago solo daba 10 % de cuota y luego 403).
 // Dirección vigente: api.heigit.org/<servicio>/<versión>/… con la MISMA clave, enviada en el encabezado Authorization.
@@ -235,20 +235,42 @@ const MOTIVOS_ORS = {
   429: 'se alcanzó el límite de consultas de rutas por minuto',
 };
 
-async function pedirRutaORS(origen, destino, signal) {
+// Polígonos que ORS debe esquivar (spec §6): tramos bloqueados (con un margen) y áreas de peligro de
+// otras alertas, salvo las que contienen el origen o el destino (si no, ORS no encuentra ruta).
+// NO se incluye el área de la amenaza principal: la persona suele estar dentro.
+const MARGEN_BLOQUEO_M = 8;
+function poligonosAEvitar(origen, destino) {
+  const polis = [];
+  for (const b of bloqueos) {
+    const g = /Polygon/.test(b.geometry.type) ? b : turf.buffer(b, MARGEN_BLOQUEO_M, { units: 'meters', steps: 4 });
+    if (g?.geometry) polis.push(g);
+  }
+  for (const a of areasExtra) polis.push(a);
+  const coords = [];
+  for (const p of polis) {
+    if (turf.booleanPointInPolygon(origen, p) || turf.booleanPointInPolygon(destino, p)) continue;
+    if (p.geometry.type === 'Polygon') coords.push(p.geometry.coordinates);
+    else coords.push(...p.geometry.coordinates);
+  }
+  return coords.length ? { type: 'MultiPolygon', coordinates: coords } : null;
+}
+
+async function pedirRutaORS(origen, destino, signal, { evitar = true } = {}) {
   if (Date.now() < pausaHasta) throw Object.assign(new Error(ultimoErrorORS?.motivo || 'servicio de rutas en pausa'), { codigo: ultimoErrorORS?.codigo || 0 });
+  const avoid = evitar ? poligonosAEvitar(origen, destino) : null;
   let resp;
   try {
     resp = usarDirecto()
       ? await fetch(ORS_URL, {
           method: 'POST', signal,
           headers: { 'Authorization': ORS_API_KEY, 'Content-Type': 'application/json', 'Accept': 'application/geo+json' },
-          body: JSON.stringify({ coordinates: [origen, destino], instructions: true, language: 'es', units: 'm' }),
+          body: JSON.stringify({ coordinates: [origen, destino], instructions: true, language: 'es', units: 'm',
+            ...(avoid ? { options: { avoid_polygons: avoid } } : {}) }),
         })
       : await fetch(ORS_PROXY, {
           method: 'POST', signal,
           headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
-          body: JSON.stringify({ coordinates: [origen, destino] }),
+          body: JSON.stringify({ coordinates: [origen, destino], ...(avoid ? { evitar: avoid } : {}) }),
         });
   } catch (e) {
     if (e.name === 'AbortError') throw e;
@@ -260,9 +282,14 @@ async function pedirRutaORS(origen, destino, signal) {
     throw Object.assign(new Error(ultimoErrorORS.motivo), { codigo: 0 });
   }
   if (!resp.ok) {
-    let detalle = '';
-    try { const j = await resp.json(); detalle = j?.error?.message || j?.error || ''; } catch { /* sin cuerpo */ }
-    const motivo = MOTIVOS_ORS[resp.status] || `servicio de rutas no disponible (HTTP ${resp.status})`;
+    let detalle = '', cuerpo = '';
+    try { const j = await resp.json(); cuerpo = JSON.stringify(j); detalle = j?.error?.message || j?.error || j?.message || ''; } catch { /* sin cuerpo */ }
+    // Con polígonos a esquivar, ORS puede no encontrar ruta (404/400): se reintenta sin ellos y
+    // la validación común descarta la ruta si cruza un bloqueo.
+    if (avoid && (resp.status === 404 || resp.status === 400)) return pedirRutaORS(origen, destino, signal, { evitar: false });
+    // 404 de ORS = "no hay ruta"; 404 del gateway de Supabase = la función no está desplegada
+    const sinRuta = resp.status === 404 && !/function/i.test(cuerpo);
+    const motivo = sinRuta ? 'no se encontró una ruta a pie' : (MOTIVOS_ORS[resp.status] || `servicio de rutas no disponible (HTTP ${resp.status})`);
     ultimoErrorORS = { codigo: resp.status, motivo, detalle: String(detalle), cuando: new Date() };
     console.warn('[rutas] OpenRouteService respondió', resp.status, detalle);
     if ([401, 403, 429].includes(resp.status)) pausaHasta = Date.now() + PAUSA_TRAS_RECHAZO_MS;
@@ -373,7 +400,10 @@ export async function calcularRuta(origen, { signal } = {}) {
           descartadas: rutas.filter(r => r && r.analisis.reentradas > 0).length,
         };
       } else if (rutas.some(Boolean)) {
-        aviso = `Todas las rutas calculadas vuelven a entrar a la ${areasExtra.length ? 'zona de peligro' : nombreArea}. Se muestra la dirección al punto más cercano.`;
+        const porBloqueo = rutas.some(r => r?.analisis.cruzaBloqueo);
+        const porArea = rutas.some(r => r?.analisis.reentradas > 0);
+        const motivo = [porBloqueo && 'cruzan un tramo bloqueado', porArea && `vuelven a entrar a la ${areasExtra.length ? 'zona de peligro' : nombreArea}`].filter(Boolean).join(' o ');
+        aviso = `Las rutas calculadas ${motivo}. Se muestra la dirección al punto más cercano.`;
       } else {
         aviso = 'No se pudo calcular la ruta por calles.';
       }

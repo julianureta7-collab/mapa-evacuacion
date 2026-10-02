@@ -22,6 +22,21 @@ function distanciaKm([lng1, lat1]: number[], [lng2, lat2]: number[]) {
   return 6371 * 2 * Math.asin(Math.sqrt(a));
 }
 
+const MAX_VERTICES_EVITAR = 2000;
+// MultiPolygon GeoJSON con todos sus vértices en Chile y un tamaño razonable.
+function poligonosValidos(g: any) {
+  if (!g || g.type !== 'MultiPolygon' || !Array.isArray(g.coordinates)) return false;
+  let n = 0;
+  for (const poli of g.coordinates) {
+    if (!Array.isArray(poli)) return false;
+    for (const anillo of poli) {
+      if (!Array.isArray(anillo) || anillo.length < 4) return false;
+      for (const p of anillo) { if (!enChile(p)) return false; n++; }
+    }
+  }
+  return n <= MAX_VERTICES_EVITAR;
+}
+
 const enChile = (p: unknown) => Array.isArray(p) && p.length === 2 && p.every(Number.isFinite)
   && p[0] > -76 && p[0] < -66 && p[1] > -56 && p[1] < -17;
 
@@ -46,8 +61,9 @@ Deno.serve(async (req) => {
   const clave = Deno.env.get('ORS_API_KEY');
   if (!clave) return responder(500, { error: 'Falta el secreto ORS_API_KEY en Supabase' });
 
-  let coords: unknown;
-  try { coords = (await req.json())?.coordinates; } catch { return responder(400, { error: 'JSON inválido' }); }
+  let coords: unknown, evitar: unknown;
+  try { const cuerpo = await req.json(); coords = cuerpo?.coordinates; evitar = cuerpo?.evitar; }
+  catch { return responder(400, { error: 'JSON inválido' }); }
   if (!Array.isArray(coords) || coords.length !== 2 || !coords.every(enChile)) {
     return responder(400, { error: 'Se esperan 2 coordenadas [lng, lat] dentro de Chile' });
   }
@@ -55,10 +71,16 @@ Deno.serve(async (req) => {
     return responder(400, { error: `Distancia mayor a ${MAX_DISTANCIA_KM} km` });
   }
 
+  // Opcional: polígonos a esquivar (tramos bloqueados y áreas de peligro marcadas por un operador).
+  if (evitar != null && !poligonosValidos(evitar)) {
+    return responder(400, { error: 'Polígonos a evitar inválidos (MultiPolygon en Chile, máx. 2000 vértices)' });
+  }
+
   const r = await fetch(ORS_URL, {
     method: 'POST',
     headers: { 'Authorization': clave, 'Content-Type': 'application/json', 'Accept': 'application/geo+json' },
-    body: JSON.stringify({ coordinates: coords, instructions: true, language: 'es', units: 'm' }),
+    body: JSON.stringify({ coordinates: coords, instructions: true, language: 'es', units: 'm',
+      ...(evitar ? { options: { avoid_polygons: evitar } } : {}) }),
   });
   return responder(r.status, await r.text());
 });
