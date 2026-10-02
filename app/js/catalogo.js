@@ -2,7 +2,7 @@
 // qué amenazas tiene cada una y qué capas oficiales las describen" vive en data/catalogo.json.
 // El resto del código trabaja con roles genéricos y nunca pregunta por una zona por su nombre.
 
-import { cargarJSON } from './datos.js?v=14';
+import { cargarJSON } from './datos.js?v=16';
 
 export const ROLES = ['area_peligro', 'ruta', 'punto_encuentro', 'referencia', 'bloqueo'];
 
@@ -10,7 +10,7 @@ let cat = null;
 
 // base: ruta hasta la carpeta app/ ('' desde la app usuario, '../' desde la app operador)
 export async function cargarCatalogo(base = '') {
-  cat = await cargarJSON(`${base}data/catalogo.json?v=14`);   // subir junto con los ?v= de los scripts
+  cat = await cargarJSON(`${base}data/catalogo.json?v=16`);   // subir junto con los ?v= de los scripts
   return cat;
 }
 
@@ -22,8 +22,21 @@ export const fuente = (id) => cat.fuentes[id] || null;
 // Amenazas disponibles en una zona (el desplegable solo muestra estas).
 export const amenazasDe = (z) => (z?.amenazas || []).map(a => ({ ...amenazaInfo(a.id), def: a }));
 
-export function estiloDe(capa) {
-  return { ...(cat.estilos[capa.rol] || {}), ...(capa.estilo || {}) };
+// Estilo de una capa. Si la capa declara "estilo_por" ({campo, valores}) y se pasa un feature,
+// se agrega el estilo de su clase (p. ej. recurrencia "Alta" → rojo).
+export function estiloDe(capa, feature = null) {
+  const base = { ...(cat.estilos[capa.rol] || {}), ...(capa.estilo || {}) };
+  const por = capa.estilo_por;
+  if (!por || !feature) return base;
+  return { ...base, ...(por.valores?.[feature.properties?.[por.campo]] || {}) };
+}
+
+// Clases de una capa con estilo_por, para la leyenda: [{ valor, estilo }]
+export function clasesDe(capa) {
+  const por = capa.estilo_por;
+  if (!por) return [];
+  const base = estiloDe(capa);
+  return Object.entries(por.valores || {}).map(([valor, e]) => ({ valor, estilo: { ...base, ...e } }));
 }
 
 // ¿En qué zona cae un punto [lng, lat]? Devuelve la primera zona cuya cobertura lo contiene.

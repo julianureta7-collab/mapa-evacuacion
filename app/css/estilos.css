@@ -211,3 +211,5 @@ body.modo-emergencia .ruta-aviso { font-size: 12px; }
 .precaucion-lista { margin: 4px 0 0; padding-left: 22px; }
 .precaucion-lista li { font-size: 17px; font-weight: 600; line-height: 1.35; margin-bottom: 6px; }
 .precaucion-fuente { font-size: 11px; color: var(--tenue); margin-top: 4px; }
+.leyenda li.leyenda-grupo { font-weight: 600; padding-bottom: 2px; }
+.leyenda li.leyenda-clase { padding: 2px 0 2px 8px; font-size: 13px; }

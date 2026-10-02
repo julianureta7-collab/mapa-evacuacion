@@ -1,5 +1,5 @@
 {
-  "_doc": "Catálogo de zonas × amenazas (spec §3). Agregar una zona o amenaza = editar este archivo y agregar sus capas en data/<zona>/<amenaza>/. El código no conoce zonas por nombre. Roles válidos: area_peligro, ruta, punto_encuentro, referencia, bloqueo.",
+  "_doc": "Catálogo de zonas × amenazas (spec §3). Agregar una zona o amenaza = editar este archivo y agregar sus capas en data/<zona>/<amenaza>/. El código no conoce zonas por nombre. Roles válidos: area_peligro, ruta, punto_encuentro, referencia, bloqueo. Opcionales por capa: estilo_por {campo, valores: {valor: estilo}} colorea por clase (también en la leyenda); consulta {campo, etiqueta} muestra el valor en el punto del pin (diagnóstico informativo) y en el popup; aviso: texto bajo el diagnóstico cuando la amenaza no tiene área de peligro.",
   "version": 1,
   "amenazas": {
     "tsunami": {
@@ -9,12 +9,12 @@
     },
     "incendio_forestal": {
       "nombre": "Incendio forestal",
-      "area": "zona de amenaza de incendio",
+      "area": "zona afectada por el incendio",
       "contenido": "data/contenido/incendio_forestal.json"
     },
     "incendio_estructural": {
       "nombre": "Incendio estructural",
-      "area": "área afectada por el incendio",
+      "area": "zona afectada por el incendio",
       "contenido": "data/contenido/incendio_estructural.json"
     }
   },
@@ -25,6 +25,14 @@
       "detalle": "Planos de evacuación de los municipios costeros, recopilados por SENAPRED",
       "url": "https://geoportal.cl/geoportal/catalog/download/1dbd467c-ebaf-3c0d-b92e-1a2eb3286f55",
       "publicacion": "2024-05-01"
+    },
+    "senapred_if_2024": {
+      "organismo": "SENAPRED",
+      "nombre": "Amenaza por Incendio Forestal 2024",
+      "detalle": "Densidad de incendios forestales 2020–2024 (incendios por km²), por clase de recurrencia. Elaborado por CONAF, publicado por SENAPRED",
+      "url": "https://www.arcgis.com/home/item.html?id=19268f2baaaf4cfdb8ad93f083c2c437",
+      "_publicacion": "Última modificación del servicio en ArcGIS Online (creado el 2024-04-10).",
+      "publicacion": "2025-10-27"
     }
   },
   "estilos": {
@@ -145,8 +153,49 @@
         },
         {
           "id": "incendio_forestal",
-          "_pendiente": "Verificar si la capa oficial de amenaza por incendio forestal (SENAPRED/CONAF) cubre Viña; mientras tanto, solo lo que dibuje el operador.",
-          "capas": []
+          "_nota": "La capa oficial mide incendios pasados (2020–2024), no un área a evacuar: va como 'referencia' (spec §3, PLAN_ZONAS ítem 2). El área de peligro de una emergencia la dibuja el operador.",
+          "carpeta": "data/vina/incendio_forestal",
+          "metadata": "metadata.json",
+          "capas": [
+            {
+              "archivo": "recurrencia_2020_2024.geojson",
+              "rol": "referencia",
+              "nombre": "Recurrencia de incendios 2020–2024",
+              "fuente": "senapred_if_2024",
+              "visible": true,
+              "estilo": {
+                "color": "#7f2704",
+                "weight": 0,
+                "fill": true,
+                "fillOpacity": 0.45
+              },
+              "estilo_por": {
+                "campo": "recurrencia",
+                "valores": {
+                  "Muy baja": {
+                    "fillColor": "#ffffb2"
+                  },
+                  "Baja": {
+                    "fillColor": "#fecc5c"
+                  },
+                  "Media": {
+                    "fillColor": "#fd8d3c"
+                  },
+                  "Alta": {
+                    "fillColor": "#f03b20"
+                  },
+                  "Muy alta": {
+                    "fillColor": "#bd0026"
+                  }
+                }
+              },
+              "consulta": {
+                "campo": "recurrencia",
+                "etiqueta": "Recurrencia de incendios forestales 2020–2024"
+              },
+              "aviso": "El mapa muestra dónde hubo incendios forestales entre 2020 y 2024 (SENAPRED). No es un área de evacuación: en una emergencia, el operador marcará la zona afectada."
+            }
+          ]
         }
       ]
     },

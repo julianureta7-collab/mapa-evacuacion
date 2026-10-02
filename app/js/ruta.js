@@ -16,7 +16,7 @@
 //     dentro del área); a igualdad, la más corta en tiempo.
 //  5. Si ORS falla (sin clave, sin red, límite 429): dirección en línea recta al más cercano.
 
-import { ORS_API_KEY, SUPABASE_URL, SUPABASE_KEY } from './claves.js?v=14';
+import { ORS_API_KEY, SUPABASE_URL, SUPABASE_KEY } from './claves.js?v=16';
 
 // HeiGIT apagó api.openrouteservice.org el 28-sep-2026 (desde el 27-ago solo daba 10 % de cuota y luego 403).
 // Dirección vigente: api.heigit.org/<servicio>/<versión>/… con la MISMA clave, enviada en el encabezado Authorization.
@@ -31,7 +31,8 @@ const RADIO_VIA_M = 500;         // máximo acercamiento a pie hasta una vía of
 const ACERCAMIENTO_RECTO_M = 60; // bajo esto, el acercamiento se dibuja recto sin pedir ruta
 const FINAL_A_PUNTO_M = 150;     // si la vía termina así de cerca de un punto de encuentro, se une
 
-let areas = [];                  // Features de polígono
+let areas = [];                  // Features de polígono (propias + de otras alertas)
+let areasExtra = [];             // solo las de otras alertas activas de la zona (spec §5.3)
 let puntos = [];                 // Features de punto de encuentro
 let vias = [];                   // Features de línea (vías de evacuación oficiales)
 let viasOperador = [];           // rutas dibujadas por operadores (prioridad 1, spec §6)
@@ -47,8 +48,12 @@ export const hayClaveORS = () => usarDirecto() || !!ORS_PROXY;
 let nombreArea = 'área de peligro';
 
 // Recibe las capas agrupadas por rol (spec §3): area_peligro, ruta, punto_encuentro.
-export function prepararRutas(porRol, { area = 'área de peligro' } = {}) {
-  areas = (porRol.area_peligro?.features || []).filter(f => f.geometry && /Polygon/.test(f.geometry.type));
+// areasExtra: áreas de peligro de otras alertas activas en la zona (spec §5.3). Cuentan igual que las
+// propias para validar: ninguna ruta puede volver a entrar a ellas ni terminar dentro.
+export function prepararRutas(porRol, { area = 'área de peligro', areasExtra: extra = [] } = {}) {
+  const esPoligono = f => f.geometry && /Polygon/.test(f.geometry.type);
+  areasExtra = extra.filter(esPoligono);
+  areas = [...(porRol.area_peligro?.features || []).filter(esPoligono), ...areasExtra];
   puntos = (porRol.punto_encuentro?.features || []).filter(f => f.geometry && f.geometry.type === 'Point');
   vias = (porRol.ruta?.features || []).filter(f => f.geometry && f.geometry.type === 'LineString');
   viasOperador = (porRol.ruta_operador?.features || []).filter(f => f.geometry && f.geometry.type === 'LineString');
@@ -249,7 +254,7 @@ async function pedirRutaORS(origen, destino, signal) {
     if (e.name === 'AbortError') throw e;
     // Cuando ORS rechaza la clave (403) o la cuota, su respuesta NO trae cabeceras CORS:
     // el navegador la bloquea y aquí solo llega un "Failed to fetch". Se trata igual que un rechazo.
-    ultimoErrorORS = { codigo: 0, motivo: 'el servicio de rutas no respondió (clave rechazada, cuota agotada o sin internet)', cuando: new Date() };
+    ultimoErrorORS = { codigo: 0, motivo: usarDirecto() ? 'el servicio de rutas no respondió (clave rechazada, cuota agotada o sin internet)' : "no se pudo contactar la función 'rutas' de Supabase (revisar que esté desplegada y sin verificación JWT)", cuando: new Date() };
     console.warn('[rutas] OpenRouteService no respondió o bloqueó la consulta (revisar clave y cuota):', e.message);
     pausaHasta = Date.now() + PAUSA_TRAS_RECHAZO_MS;
     throw Object.assign(new Error(ultimoErrorORS.motivo), { codigo: 0 });
@@ -272,21 +277,35 @@ async function pedirRutaORS(origen, destino, signal) {
 
 // Recorre la ruta y mide: metros dentro del área, cuántas veces vuelve a entrar,
 // y qué fracción de la ruta va sobre vías de evacuación oficiales.
+// La regla "sale y no vuelve a entrar" se aplica a CADA área por separado: si el área de un incendio
+// está dentro del área de inundación, entrar al incendio cuenta aunque sigas dentro de la inundación.
 export function analizarRuta(coords) {
   let metrosDentro = 0, metrosTotales = 0, reentradas = 0, metrosEnVia = 0;
-  let prevDentro = dentroDeArea(coords[0]);
-  let yaSalio = !prevDentro;
+  const est = areas.map(a => { const d = turf.booleanPointInPolygon(coords[0], a); return { a, dentro: d, yaSalio: !d }; });
+  let prevDentro = est.some(e => e.dentro);
   for (let i = 1; i < coords.length; i++) {
     const a = coords[i - 1], b = coords[i];
     const d = turf.distance(a, b, { units: 'meters' });
     const medio = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
-    const dentro = dentroDeArea(b);
+    let dentro = false;
+    for (const e of est) {
+      const ahora = turf.booleanPointInPolygon(b, e.a);
+      if (ahora && !e.dentro && e.yaSalio) reentradas++;
+      if (!ahora) e.yaSalio = true;
+      e.dentro = ahora;
+      dentro ||= ahora;
+    }
     if (prevDentro || dentro) metrosDentro += d;
-    if (!prevDentro && dentro && yaSalio) reentradas++;
-    if (!dentro) yaSalio = true;
     if (vias.length && cercaDeVia(medio)) metrosEnVia += d;
     metrosTotales += d;
     prevDentro = dentro;
+  }
+  // Áreas de OTRAS alertas donde no estás: la ruta no puede ni tocarlas (también entre vértices).
+  if (areasExtra.length && coords.length > 1) {
+    const linea = turf.lineString(coords);
+    for (const ar of areasExtra) {
+      if (!turf.booleanPointInPolygon(coords[0], ar) && turf.booleanIntersects(linea, ar)) reentradas++;
+    }
   }
   const cruzaBloqueo = bloqueos.length > 0 && coords.length > 1 && bloqueos.some(b => turf.booleanIntersects(turf.lineString(coords), b));
   return { metrosDentro, metrosTotales, reentradas, cruzaBloqueo, fraccionVias: metrosTotales ? metrosEnVia / metrosTotales : 0 };
@@ -330,7 +349,7 @@ export async function calcularRuta(origen, { signal } = {}) {
   // 2) Respaldo: ruta por calles a un punto de encuentro
   const cands = candidatos(origen);
   if (!cands.length) {
-    return { tipo: 'sin_candidatos', aviso: 'No hay vías ni puntos de encuentro cercanos. Dirígete a zona alta, lejos de la costa.' };
+    return { tipo: 'sin_candidatos', aviso: 'No hay vías ni puntos de encuentro cercanos.' };
   }
   let resultado = null, aviso = null;
   if (hayClaveORS()) {
@@ -354,7 +373,7 @@ export async function calcularRuta(origen, { signal } = {}) {
           descartadas: rutas.filter(r => r && r.analisis.reentradas > 0).length,
         };
       } else if (rutas.some(Boolean)) {
-        aviso = `Todas las rutas calculadas vuelven a entrar a la ${nombreArea}. Se muestra la dirección al punto más cercano.`;
+        aviso = `Todas las rutas calculadas vuelven a entrar a la ${areasExtra.length ? 'zona de peligro' : nombreArea}. Se muestra la dirección al punto más cercano.`;
       } else {
         aviso = 'No se pudo calcular la ruta por calles.';
       }
@@ -396,7 +415,7 @@ export function organismoDe(f) {
 
 export function nombreDestino(p) {
   const pr = p?.properties || {};
-  return pr.nombre_pe?.trim() || `Punto de encuentro ${pr.name || ''}`.trim();
+  return pr.nombre_pe?.trim() || (pr.nombre?.trim() ? `punto de encuentro ${pr.nombre.trim()}` : '') || `Punto de encuentro ${pr.name || ''}`.trim();
 }
 
 export function rumboATexto(grados) {

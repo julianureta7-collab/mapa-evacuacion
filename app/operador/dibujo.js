@@ -2,10 +2,10 @@
 // Rutas, puntos de encuentro, áreas de peligro y tramos bloqueados, cada uno con motivo, fuente,
 // autor (automático) y vigencia. También permite desactivar (sin borrar) una vía oficial.
 // Usa Leaflet-Geoman (vendor/geoman, licencia MIT) para dibujar.
-import { zonas, zona as zonaPorId, amenazasDe, amenazaInfo, fuente, estiloDe } from '../js/catalogo.js?v=14';
-import { cargarCapas } from '../js/datos.js?v=14';
-import { nube } from '../js/nube.js?v=14';
-import { ROLES_OPERADOR, escucharOperador, consultarOperador, aFeature, elementosActuales, desactivacionesActuales } from '../js/capasOperador.js?v=14';
+import { zonas, zona as zonaPorId, amenazasDe, amenazaInfo, fuente, estiloDe } from '../js/catalogo.js?v=16';
+import { cargarCapas } from '../js/datos.js?v=16';
+import { nube } from '../js/nube.js?v=16';
+import { ROLES_OPERADOR, escucharOperador, consultarOperador, aFeature, elementosActuales, desactivacionesActuales } from '../js/capasOperador.js?v=16';
 
 const $ = (id) => document.getElementById(id);
 const esc = (t) => String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -81,7 +81,7 @@ async function cargarVista(centrar) {
         const estilo = estiloDe(c);
         L.geoJSON(geo, {
           style: (f) => c.rol === 'ruta' && desact.has(f.properties?.name)
-            ? { ...estilo, color: '#9e9e9e', dashArray: '4 6', opacity: 0.8 } : { ...estilo, opacity: (estilo.opacity ?? 1) * 0.8 },
+            ? { ...estilo, color: '#9e9e9e', dashArray: '4 6', opacity: 0.8 } : { ...estiloDe(c, f), opacity: (estilo.opacity ?? 1) * 0.8 },
           pointToLayer: (_f, ll) => L.circleMarker(ll, estilo),
           pmIgnore: true,
           onEachFeature: (f, l) => {

@@ -1,8 +1,8 @@
-# Mapa de Evacuación — Especificación (v2.1)
+# Mapa de Evacuación — Especificación (v2.6)
 
 > **Fuente única de verdad del proyecto.** Si algo en otro archivo contradice esto, manda este documento.
 > Ubicación: `docs/ESPECIFICACION.md` del repo `julianureta7-collab/mapa-evacuacion`.
-> Versión 2.1 · acordada el 30 de septiembre de 2026 · reemplaza a la especificación v1 (archivo en OneDrive, ya retirado).
+> Versión 2.6 · acordada el 30 de septiembre de 2026, actualizada el 2 de octubre de 2026 · reemplaza a la especificación v1 (archivo en OneDrive, ya retirado).
 
 ## 1. Qué es y para cuándo
 
@@ -58,13 +58,14 @@ Los elementos del operador usan los mismos roles. Así, una zona o amenaza nueva
 | Zona | Amenazas | Fuente | Estado |
 | --- | --- | --- | --- |
 | Viña del Mar | Tsunami | SENAPRED, *Amenaza por Tsunami 2024* (vías, puntos, área, línea segura) | ✅ datos cargados |
-| Viña del Mar | Incendio forestal | Capa oficial de amenaza por incendio forestal (SENAPRED/CONAF en Geoportal, publicación 2020) + lo que dibuje el operador | ⏳ verificar cobertura en Viña y descargar |
-| Campus San Joaquín | Incendio estructural | No hay datos digitales ni respuesta de prevención de riesgos. **Las zonas de seguridad (puntos de encuentro, vigencia permanente, amenaza "todas") y las rutas las dibuja un operador** con la app operador. Durante una alerta, el operador marca el edificio afectado como área de peligro. Mientras no haya nada dibujado, el Campus muestra modo precaución | ⏳ falta ubicar las zonas en terreno |
+| Viña del Mar | Incendio forestal | SENAPRED, *Amenaza por Incendio Forestal 2024* (densidad de incendios 2020–2024, por recurrencia) como **referencia**: no es un área a evacuar. El área de peligro de una emergencia la dibuja el operador | ✅ código listo (reporte 05); falta descargar la capa con `node scripts/descargar_capas.mjs vina/incendio_forestal` |
+| Campus San Joaquín | Incendio estructural | No hay datos digitales ni respuesta de prevención de riesgos. **Las zonas de seguridad (puntos de encuentro, vigencia permanente, amenaza "todas") y las rutas las dibuja un operador** con la app operador. Durante una alerta, el operador marca el edificio afectado como área de peligro. Mientras no haya nada dibujado, el Campus muestra modo precaución | ✅ dibujado por el equipo (2-oct); confirmar en terreno |
 | Zona 3 | Por decidir | Criterio: **más de un tipo de amenaza, distintas a tsunami e incendio, con bastante información oficial**, para lucir la función multiamenaza | ⏳ decisión del equipo |
 
 - **Sismo no se incluye** en esta versión.
 - Candidatas para la zona 3, por verificar: una comuna con peligro **volcánico** + lahares (p. ej. Pucón/Villarrica, mapas de SERNAGEOMIN) o una con **inundación** + **remoción en masa**. Se decide según qué datos descargables existan.
 - El desplegable de amenaza **solo muestra las amenazas disponibles en la zona actual** (en Viña no aparece sismo).
+- **Después del MVP (1-oct-2026):** el orden propuesto para nuevas zonas y amenazas está en `docs/PLAN_ZONAS.md`: Macul comuna completa (incluye el Campus) con inundación; Pucón volcánica como zona 3 (vías, puntos y área de evacuación SENAPRED 2024); Santiago; Tiltil (relaves, cliente minero). Sismo sigue excluido salvo decisión del equipo.
 
 ## 5. App usuario
 
@@ -90,13 +91,17 @@ La app maneja **dos puntos**:
 - **Sin ruta personal en modo informativo:** la ruta solo aparece durante una alerta. En informativo se ven las capas oficiales (vías, puntos) como preparación.
 - Brújula con efecto linterna (hecha).
 - Si la amenaza no tiene capa geográfica en esa zona, se muestra solo la información pedagógica, con el aviso "Sin mapa de amenaza para esta zona".
+- Si solo tiene capas de **referencia** (p. ej. recurrencia de incendios forestales), el estado dice "Sin área de evacuación oficial", explica qué muestra el mapa (`aviso` en el catálogo) y, si la capa declara `consulta`, el valor en el punto del pin ("Recurrencia de incendios forestales 2020–2024 en este punto: Alta"). Las capas pueden colorearse por clase (`estilo_por`), con la leyenda por clase.
 
 ### 5.3 Modo emergencia
 
 - Se activa **solo** cuando llega una alerta que corresponde según §5.1. Al activarse, la app cambia sola a la zona y a la amenaza de la alerta.
 - **Desde dónde se calcula la ruta:** si la ubicación real está dentro de la zona alertada, **la ruta sale de la ubicación real** (es donde la persona corre peligro) y el pin se mueve ahí. Si solo el pin está dentro (por ejemplo, alguien simulando Viña desde Santiago), la ruta sale del pin.
 - **Si hay dos alertas que te aplican a la vez** (una por tu ubicación real y otra por tu pin), manda la de la ubicación real. La otra aparece como un aviso secundario que se puede tocar para verla.
-- **Si hay dos alertas en la misma zona** (p. ej. tsunami e incendio en Viña después de un terremoto), se muestran ambas en el banner. La ruta usa la amenaza de la alerta más reciente, pero **se valida contra las áreas de peligro de todas las alertas activas de la zona**, para no llevar a nadie de un peligro a otro.
+- **Si hay dos alertas en la misma zona** (p. ej. tsunami e incendio en Viña después de un terremoto), se muestran ambas en el banner. La ruta usa la amenaza de la alerta más reciente, pero **se valida contra las áreas de peligro de todas las alertas activas de la zona**, para no llevar a nadie de un peligro a otro (hecho, reporte 05):
+  - Las áreas de las otras alertas (oficiales y del operador) se dibujan en el mapa de emergencia.
+  - La regla "sale y no vuelve a entrar" se aplica a **cada área por separado**: entrar al área de un incendio cuenta aunque la persona siga dentro del área de inundación. Una ruta tampoco puede tocar un área de otra alerta donde la persona no está (se revisa también entre vértices).
+  - Si la persona está dentro del área de otra alerta, el estado es "Debes evacuar" aunque esté fuera del área de la alerta principal.
 - **Si hay área de peligro y el punto de origen está fuera de ella** (a más de 100 m del borde): pantalla verde "Estás en zona segura, permanece aquí", sin ruta. **Si la amenaza no tiene área de peligro** (p. ej. el Campus antes de que el operador marque el edificio), se guía al punto de encuentro con ruta del operador si existe, y si no, se pasa a precaución.
 - **Pantalla mínima:** se ocultan la cabecera, los botones de modo, el panel de información, la leyenda, las fuentes, el control de capas y los detalles; en el mapa quedan solo el área de peligro, los puntos de encuentro y la ruta personal. Se ve: aviso de alerta, mapa, estado en una línea, distancia, tiempo y una instrucción.
 - **Lo primario es la alerta y la ruta:** banner con el mensaje del operador (y SIMULACRO si corresponde), ruta grande y clara, distancia y tiempo. La flecha, la voz y la vibración quedan **después del viernes**.
@@ -190,7 +195,7 @@ App usuario (app/, GitHub Pages) ──realtime──▶ Supabase ◀──realt
 4. Modo emergencia en la app usuario (banner, ruta primaria, simulacro, vencimiento).
 5. ✅ Panel "Información" y modo precaución, con contenido oficial por amenaza (`app/data/contenido/`, reporte 03).
 6. ✅ Operador: dibujar rutas, áreas de peligro, puntos y bloqueos, con motivo, fuente y vigencia; desactivar vías oficiales; la app usuario aplica la jerarquía y la validación común de §6 en tiempo real (reporte 04).
-7. Viña incendio forestal y campus incendio estructural (dibujado por el operador).
+7. ✅ Viña incendio forestal (reporte 05; falta descargar la capa) y campus incendio estructural (dibujado por el operador).
 
 **Último, si alcanza** (en este orden): botón "Necesito ayuda" + ver solicitudes en el operador (§8) · aprobar rutas sugeridas · zona 3.
 
@@ -223,7 +228,8 @@ Publicado en https://julianureta7-collab.github.io/mapa-evacuacion/
 - ✅ §10 punto 2: modelo de dos puntos (`js/posicion.js`): el GPS sigue activo si hay permiso aunque se use el pin; la ubicación real se dibuja como un punto azul.
 - ✅ §10 punto 3: Supabase conectado (`js/nube.js`, `supabase/esquema.sql`) y **app operador** en `app/operador/` (login, enviar y cancelar alertas, historial). URL: `/mapa-evacuacion/operador/`.
 - ✅ §10 punto 4 (base): modo emergencia en la app usuario (`js/alertas.js`): tiempo real + consulta cada 15 s, decisión local por los dos puntos, banner con SIMULACRO, desplegables bloqueados, la ruta sale de la ubicación real si está en la zona, vencimiento automático.
-- ⏳ Pendiente del punto 4: validar la ruta contra las áreas de peligro de **todas** las alertas activas de la zona (hoy solo usa la amenaza principal).
+- ✅ Pendiente del punto 4 (2-oct): la ruta se valida contra las áreas de peligro de **todas** las alertas activas de la zona (§5.3, reporte 05).
+- ✅ §10 punto 7: Viña incendio forestal con la capa SENAPRED 2024 como referencia (coloreada por recurrencia, valor en el pin) y área de peligro del operador. Campus dibujado por el equipo. `scripts/descargar_capas.mjs` ahora es genérico: cada escenario declara servicio, capas, filtro, recorte al bbox y generalización.
 - ✅ §10 punto 5: panel Información (antes/durante/después) y modo precaución con fuentes oficiales.
 - ✅ §10 punto 6: dibujo del operador (`app/operador/dibujo.js`, Leaflet-Geoman MIT) y jerarquía operador → oficial → sugerida → precaución en la app usuario (`js/capasOperador.js`, `js/ruta.js`).
 - ⏳ Todo lo demás de §10.
@@ -240,12 +246,14 @@ Reportes para el informe del equipo: `docs/reportes/` (uno por hito).
 | Ubicar las zonas de seguridad del campus en terreno | Equipo | Campus |
 | Tareas de O4, O5 y buscador de direcciones | Otro integrante | Guion de testeo |
 | Revisar el contenido informativo | Equipo | O3 |
+| Entrevista Gestión del Riesgo de Macul: pedir plan comunal, anexos, puntos críticos, albergues (ver `docs/PLAN_ZONAS.md` ítem 4) | Equipo | Macul inundación |
 
 ## Anexo A — Fuentes de datos verificadas
 
 - **Tsunami (SENAPRED 2024):** FeatureServer `https://services5.arcgis.com/i7S5PSnIJAUcWvSE/ArcGIS/rest/services/Amenaza_por_Tsunami_2024/FeatureServer`. Capas: 0 Punto de Encuentro, 1 Vía de Evacuación, 2 Línea Segura, 3 Área a Evacuar, 4 Cota 30. Puntos y vías usan el campo `nom_com`; el área usa `comuna`. Descarga: `node scripts/descargar_capas.mjs`.
 - **Viña (bbox −71.60, −33.06, −71.48, −32.93):** 34 puntos de encuentro (25 Viña, 7 Valparaíso, 2 Concón; sin nombre, solo código), 74 vías (todas empiezan dentro del área y 59 terminan fuera; solo 4 se tocan entre sí), 3 polígonos de área, ≈ 490 KB en total.
-- **Incendio forestal:** ficha "Amenaza por Incendio Forestal" en el Geoportal (SENAPRED, publicación 2020-01-02), que declara un FeatureServer. Falta verificar la cobertura en Viña.
+- **Incendio forestal:** `Amenaza_por_Incendio_Forestal_2024/FeatureServer/0` (mismo servidor que el tsunami; ítem ArcGIS `19268f2baaaf4cfdb8ad93f083c2c437`, creado el 2024-04-10, modificado el 2025-10-27). Polígonos "Densidad de Incendios Forestales 2020-2024 (Inc./Km2)" con campos `gridcode` (1–5) y `recurrencia` (Muy baja, Baja, Media, Alta, Muy alta). En el recuadro de Viña hay **23 polígonos** (2 Muy baja, 5 Baja, 8 Media, 6 Alta, 1 Muy alta); uno "Muy baja" es enorme (≈330 km²), por eso el script los **recorta al recuadro** y los generaliza (~5 m). Mide incendios pasados, así que se usa solo como `referencia` (verificado el 2-oct-2026). La ficha antigua del Geoportal (publicación 2020) queda reemplazada.
+- **Volcánica (SENAPRED 2024):** `AMENAZA_VOLCÁNICA_2024` (capas 0 puntos de encuentro, 1 vías, 2 áreas de peligro Alto/Medio/Bajo, 3 volcanes) y `Área_de_Evacuación_Volcanes`, en el mismo servidor que el tsunami. Detalle en `docs/PLAN_ZONAS.md` ítem 5.
 - **Remoción en masa / aluvión:** en el Geoportal solo hay un boletín de SERNAGEOMIN, no capa vectorial.
 - **Visor web vs. descarga:** apuntan al mismo recurso del catálogo; no son productos distintos.
 - **Quién elabora los mapas de amenaza** (Ley 21.364): los Organismos Técnicos de Monitoreo de Amenazas (SHOA tsunami, CONAF incendio forestal, DGA inundación, CSN sísmica, SMA marejadas); SENAPRED los publica. Fuente: senapred.gov.cl/mapas-de-amenaza.
@@ -261,6 +269,8 @@ Reportes para el informe del equipo: `docs/reportes/` (uno por hito).
 ## Anexo C — Registro de cambios
 
 - **v2.1 (30-sep-2026):** modelo de dos puntos: la ubicación real se sigue siempre si hay permiso, y el pin es lo que se mira; la alerta llega si cualquiera de los dos está en la zona (§5.1). La ruta de emergencia sale de la ubicación real si está en la zona alertada; con dos alertas simultáneas manda la de la ubicación real (§5.3). Validación común de rutas contra bloqueos y áreas de peligro del operador (§6). Vigencia permanente y amenaza "todas" para elementos del operador (§7). Roles genéricos de capa y contenido por amenaza (§3). Estado "zona segura" en emergencia (§5.3). El campus usa modo precaución hasta que el operador dibuje (§4).
+- **v2.6 (2-oct-2026):** Viña incendio forestal: capa SENAPRED 2024 como referencia, coloreada por recurrencia y con su valor en el pin (§5.2, §4). Validación de la ruta contra las áreas de todas las alertas activas de la zona, área por área (§5.3). Script de descarga genérico. El área de los incendios se llama "zona afectada por el incendio" en los textos.
+- **v2.5 (1-oct-2026):** prioridades de zonas y amenazas después del MVP en `docs/PLAN_ZONAS.md` (§4, §13, Anexo A).
 - **v2.4 (1-oct-2026):** el pin de Viña parte en 4 Norte con Av. Libertad; sin desplazamiento automático al arrastrar el pin a los bordes (con el mapa rotable hacía saltar el pin). Se mantiene el motor de rutas actual; `docs/PLAN_RUTAS.md` queda como propuesta futura.
 - **v2.3 (30-sep-2026):** rutas oficiales con mejor punto de entrada, 3 vías evaluadas con ORS y unión sin saltos; con la brújula activa el pin queda fijo (se mueve en norte arriba).
 - **v2.2 (30-sep-2026):** ruta personal solo en emergencia; pantalla de emergencia mínima; textos de diagnóstico de preparación en modo informativo; brújula centrada en la persona.

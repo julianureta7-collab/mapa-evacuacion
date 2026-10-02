@@ -1,5 +1,5 @@
 // Mapa Leaflet: fondo OSM y capas de la zona × amenaza actual.
-import { estiloDe } from './catalogo.js?v=14';
+import { estiloDe } from './catalogo.js?v=16';
 
 let mapa, controlCapas, grupoCapas;
 let capasDibujadas = [];        // [{ def, capa }]
@@ -30,12 +30,14 @@ export function crearMapa(idContenedor) {
   return mapa;
 }
 
-function popupDe(nombreCapa, props) {
+function popupDe(def, props) {
+  const nombreCapa = def.nombre;
   const titulo = props.nombre_pe?.trim() || props.nombre_ve?.trim() || props.name || props.sector || nombreCapa;
   const filas = [];
   if (props.sector) filas.push(`Sector: ${props.sector}`);
   if (props.nom_com || props.comuna) filas.push(`Comuna: ${props.nom_com || props.comuna}`);
   if (props.name && titulo !== props.name) filas.push(`Código: ${props.name}`);
+  if (def.consulta && props[def.consulta.campo] != null) filas.push(`${def.consulta.etiqueta}: ${props[def.consulta.campo]}`);
   if (props._procedencia === 'operador') {
     const e = (t) => String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const cuando = props.creado ? new Date(props.creado).toLocaleString('es-CL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
@@ -45,7 +47,7 @@ function popupDe(nombreCapa, props) {
   }
   const f = props._fuente;
   const origen = f ? `Fuente: ${f.organismo}${f.nombre ? ` — ${f.nombre}` : ''}` : '';
-  return `<div class="popup-titulo">${titulo}</div><div>${nombreCapa}</div>${filas.map(x => `<div>${x}</div>`).join('')}${origen ? `<div class="popup-fuente">${origen}</div>` : ''}`;
+  return `<div class="popup-titulo">${titulo}</div>${titulo !== nombreCapa ? `<div>${nombreCapa}</div>` : ''}${filas.map(x => `<div>${x}</div>`).join('')}${origen ? `<div class="popup-fuente">${origen}</div>` : ''}`;
 }
 
 // En emergencia el mapa muestra solo lo esencial: área de peligro y puntos de encuentro
@@ -78,11 +80,10 @@ export function mostrarCapas(capas) {
   controlCapas = L.control.layers(null, null, { collapsed: window.innerWidth < 760 }).addTo(mapa);
   const organismos = new Set();
   for (const { def, geo } of capas) {
-    const estilo = estiloDe(def);
     const capa = L.geoJSON(geo, {
-      style: () => estilo,
-      pointToLayer: (_f, latlng) => L.circleMarker(latlng, estilo),
-      onEachFeature: (f, l) => l.bindPopup(popupDe(def.nombre, f.properties || {})),
+      style: (f) => estiloDe(def, f),
+      pointToLayer: (f, latlng) => L.circleMarker(latlng, estiloDe(def, f)),
+      onEachFeature: (f, l) => l.bindPopup(popupDe(def, f.properties || {})),
     });
     controlCapas.addOverlay(capa, def.nombre);
     capasDibujadas.push({ def, capa });

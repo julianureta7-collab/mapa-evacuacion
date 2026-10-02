@@ -1,9 +1,9 @@
 // App operador (spec §7): login, enviar y cancelar alertas por zona × amenaza.
 // Las zonas y amenazas salen del mismo catálogo que la app usuario, así que solo se puede
 // alertar a zonas cubiertas. Los permisos reales los ponen las reglas RLS (supabase/esquema.sql).
-import { cargarCatalogo, zonas, zona as zonaPorId, amenazasDe, amenazaInfo } from '../js/catalogo.js?v=14';
-import { nube, ahoraISO } from '../js/nube.js?v=14';
-import { iniciarDibujo } from './dibujo.js?v=14';
+import { cargarCatalogo, zonas, zona as zonaPorId, amenazasDe, amenazaInfo } from '../js/catalogo.js?v=16';
+import { nube, ahoraISO } from '../js/nube.js?v=16';
+import { iniciarDibujo } from './dibujo.js?v=16';
 
 const $ = (id) => document.getElementById(id);
 const mostrar = (id, si) => { $(id).hidden = !si; };

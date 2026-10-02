@@ -1,6 +1,6 @@
 # Contexto para Claude (Cowork o Claude Code)
 
-**Lee primero `docs/ESPECIFICACION.md`.** Para el motor de rutas, lee también `docs/PLAN_RUTAS.md` (plan v3, pendiente de aprobación/implementación). Es la fuente única de verdad: visión, decisiones acordadas, prioridades y pendientes. Este archivo solo explica cómo trabajar en el repo.
+**Lee primero `docs/ESPECIFICACION.md`.** Para el motor de rutas, lee también `docs/PLAN_RUTAS.md` (plan v3, pendiente de aprobación/implementación). Para **nuevas zonas y amenazas**, `docs/PLAN_ZONAS.md` (tabla de progreso priorizada con instrucciones por ítem). Es la fuente única de verdad: visión, decisiones acordadas, prioridades y pendientes. Este archivo solo explica cómo trabajar en el repo.
 
 - Usuario: Julián (julianureta7-collab en GitHub). Equipo de 5, curso UC.
 - **Hito: viernes 2-oct-2026**, versión para testear con entrevistados (spec §1 y §10).
@@ -26,7 +26,7 @@
 
 ## Comandos
 
-- `node scripts/descargar_capas.mjs`: descarga las capas SENAPRED (necesita red hacia ArcGIS).
+- `node scripts/descargar_capas.mjs [zona/amenaza]`: descarga capas oficiales de servicios ArcGIS (necesita red hacia ArcGIS). Cada escenario declara servicio, capas, fuente y, por capa, `where`, `campos`, `recortar` (al bbox) y `generalizar`. Escenarios: `vina/tsunami`, `vina/incendio_forestal`.
 - `node scripts/servidor.mjs`: abre http://localhost:8080 (con `PORT=xxxx` para otro puerto).
 - Publicar: `git add . && git commit -m "..." && git push` (GitHub Actions publica en Pages).
 
@@ -41,7 +41,7 @@
 | Archivo | Rol |
 | --- | --- |
 | `index.html`, `css/estilos.css` | Interfaz de la app usuario |
-| `data/catalogo.json` | **Zonas × amenazas**, fuentes, estilos por rol y capas oficiales (spec §3). Agregar zona o amenaza = editar esto |
+| `data/catalogo.json` | **Zonas × amenazas**, fuentes, estilos por rol y capas oficiales (spec §3). Agregar zona o amenaza = editar esto. Por capa, opcionales: `estilo_por` (color por clase), `consulta` (valor en el pin), `aviso` |
 | `js/informacion.js` | Panel Información (pestañas) y tarjeta de modo precaución |
 | `data/contenido/` | Contenido oficial por amenaza (antes/durante/después) y `fuentes.json`. Solo fuentes oficiales, citadas |
 | `js/catalogo.js` | Lee el catálogo; `zonaEn(lngLat)` decide la zona por cobertura |
@@ -53,7 +53,8 @@
 | `js/ruta.js` | Motor de rutas por rol: ruta oficial → ORS sugerida → línea recta |
 | `js/main.js` | Desplegables zona/amenaza, el pin decide la zona, diagnóstico, tarjeta de ruta |
 | `js/claves.js` | Clave de ORS (pública a propósito) |
-| `data/<zona>/<amenaza>/` | Capas oficiales + `metadata.json` (hoy: `data/vina/tsunami/`) |
+| `data/<zona>/<amenaza>/` | Capas oficiales + `metadata.json` (hoy: `data/vina/tsunami/`, `data/vina/incendio_forestal/`) |
+| `docs/PLAN_ZONAS.md` | Prioridades de zonas × amenazas después del MVP, con estado e instrucciones. **Al terminar un ítem, marca su estado ahí** |
 | `operador/` | **App operador** (login, alertas, dibujo en el mapa). Publicada en `/operador/`. `dibujo.js` usa Leaflet-Geoman (`vendor/geoman`, MIT) |
 | `js/capasOperador.js` | Lee y escucha en tiempo real `elementos_operador` y `desactivaciones_oficiales`; los convierte en capas por rol |
 | `js/nube.js` | Cliente Supabase compartido (`vendor/supabase.js`, claves en `js/claves.js`) |
@@ -62,4 +63,6 @@
 
 ## Próximo paso
 
-Spec §10, **punto 7**: datos de zonas (Viña incendio forestal: verificar capa CONAF/SENAPRED; Campus: el equipo dibuja zonas de seguridad con la app operador, candidatos Patio Norte y Patio Sur). Después: preparación del testeo (QR, guion). Puntos 1 a 6 hechos (ver spec §12). Revisa §13 para ver qué falta del equipo (Supabase y clave ORS bloquean los puntos 3 y 6).
+Spec §10 puntos 1 a 7 hechos (ver spec §12 y reporte 05; falta que Julián descargue la capa de incendio forestal de Viña). Siguiente: preparación del testeo (QR, guion) y `docs/PLAN_ZONAS.md` ítem 3 (Macul comuna completa). Revisa §13 para ver qué falta del equipo.
+
+**Zonas y amenazas nuevas:** sigue la tabla de `docs/PLAN_ZONAS.md` en orden (1 Campus incendio estructural ✅ → 2 Viña incendio forestal ✅ → 3 Macul comuna completa → 4 Macul inundación → 5 Pucón volcánica → …). Cada ítem trae datos, archivos a tocar y cómo verificar. Contexto: entrevista con la Dirección de Gestión del Riesgo de Macul y posible cliente minero (Tiltil, relaves).

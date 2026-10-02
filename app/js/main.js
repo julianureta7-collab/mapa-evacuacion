@@ -2,16 +2,16 @@
 // Zonas × amenazas desde data/catalogo.json (spec §3). El pin decide la zona (spec §5.1):
 // al elegir una zona en el desplegable el pin va a su centro, y al arrastrar el pin a otra zona
 // la app cambia de zona sola.
-import { cargarCatalogo, zonas, zona as zonaPorId, amenazasDe, amenazaInfo, fuente, estiloDe, zonaEn } from './catalogo.js?v=14';
-import { cargarCapas } from './datos.js?v=14';
-import { crearMapa, mostrarCapas, centrarEn, dibujarRuta, limpiarRuta, setModoMapa } from './mapa.js?v=14';
-import { prepararRutas, calcularRuta, nombreDestino, nombreVia, organismoDe, rumboATexto, hayRutasOperador } from './ruta.js?v=14';
-import { escucharOperador, capasOperador, codigosDesactivados, elementosActuales, desactivacionesActuales } from './capasOperador.js?v=14';
-import { prepararAreas, diagnosticar, textosDiagnostico } from './diagnostico.js?v=14';
-import { iniciarPosicion, iniciarGPSSiHayPermiso, modoSimulacion, modoGPS, ubicarPin, setLinterna, posicionActual, ubicacionReal, pinArrastrando, bloquearPin } from './posicion.js?v=14';
-import { escucharAlertas } from './alertas.js?v=14';
-import { cargarContenido, dibujarInformacion as pintarInformacion, htmlPrecaucion } from './informacion.js?v=14';
-import { crearControlBrujula } from './brujula.js?v=14';
+import { cargarCatalogo, zonas, zona as zonaPorId, amenazasDe, amenazaInfo, fuente, estiloDe, clasesDe, zonaEn } from './catalogo.js?v=16';
+import { cargarCapas } from './datos.js?v=16';
+import { crearMapa, mostrarCapas, centrarEn, dibujarRuta, limpiarRuta, setModoMapa } from './mapa.js?v=16';
+import { prepararRutas, calcularRuta, nombreDestino, nombreVia, organismoDe, rumboATexto, hayRutasOperador } from './ruta.js?v=16';
+import { escucharOperador, capasOperador, codigosDesactivados, elementosActuales, desactivacionesActuales, aFeature, ROLES_OPERADOR } from './capasOperador.js?v=16';
+import { prepararAreas, diagnosticar, textosDiagnostico } from './diagnostico.js?v=16';
+import { iniciarPosicion, iniciarGPSSiHayPermiso, modoSimulacion, modoGPS, ubicarPin, setLinterna, posicionActual, ubicacionReal, pinArrastrando, bloquearPin } from './posicion.js?v=16';
+import { escucharAlertas } from './alertas.js?v=16';
+import { cargarContenido, dibujarInformacion as pintarInformacion, htmlPrecaucion } from './informacion.js?v=16';
+import { crearControlBrujula } from './brujula.js?v=16';
 
 const $ = (id) => document.getElementById(id);
 let mapa = null;
@@ -32,14 +32,20 @@ const fmtMin = (s) => `${Math.max(1, Math.round(s / 60))} min`;
 
 // ---------------------------------------------------------------- Leyenda, fuente, información
 
+function muestraDe(def, e) {
+  if (def.rol === 'area_peligro' || e.fill) return `<span class="muestra" style="background:${e.fillColor || e.color};opacity:.75;border:1px solid ${e.weight ? e.color : 'rgba(0,0,0,.25)'}"></span>`;
+  if (def.rol === 'punto_encuentro') return `<span class="muestra punto" style="background:${e.fillColor}"></span>`;
+  return `<span class="muestra linea" style="border-top-color:${e.color};border-top-style:${e.dashArray ? 'dashed' : 'solid'}"></span>`;
+}
+
 function dibujarLeyenda(capas) {
   $('leyenda').innerHTML = capas.map(({ def }) => {
-    const e = estiloDe(def);
-    let muestra;
-    if (def.rol === 'area_peligro') muestra = `<span class="muestra" style="background:${e.fillColor};opacity:.6;border:1px solid ${e.color}"></span>`;
-    else if (def.rol === 'punto_encuentro') muestra = `<span class="muestra punto" style="background:${e.fillColor}"></span>`;
-    else muestra = `<span class="muestra linea" style="border-top-color:${e.color};border-top-style:${e.dashArray ? 'dashed' : 'solid'}"></span>`;
-    return `<li>${muestra}${def.nombre}</li>`;
+    const clases = clasesDe(def);
+    if (clases.length) {
+      return `<li class="leyenda-grupo">${def.nombre}</li>`
+        + clases.map(c => `<li class="leyenda-clase">${muestraDe(def, c.estilo)}${c.valor}</li>`).join('');
+    }
+    return `<li>${muestraDe(def, estiloDe(def))}${def.nombre}</li>`;
   }).join('');
 }
 
@@ -150,11 +156,83 @@ function aplicarCapas() {
     const rol = def.operador && def.rol === 'ruta' ? 'ruta_operador' : def.rol;
     (porRol[rol] ||= fc([])).features.push(...geo.features);
   }
-  mostrarCapas(capas);
-  dibujarLeyenda(capas);
+  const extras = capasOtrasAlertas();
+  areasOtras = extras.flatMap(c => c.geo.features.map(f => ({ f, amenaza: c.amenaza })));
+  capasConsulta = capasOf.filter(c => c.def.consulta || c.def.aviso);
+  mostrarCapas([...capas, ...extras]);
+  dibujarLeyenda([...capas, ...extras]);
   dibujarFuente(capasOf, datosOficiales.metadata, capasOp.reduce((n, c) => n + c.geo.features.length, 0), off.size);
   hayAreaPeligro = prepararAreas(porRol.area_peligro) > 0;
-  prepararRutas(porRol, { area: amenazaActual.area });
+  prepararRutas(porRol, { area: amenazaActual.area, areasExtra: areasOtras.map(x => x.f) });
+}
+
+// ---- Varias alertas en la misma zona (spec §5.3): la ruta usa la amenaza de la alerta principal,
+// pero se valida contra las áreas de peligro (oficiales y del operador) de TODAS las alertas activas
+// de la zona, para no llevar a nadie de un peligro a otro. Esas áreas también se dibujan.
+let areasOtras = [];                     // [{ f: Feature, amenaza }]
+let firmaOtras = '';
+const oficialesOtras = new Map();        // "zona/amenaza" → [{ def, geo }] | null (cargando)
+
+function otrasAmenazasConAlerta() {
+  if (!emergencia || !zonaActual || !amenazaActual) return [];
+  return [...new Set(alertasActivas
+    .filter(a => a.zona === zonaActual.id && a.amenaza !== amenazaActual.id)
+    .map(a => a.amenaza))].sort();
+}
+
+function capasOtrasAlertas() {
+  const amenazas = otrasAmenazasConAlerta();
+  firmaOtras = amenazas.join(',');
+  const capas = [];
+  for (const am of amenazas) {
+    const info = amenazaInfo(am);
+    const clave = `${zonaActual.id}/${am}`;
+    if (!oficialesOtras.has(clave)) cargarAreasOficiales(clave, zonaActual.amenazas.find(a => a.id === am));
+    for (const c of oficialesOtras.get(clave) || []) {
+      capas.push({ amenaza: am, def: { ...c.def, nombre: `${c.def.nombre} · ${info.nombre.toLowerCase()} (otra alerta)` }, geo: c.geo });
+    }
+    const op = elementosActuales().filter(e => e.rol === 'area_peligro' && e.zona === zonaActual.id && e.amenaza === am).map(aFeature);
+    if (op.length) capas.push({ amenaza: am, def: { nombre: `Áreas de peligro (operador) · ${info.nombre.toLowerCase()}`, rol: 'area_peligro', visible: true, estilo: ROLES_OPERADOR.area_peligro.estilo, operador: true }, geo: { type: 'FeatureCollection', features: op } });
+  }
+  return capas;
+}
+
+async function cargarAreasOficiales(clave, def) {
+  const defsArea = (def?.capas || []).filter(c => c.rol === 'area_peligro');
+  if (!defsArea.length) { oficialesOtras.set(clave, []); return; }
+  oficialesOtras.set(clave, null);
+  try {
+    const datos = await cargarCapas({ carpeta: def.carpeta, capas: defsArea }, fuente);
+    oficialesOtras.set(clave, datos.capas);
+  } catch { oficialesOtras.set(clave, []); }
+  if (emergencia && zonaActual && clave.startsWith(`${zonaActual.id}/`)) { aplicarCapas(); refrescarDiagnostico(); }
+}
+
+// Si la persona está dentro del área de peligro de OTRA alerta activa de la zona, debe evacuar igual.
+function otraAreaQueContiene(latlng) {
+  if (!latlng || !areasOtras.length) return null;
+  const pt = turf.point([latlng.lng, latlng.lat]);
+  return areasOtras.find(x => turf.booleanPointInPolygon(pt, x.f)) || null;
+}
+
+// Valor de las capas con "consulta" en el punto (p. ej. recurrencia de incendios 2020–2024).
+let capasConsulta = [];
+function consultasEn(latlng) {
+  if (!latlng) return [];
+  const pt = turf.point([latlng.lng, latlng.lat]);
+  const filas = [];
+  for (const { def, geo } of capasConsulta) {
+    if (!def.consulta) continue;
+    const f = geo.features.find(ft => {
+      const [o, s, e, n] = ft._bbox || (ft._bbox = turf.bbox(ft));
+      return latlng.lng >= o && latlng.lng <= e && latlng.lat >= s && latlng.lat <= n && turf.booleanPointInPolygon(pt, ft);
+    });
+    const v = f?.properties?.[def.consulta.campo];
+    filas.push(v != null
+      ? `${def.consulta.etiqueta} en este punto: <strong>${escaparHTML(String(v))}</strong>.`
+      : `${def.consulta.etiqueta}: sin registro en este punto.`);
+  }
+  return filas;
 }
 
 // ---------------------------------------------------------------- Diagnóstico
@@ -171,14 +249,26 @@ function mostrarDiagnostico(latlng, precision) {
     pintarEstado('neutro', 'Fuera de cobertura', 'Aún no cubrimos esta ubicación. Elige una zona en el desplegable.');
     return { estado: 'fuera_cobertura' };
   }
+  const otra = emergencia ? otraAreaQueContiene(latlng) : null;
+  if (otra) {
+    const am = amenazaInfo(otra.amenaza);
+    pintarEstado('peligro', 'Debes evacuar', `Estás dentro de la ${am.area} (alerta de ${am.nombre.toLowerCase()}). Dirígete a pie a la zona segura.`);
+    return { estado: 'evacuar' };
+  }
   if (!hayAreaPeligro && emergencia && hayRutasOperador()) {
     pintarEstado('peligro', 'Evacúa por la ruta marcada', 'Un operador marcó la ruta de evacuación para esta emergencia.');
     return { estado: 'sin_mapa' };
   }
   if (!hayAreaPeligro) {
-    pintarEstado('neutro', 'Sin mapa de amenaza para esta zona', emergencia
-      ? 'Sigue estas indicaciones oficiales.'
-      : `No hay un mapa oficial de ${amenazaActual.nombre.toLowerCase()} para ${zonaActual.nombre}. Revisa la información de abajo.`);
+    // Puede haber capas oficiales de referencia (p. ej. recurrencia de incendios) aunque no haya área a evacuar
+    const aviso = capasConsulta.find(c => c.def.aviso)?.def.aviso;
+    const hayReferencia = capasConsulta.length > 0;
+    pintarEstado('neutro',
+      hayReferencia ? (emergencia ? 'Sin área de peligro marcada' : 'Sin área de evacuación oficial') : 'Sin mapa de amenaza para esta zona',
+      emergencia
+        ? 'Sigue estas indicaciones oficiales.'
+        : aviso || `No hay un mapa oficial de ${amenazaActual.nombre.toLowerCase()} para ${zonaActual.nombre}. Revisa la información de abajo.`,
+      emergencia ? [] : consultasEn(latlng));
     return { estado: 'sin_mapa' };
   }
   const r = diagnosticar(latlng ? [latlng.lng, latlng.lat] : null, precision);
@@ -219,7 +309,8 @@ function ocultarRuta() {
 
 function mostrarInfoRuta(r) {
   const el = $('ruta-info');
-  const area = amenazaActual.area;
+  // Con áreas de otras alertas, "metrosDentro" cuenta todas: se nombran en genérico
+  const area = areasOtras.length ? 'zona de peligro' : amenazaActual.area;
   el.hidden = false;
   el.classList.remove('precaucion');
   if (r.tipo === 'sin_candidatos') { mostrarPrecaucion(r.aviso); return; }
@@ -383,7 +474,9 @@ function evaluarAlertas() {
   const principal = aplican[0] || null;
   dibujarBanner(principal, aplican.slice(1));
   if (!principal) { if (emergencia) salirEmergencia(); return; }
-  if (emergencia?.id !== principal.a.id) entrarEmergencia(principal);
+  if (emergencia?.id !== principal.a.id) { entrarEmergencia(principal); return; }
+  // Misma alerta principal, pero cambiaron las otras alertas de la zona: revalidar la ruta
+  if (otrasAmenazasConAlerta().join(',') !== firmaOtras) { aplicarCapas(); refrescarDiagnostico(); }
 }
 
 async function entrarEmergencia({ a, porReal }) {
@@ -402,6 +495,7 @@ async function entrarEmergencia({ a, porReal }) {
 
 function salirEmergencia() {
   emergencia = null;
+  firmaOtras = '';
   document.body.classList.remove('modo-emergencia');
   setModoMapa(false);
   ocultarRuta();
