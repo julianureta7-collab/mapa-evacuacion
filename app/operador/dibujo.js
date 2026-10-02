@@ -2,10 +2,10 @@
 // Rutas, puntos de encuentro, áreas de peligro y tramos bloqueados, cada uno con motivo, fuente,
 // autor (automático) y vigencia. También permite desactivar (sin borrar) una vía oficial.
 // Usa Leaflet-Geoman (vendor/geoman, licencia MIT) para dibujar.
-import { zonas, zona as zonaPorId, amenazasDe, amenazaInfo, fuente, estiloDe } from '../js/catalogo.js?v=17';
-import { cargarCapas } from '../js/datos.js?v=17';
-import { nube } from '../js/nube.js?v=17';
-import { ROLES_OPERADOR, escucharOperador, consultarOperador, aFeature, elementosActuales, desactivacionesActuales } from '../js/capasOperador.js?v=17';
+import { zonas, zona as zonaPorId, amenazasDe, amenazaInfo, fuente, estiloDe } from '../js/catalogo.js?v=18';
+import { cargarCapas } from '../js/datos.js?v=18';
+import { nube } from '../js/nube.js?v=18';
+import { ROLES_OPERADOR, escucharOperador, consultarOperador, aFeature, elementosActuales, desactivacionesActuales } from '../js/capasOperador.js?v=18';
 
 const $ = (id) => document.getElementById(id);
 const esc = (t) => String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

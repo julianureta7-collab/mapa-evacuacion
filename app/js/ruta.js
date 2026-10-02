@@ -16,7 +16,7 @@
 //     dentro del área); a igualdad, la más corta en tiempo.
 //  5. Si ORS falla (sin clave, sin red, límite 429): dirección en línea recta al más cercano.
 
-import { ORS_API_KEY, SUPABASE_URL, SUPABASE_KEY } from './claves.js?v=17';
+import { ORS_API_KEY, SUPABASE_URL, SUPABASE_KEY } from './claves.js?v=18';
 
 // HeiGIT apagó api.openrouteservice.org el 28-sep-2026 (desde el 27-ago solo daba 10 % de cuota y luego 403).
 // Dirección vigente: api.heigit.org/<servicio>/<versión>/… con la MISMA clave, enviada en el encabezado Authorization.
@@ -89,11 +89,19 @@ function proyectarEnLinea(origen, coords) {
   return { punto, i: mejor.i, distancia: Math.sqrt(mejor.d2) };
 }
 
+// ¿Sirve este punto de encuentro como destino? Debe estar fuera de toda área de peligro, salvo que la
+// autoridad lo designe dentro del área (catálogo: destino_aunque_dentro). Nunca dentro del área de OTRA alerta.
+function destinoValido(p) {
+  const c = p.geometry.coordinates;
+  if (areasExtra.some(a => turf.booleanPointInPolygon(c, a))) return false;
+  return p.properties?._destinoDentro || !dentroDeArea(c);
+}
+
 function puntoMasCercanoFuera(lngLat, maxM) {
   let mejor = null;
   for (const p of puntos) {
     const d = distM(lngLat, p.geometry.coordinates);
-    if (d <= maxM && (!mejor || d < mejor.d) && !dentroDeArea(p.geometry.coordinates)) mejor = { p, d };
+    if (d <= maxM && (!mejor || d < mejor.d) && destinoValido(p)) mejor = { p, d };
   }
   return mejor;
 }
@@ -186,6 +194,7 @@ async function armarOpcion(origen, op, signal) {
     distancia, duracion: distancia / VELOCIDAD_PIE,
     acercamientoM, oficialM,
     metrosDentro: analisis.metrosDentro,
+    terminaDentro: dentroDeArea(todo[todo.length - 1]),   // destino oficial dentro del área (p. ej. un PET)
     aviso: fallo ? `El tramo hasta la vía oficial se muestra en línea recta: ${ultimoErrorORS?.motivo || 'sin servicio de rutas'}.` : null,
   };
 }
@@ -212,7 +221,7 @@ const dentroDeArea = (lngLat) => areas.some(a => turf.booleanPointInPolygon(lngL
 
 function candidatos(origen) {
   return puntos
-    .filter(p => !dentroDeArea(p.geometry.coordinates))
+    .filter(destinoValido)
     .map(p => ({ punto: p, lineal: turf.distance(origen, p.geometry.coordinates, { units: 'meters' }) }))
     .filter(c => c.lineal <= RADIO_CANDIDATOS_M)
     .sort((a, b) => a.lineal - b.lineal)
@@ -396,6 +405,7 @@ export async function calcularRuta(origen, { signal } = {}) {
           tipo: 'ruta', destino: g.punto, geometria: g.ruta.geometry,
           distancia: g.resumen.distance, duracion: g.resumen.duration,
           metrosDentro: g.analisis.metrosDentro, fraccionVias: g.analisis.fraccionVias,
+          terminaDentro: dentroDeArea(g.punto.geometry.coordinates),
           pasos: g.ruta.properties.segments?.[0]?.steps || [],
           descartadas: rutas.filter(r => r && r.analisis.reentradas > 0).length,
         };

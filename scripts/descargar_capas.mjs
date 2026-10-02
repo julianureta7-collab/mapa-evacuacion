@@ -12,6 +12,9 @@ import { fileURLToPath } from 'node:url';
 
 const RAIZ = join(dirname(fileURLToPath(import.meta.url)), '..');
 const SENAPRED = 'https://services5.arcgis.com/i7S5PSnIJAUcWvSE/ArcGIS/rest/services';
+const VOLCANICA = `${SENAPRED}/AMENAZA_VOLC%C3%81NICA_2024/FeatureServer`;
+const AREA_EVAC_VOLCANES = `${SENAPRED}/%C3%81rea_de_Evacuaci%C3%B3n_Volcanes/FeatureServer`;
+const BBOX_PUCON = [-72.02, -39.46, -71.54, -39.05];   // comuna de Pucón con un pequeño margen
 // División Político Administrativa (SUBDERE, IGM e INE, 2018), publicada por el MOP. Solo responde en JSON de Esri.
 const DPA_MOP = 'https://rest-sit.mop.gob.cl/arcgis/rest/services/INTEROP/SERVICIO_DPA/MapServer';
 
@@ -27,6 +30,7 @@ const BBOX_VINA = [-71.60, -33.06, -71.48, -32.93];
 //   generalizar tolerancia en grados para simplificar la geometría en el servidor (0.00005 ≈ 5 m)
 //   decodificar true = reemplazar los códigos de los dominios de ArcGIS por su nombre (p. ej. 9 → "Colapso colectores…")
 //   esri        true = el servicio no entrega GeoJSON (f=json de Esri): se convierte aquí
+//   servicio    otro servicio para esta capa (si el escenario combina dos servicios)
 const ESCENARIOS = {
   'vina/tsunami': {
     nombre: 'Viña del Mar',
@@ -67,6 +71,46 @@ const ESCENARIOS = {
     capas: [
       { id: 1, archivo: 'limite_comunal', nombre: 'Comunas', where: "CUT_COM='13118'",
         campos: ['CUT_COM', 'COMUNA'], generalizar: 0.00005, esri: true },
+    ],
+  },
+  'pucon/cobertura': {
+    nombre: 'Pucón (límite comunal)',
+    servicio: DPA_MOP,
+    fuente: 'SUBDERE, IGM e INE (2018) — División Político Administrativa, Comunas (servicio del MOP)',
+    ficha: `${DPA_MOP}/1`,
+    publicacion: '2018',
+    capas: [
+      { id: 1, archivo: 'limite_comunal', nombre: 'Comunas', where: "CUT_COM='09115'",
+        campos: ['CUT_COM', 'COMUNA'], generalizar: 0.0001, esri: true },
+    ],
+  },
+  'pucon/volcanica': {
+    nombre: 'Pucón (volcán Villarrica)',
+    bbox: BBOX_PUCON,
+    servicio: VOLCANICA,
+    fuente: 'SENAPRED — Amenaza Volcánica 2024 y Área de Evacuación Volcanes',
+    ficha: 'https://www.arcgis.com/home/item.html?id=cdc76e7d47a74c89b1111c3d1e25924c',
+    // Amenaza Volcánica 2024: creado 2024-10-07, modificado 2026-09-21. Área de Evacuación Volcanes: 2026-09-22.
+    publicacion: '2026-09-21',
+    capas: [
+      { servicio: AREA_EVAC_VOLCANES, id: 0, archivo: 'area_evacuacion', nombre: 'Áreas de evacuación',
+        where: "nombre='Villarrica'", campos: ['nombre', 'clase'], recortar: true, generalizar: 0.00005 },
+      { id: 2, archivo: 'peligro', nombre: 'Áreas de Peligro Volcánico', campos: ['peligro'], recortar: true, generalizar: 0.0001 },
+      { id: 1, archivo: 'vias_evacuacion', nombre: 'Vías de Evacuación', where: "volcan='Villarrica'", campos: ['objectid', 'volcan', 'bidireccional'] },
+      { id: 0, archivo: 'puntos_encuentro', nombre: 'Puntos de Encuentro', where: "volcan='Villarrica'", campos: ['nombre', 'tipo', 'volcan'] },
+      { id: 3, archivo: 'volcan', nombre: 'Volcanes Geológicamente Activos: Peligrosidad', where: "volcan='Villarrica'", campos: ['volcan', 'categoria'] },
+    ],
+  },
+  'pucon/incendio_forestal': {
+    nombre: 'Pucón',
+    bbox: BBOX_PUCON,
+    servicio: `${SENAPRED}/Amenaza_por_Incendio_Forestal_2024/FeatureServer`,
+    fuente: 'SENAPRED — Amenaza por Incendio Forestal 2024 (densidad de incendios forestales 2020–2024)',
+    ficha: 'https://www.arcgis.com/home/item.html?id=19268f2baaaf4cfdb8ad93f083c2c437',
+    publicacion: '2025-10-27',
+    capas: [
+      { id: 0, archivo: 'recurrencia_2020_2024', nombre: 'Densidad de Incendios Forestales 2020-2024',
+        campos: ['gridcode', 'recurrencia'], recortar: true, generalizar: 0.00005 },
     ],
   },
   'macul/inundacion': {
@@ -220,12 +264,12 @@ async function descargarEscenario(clave) {
   const resumen = [];
   for (const capa of esc.capas) {
     process.stdout.write(`  ${capa.nombre}... `);
-    const fc = await consultarCapa(esc.servicio, capa, esc.bbox);
+    const fc = await consultarCapa(capa.servicio || esc.servicio, capa, esc.bbox);
     const texto = JSON.stringify(fc);
     await writeFile(join(carpeta, `${capa.archivo}.geojson`), texto);
     const kb = (Buffer.byteLength(texto) / 1024).toFixed(0);
     console.log(`${fc.features.length} elementos, ${kb} KB`);
-    resumen.push({ capa: capa.nombre, indice: capa.id, archivo: `${capa.archivo}.geojson`, elementos: fc.features.length, kb: +kb,
+    resumen.push({ capa: capa.nombre, indice: capa.id, archivo: `${capa.archivo}.geojson`, elementos: fc.features.length, kb: +kb, ...(capa.servicio ? { servicio: capa.servicio } : {}),
       ...(capa.recortar ? { recortada_al_bbox: true } : {}), ...(capa.generalizar ? { generalizacion_grados: capa.generalizar } : {}) });
   }
   const metadata = {

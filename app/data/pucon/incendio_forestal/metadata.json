@@ -1,0 +1,26 @@
+{
+  "escenario": "pucon/incendio_forestal",
+  "nombre": "Pucón",
+  "fuente": "SENAPRED — Amenaza por Incendio Forestal 2024 (densidad de incendios forestales 2020–2024)",
+  "url_servicio": "https://services5.arcgis.com/i7S5PSnIJAUcWvSE/ArcGIS/rest/services/Amenaza_por_Incendio_Forestal_2024/FeatureServer",
+  "ficha_catalogo": "https://www.arcgis.com/home/item.html?id=19268f2baaaf4cfdb8ad93f083c2c437",
+  "fecha_publicacion_fuente": "2025-10-27",
+  "fecha_descarga": "2026-10-02T04:26:05.138Z",
+  "bbox": [
+    -72.02,
+    -39.46,
+    -71.54,
+    -39.05
+  ],
+  "capas": [
+    {
+      "capa": "Densidad de Incendios Forestales 2020-2024",
+      "indice": 0,
+      "archivo": "recurrencia_2020_2024.geojson",
+      "elementos": 28,
+      "kb": 40,
+      "recortada_al_bbox": true,
+      "generalizacion_grados": 0.00005
+    }
+  ]
+}

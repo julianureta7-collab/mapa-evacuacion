@@ -1,5 +1,5 @@
 {
-  "_doc": "Fuentes oficiales del contenido informativo (spec §2.2). Cada recomendación cita una o más de estas. Consultadas el 1-oct-2026 (inundación y Macul: 2-oct-2026).",
+  "_doc": "Fuentes oficiales del contenido informativo (spec §2.2). Cada recomendación cita una o más de estas. Consultadas el 1-oct-2026 (inundación, Macul y volcanes: 2-oct-2026).",
   "senapred_tsunami":     { "organismo": "SENAPRED", "titulo": "Tsunami: recomendaciones", "url": "https://senapred.cl/tsunami/" },
   "senapred_if":          { "organismo": "SENAPRED", "titulo": "Incendios forestales: recomendaciones", "url": "https://senapred.cl/incendios-forestales/" },
   "senapred_ie":          { "organismo": "SENAPRED", "titulo": "Incendios estructurales: recomendaciones", "url": "https://senapred.cl/incendios-estructurales/" },
@@ -11,5 +11,8 @@
   "senapred_inundaciones":{ "organismo": "SENAPRED", "titulo": "Inundaciones: recomendaciones", "url": "https://senapred.cl/inundaciones/" },
   "minsal_inundaciones":  { "organismo": "Ministerio de Salud", "titulo": "Qué hacer en caso de inundaciones", "url": "https://degreyd.minsal.cl/que-hacer-en-caso-de-inundaciones/" },
   "minsal_sistema_frontal":{ "organismo": "Ministerio de Salud", "titulo": "¿Qué hacer en caso de un sistema frontal?", "url": "https://degreyd.minsal.cl/que-hacer-en-caso-de-un-sistema-frontal/" },
-  "muni_macul":           { "organismo": "Municipalidad de Macul", "titulo": "Macul refuerza medidas preventivas ante sistema frontal (9-jun-2026)", "url": "https://www.munimacul.cl/portalnv/index.php/2026/06/09/macul-refuerza-medidas-preventivas-ante-sistema-frontal-y-llama-a-la-comunidad-a-colaborar/" }
+  "muni_macul":           { "organismo": "Municipalidad de Macul", "titulo": "Macul refuerza medidas preventivas ante sistema frontal (9-jun-2026)", "url": "https://www.munimacul.cl/portalnv/index.php/2026/06/09/macul-refuerza-medidas-preventivas-ante-sistema-frontal-y-llama-a-la-comunidad-a-colaborar/" },
+  "senapred_volcanes":    { "organismo": "SENAPRED", "titulo": "Erupciones volcánicas: recomendaciones", "url": "https://senapred.cl/erupciones-volcanicas/" },
+  "minsal_volcanes":      { "organismo": "Ministerio de Salud", "titulo": "Qué hacer en caso de erupción volcánica", "url": "https://degreyd.minsal.cl/que-hacer-en-caso-de-erupcion-volcanica/" },
+  "muni_pucon_plan":      { "organismo": "Municipalidad de Pucón", "titulo": "Plan Comunal de Emergencia (versión 02, 27-nov-2023)", "url": "https://municipalidadpucon.cl/oldweb/web2010/para%20descarga/Plan%20Emergencia%20Volcanica/2024/Plan_Comunal_Emergencia.pdf" }
 }

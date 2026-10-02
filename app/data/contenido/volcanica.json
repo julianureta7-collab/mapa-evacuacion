@@ -1,0 +1,70 @@
+{
+  "amenaza": "volcanica",
+  "antes": [
+    {
+      "texto": "Infórmate de las áreas de peligro, las vías de evacuación y los puntos de encuentro de tu sector. Este mapa los muestra.",
+      "fuentes": [
+        "minsal_volcanes",
+        "senapred_volcanes"
+      ]
+    },
+    {
+      "texto": "Si notas algo anormal en el volcán (sismos, fumarolas, ruidos), avisa a las autoridades.",
+      "fuentes": [
+        "minsal_volcanes"
+      ]
+    },
+    {
+      "texto": "Si visitas o subes a un volcán activo, avisa a Carabineros o a los guardaparques.",
+      "fuentes": [
+        "minsal_volcanes",
+        "senapred_volcanes"
+      ]
+    },
+    {
+      "texto": "Si vives cerca de un volcán, los techos deben tener una inclinación mayor a 30° para que no se acumule la ceniza.",
+      "fuentes": [
+        "minsal_volcanes",
+        "senapred_volcanes"
+      ]
+    }
+  ],
+  "durante": [
+    {
+      "texto": "Si se ordena evacuar, corta la luz, el agua y el gas, y ve con tu familia a la zona de seguridad.",
+      "fuentes": [
+        "minsal_volcanes",
+        "senapred_volcanes"
+      ]
+    },
+    {
+      "texto": "Aléjate de los fondos de valle y no cruces quebradas ni ríos: por ahí bajan los flujos de barro (lahares).",
+      "fuentes": [
+        "minsal_volcanes",
+        "senapred_volcanes"
+      ]
+    },
+    {
+      "texto": "Si cae ceniza, no te quedes al aire libre: cierra puertas y ventanas, y cúbrete nariz, boca y ojos si debes salir.",
+      "fuentes": [
+        "minsal_volcanes",
+        "senapred_volcanes"
+      ]
+    }
+  ],
+  "despues": [
+    {
+      "texto": "Vuelve a tu casa solo cuando las autoridades indiquen que es seguro.",
+      "fuentes": [
+        "minsal_volcanes",
+        "senapred_volcanes"
+      ]
+    },
+    {
+      "texto": "Para limpiar la ceniza de techos y patios, humedécela primero y protégete nariz, boca y ojos.",
+      "fuentes": [
+        "senapred_volcanes"
+      ]
+    }
+  ]
+}

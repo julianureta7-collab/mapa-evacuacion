@@ -1,0 +1,57 @@
+{
+  "escenario": "pucon/volcanica",
+  "nombre": "Pucón (volcán Villarrica)",
+  "fuente": "SENAPRED — Amenaza Volcánica 2024 y Área de Evacuación Volcanes",
+  "url_servicio": "https://services5.arcgis.com/i7S5PSnIJAUcWvSE/ArcGIS/rest/services/AMENAZA_VOLC%C3%81NICA_2024/FeatureServer",
+  "ficha_catalogo": "https://www.arcgis.com/home/item.html?id=cdc76e7d47a74c89b1111c3d1e25924c",
+  "fecha_publicacion_fuente": "2026-09-21",
+  "fecha_descarga": "2026-10-02T04:26:04.709Z",
+  "bbox": [
+    -72.02,
+    -39.46,
+    -71.54,
+    -39.05
+  ],
+  "capas": [
+    {
+      "capa": "Áreas de evacuación",
+      "indice": 0,
+      "archivo": "area_evacuacion.geojson",
+      "elementos": 1,
+      "kb": 31,
+      "servicio": "https://services5.arcgis.com/i7S5PSnIJAUcWvSE/ArcGIS/rest/services/%C3%81rea_de_Evacuaci%C3%B3n_Volcanes/FeatureServer",
+      "recortada_al_bbox": true,
+      "generalizacion_grados": 0.00005
+    },
+    {
+      "capa": "Áreas de Peligro Volcánico",
+      "indice": 2,
+      "archivo": "peligro.geojson",
+      "elementos": 122,
+      "kb": 142,
+      "recortada_al_bbox": true,
+      "generalizacion_grados": 0.0001
+    },
+    {
+      "capa": "Vías de Evacuación",
+      "indice": 1,
+      "archivo": "vias_evacuacion.geojson",
+      "elementos": 3,
+      "kb": 2
+    },
+    {
+      "capa": "Puntos de Encuentro",
+      "indice": 0,
+      "archivo": "puntos_encuentro.geojson",
+      "elementos": 10,
+      "kb": 2
+    },
+    {
+      "capa": "Volcanes Geológicamente Activos: Peligrosidad",
+      "indice": 3,
+      "archivo": "volcan.geojson",
+      "elementos": 1,
+      "kb": 0
+    }
+  ]
+}

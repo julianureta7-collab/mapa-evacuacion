@@ -1,5 +1,5 @@
 {
-  "_doc": "Catálogo de zonas × amenazas (spec §3). Agregar una zona o amenaza = editar este archivo y agregar sus capas en data/<zona>/<amenaza>/. El código no conoce zonas por nombre. Roles válidos: area_peligro, ruta, punto_encuentro, referencia, bloqueo. La cobertura de una zona puede ser un polígono o la ruta a un GeoJSON (p. ej. un límite comunal oficial); el centro es opcional. Las zonas pequeñas van antes que las que las contienen (zonaEn devuelve la primera). Opcionales por capa: estilo_por {campo, valores: {valor: estilo}} colorea por clase (también en la leyenda); consulta {campo, etiqueta} muestra el valor en el punto del pin (diagnóstico informativo) y en el popup; aviso: texto bajo el diagnóstico cuando la amenaza no tiene área de peligro. popup [{campo, etiqueta}]: filas extra en el popup. En capas de puntos, consulta {campo, etiqueta, detalle} muestra el punto más cercano.",
+  "_doc": "Catálogo de zonas × amenazas (spec §3). Agregar una zona o amenaza = editar este archivo y agregar sus capas en data/<zona>/<amenaza>/. El código no conoce zonas por nombre. Roles válidos: area_peligro, ruta, punto_encuentro, referencia, bloqueo. La cobertura de una zona puede ser un polígono o la ruta a un GeoJSON (p. ej. un límite comunal oficial); el centro es opcional. Las zonas pequeñas van antes que las que las contienen (zonaEn devuelve la primera). Opcionales por capa: estilo_por {campo, valores: {valor: estilo}} colorea por clase (también en la leyenda); consulta {campo, etiqueta} muestra el valor en el punto del pin (diagnóstico informativo) y en el popup; aviso: texto bajo el diagnóstico cuando la amenaza no tiene área de peligro. popup [{campo, etiqueta}]: filas extra en el popup. En capas de puntos, consulta {campo, etiqueta, detalle} muestra el punto más cercano. En ruta: codigo {campo, prefijo} crea el código de la vía si la capa no trae 'name'. En punto_encuentro: destino_aunque_dentro: true si la autoridad designa puntos dentro del área (siguen siendo destinos).",
   "version": 1,
   "amenazas": {
     "tsunami": {
@@ -21,6 +21,11 @@
       "nombre": "Inundación y anegamiento",
       "area": "zona afectada por la inundación",
       "contenido": "data/contenido/inundacion.json"
+    },
+    "volcanica": {
+      "nombre": "Erupción volcánica",
+      "area": "zona de evacuación volcánica",
+      "contenido": "data/contenido/volcanica.json"
     }
   },
   "fuentes": {
@@ -45,6 +50,14 @@
       "detalle": "Puntos críticos ante lluvias informados por cada municipio a la ex ONEMI (hoy SENAPRED) en el Programa Invierno 2022",
       "url": "https://www.arcgis.com/home/item.html?id=09b724392dec47b2972d290e110b7dfc",
       "publicacion": "2022-04-27"
+    },
+    "senapred_volcanica_2024": {
+      "organismo": "SENAPRED",
+      "nombre": "Amenaza Volcánica 2024 y Área de Evacuación Volcanes",
+      "detalle": "Puntos de encuentro, vías de evacuación, áreas de peligro y peligrosidad de volcanes (Amenaza Volcánica 2024) y área de evacuación por volcán",
+      "url": "https://www.arcgis.com/home/item.html?id=cdc76e7d47a74c89b1111c3d1e25924c",
+      "_publicacion": "Amenaza Volcánica 2024: creado 2024-10-07, modificado 2026-09-21. Área de Evacuación Volcanes: publicado 2026-09-22.",
+      "publicacion": "2026-09-21"
     }
   },
   "estilos": {
@@ -384,6 +397,167 @@
               }
             ]
           }
+        }
+      ]
+    },
+    {
+      "id": "pucon",
+      "nombre": "Pucón",
+      "_centro": "Punto inicial del pin: inicio de la vía de evacuación oficial VE-787, en el centro de Pucón.",
+      "centro": [
+        -39.2857,
+        -71.9788
+      ],
+      "zoom": 15,
+      "_cobertura": "Límite comunal oficial (SUBDERE/IGM/INE 2018). Se descarga con: node scripts/descargar_capas.mjs pucon/cobertura.",
+      "cobertura": "data/pucon/cobertura/limite_comunal.geojson",
+      "amenazas": [
+        {
+          "id": "volcanica",
+          "_nota": "Volcán Villarrica. Área de evacuación oficial → area_peligro; peligro Alto/Medio/Bajo → referencia (si fueran área de peligro, el diagnóstico diría 'debes evacuar' en zonas enormes). Las vías no son bidireccionales y van en el sentido de la evacuación. Los puntos de encuentro transitorios (PET) de Los Calabozos y otros quedan dentro del área de evacuación, pero son oficiales (SENAPRED y Plan Comunal de Pucón): siguen siendo destinos válidos.",
+          "carpeta": "data/pucon/volcanica",
+          "metadata": "metadata.json",
+          "capas": [
+            {
+              "archivo": "area_evacuacion.geojson",
+              "rol": "area_peligro",
+              "nombre": "Área de evacuación (volcán Villarrica)",
+              "fuente": "senapred_volcanica_2024",
+              "visible": true
+            },
+            {
+              "archivo": "peligro.geojson",
+              "rol": "referencia",
+              "nombre": "Peligro volcánico",
+              "fuente": "senapred_volcanica_2024",
+              "visible": false,
+              "estilo": {
+                "color": "#7f2704",
+                "weight": 0,
+                "fill": true,
+                "fillOpacity": 0.3
+              },
+              "estilo_por": {
+                "campo": "peligro",
+                "valores": {
+                  "Alto": {
+                    "fillColor": "#d7191c"
+                  },
+                  "Medio": {
+                    "fillColor": "#fdae61"
+                  },
+                  "Bajo": {
+                    "fillColor": "#ffe066"
+                  }
+                }
+              },
+              "consulta": {
+                "campo": "peligro",
+                "etiqueta": "Peligro volcánico"
+              }
+            },
+            {
+              "archivo": "vias_evacuacion.geojson",
+              "rol": "ruta",
+              "nombre": "Vías de evacuación",
+              "fuente": "senapred_volcanica_2024",
+              "visible": true,
+              "codigo": {
+                "campo": "objectid",
+                "prefijo": "VE-"
+              }
+            },
+            {
+              "archivo": "puntos_encuentro.geojson",
+              "rol": "punto_encuentro",
+              "nombre": "Puntos de encuentro transitorios",
+              "fuente": "senapred_volcanica_2024",
+              "visible": true,
+              "destino_aunque_dentro": true
+            },
+            {
+              "archivo": "volcan.geojson",
+              "rol": "referencia",
+              "nombre": "Volcán",
+              "fuente": "senapred_volcanica_2024",
+              "visible": true,
+              "estilo": {
+                "radius": 9,
+                "color": "#ffffff",
+                "weight": 2,
+                "fillColor": "#5d4037",
+                "fillOpacity": 1
+              },
+              "popup": [
+                {
+                  "campo": "categoria",
+                  "etiqueta": "Peligrosidad"
+                }
+              ]
+            }
+          ],
+          "info_zona": {
+            "antes": [
+              {
+                "texto": "En Pucón, ante una emergencia volcánica, Bomberos alerta a la comunidad con 5 toques de sirena y perifoneo.",
+                "fuentes": [
+                  "muni_pucon_plan"
+                ]
+              },
+              {
+                "texto": "En una emergencia volcánica hay puestos médicos en los puntos de encuentro transitorios de Quelhue, la Península y Los Calabozos.",
+                "fuentes": [
+                  "muni_pucon_plan"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "incendio_forestal",
+          "_nota": "La capa oficial mide incendios pasados (2020–2024), no un área a evacuar: va como 'referencia' (spec §3, PLAN_ZONAS ítem 2). El área de peligro de una emergencia la dibuja el operador.",
+          "carpeta": "data/pucon/incendio_forestal",
+          "metadata": "metadata.json",
+          "capas": [
+            {
+              "archivo": "recurrencia_2020_2024.geojson",
+              "rol": "referencia",
+              "nombre": "Recurrencia de incendios 2020–2024",
+              "fuente": "senapred_if_2024",
+              "visible": true,
+              "estilo": {
+                "color": "#7f2704",
+                "weight": 0,
+                "fill": true,
+                "fillOpacity": 0.45
+              },
+              "estilo_por": {
+                "campo": "recurrencia",
+                "valores": {
+                  "Muy baja": {
+                    "fillColor": "#ffffb2"
+                  },
+                  "Baja": {
+                    "fillColor": "#fecc5c"
+                  },
+                  "Media": {
+                    "fillColor": "#fd8d3c"
+                  },
+                  "Alta": {
+                    "fillColor": "#f03b20"
+                  },
+                  "Muy alta": {
+                    "fillColor": "#bd0026"
+                  }
+                }
+              },
+              "consulta": {
+                "campo": "recurrencia",
+                "etiqueta": "Recurrencia de incendios forestales 2020–2024"
+              },
+              "aviso": "El mapa muestra dónde hubo incendios forestales entre 2020 y 2024 (SENAPRED). No es un área de evacuación: en una emergencia, el operador marcará la zona afectada."
+            }
+          ]
         }
       ]
     }

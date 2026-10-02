@@ -23,7 +23,7 @@ Estados: ⏳ pendiente · 🔨 en curso · ✅ hecho · 💤 en espera (depende 
 | 2 | Viña del Mar | Incendio forestal | Contenido ya hecho. Área: la dibuja el operador. Capa SENAPRED IF 2024 solo como `referencia` | Bajo | Testeo 2-oct | ✅ código (reporte 05); falta correr la descarga |
 | 3 | Macul (comuna completa) | Zona nueva (reutiliza incendio estructural) | Límite comunal oficial | Muy bajo, solo catálogo | Antes de la entrevista | ✅ código (reporte 06); falta descargar el límite |
 | 4 | Macul | Inundación / anegamiento | Contenido SENAPRED y MINSAL. Puntos críticos 2022 de SENAPRED (31); los actuales, la municipalidad | Medio | Entrevista | ✅ código (reporte 06); falta descargar los puntos |
-| 5 | Pucón | Volcánica (V. Villarrica) | Vías, puntos y área de evacuación SENAPRED 2024 | Medio | 2ª ronda de testeo | ⏳ |
+| 5 | Pucón | Volcánica (V. Villarrica) + incendio forestal | Vías, puntos y área de evacuación SENAPRED 2024; IF 2024 | Medio | 2ª ronda de testeo | ✅ código (reporte 07); falta descargar |
 | 6 | Santiago | Anegamiento + incendio estructural | 5 puntos críticos oficiales (Gobierno de Santiago, jul-2026) + contenido ya hecho | Bajo, después del 4 | 2ª ronda | ⏳ |
 | 7 | Tiltil | Relave (cliente minero) | Depósitos SERNAGEOMIN. Rutas y zonas seguras: las entrega la minera como operador | Medio | Cuando haya contacto minero | 💤 |
 | 8 | Macul | Sismo | CSN MASCSN26 (regional) + SENAPRED | Bajo, solo contenido | **Requiere cambiar spec §4** | 💤 |
@@ -77,6 +77,8 @@ Reglas comunes (ver `CLAUDE.md`): nada hardcodeado por zona; al tocar JS/CSS o `
 - **Qué ofrecerle:** cuentas de operador; la app como canal de difusión de su plan comunal; "Necesito ayuda" hacia su central; piloto Campus–Macul con simulacro conjunto (mencionar a CIGIDEN, el centro de riesgo de desastres que alberga la UC).
 
 ### 5. Pucón: volcánica
+
+> **Hecho el 2-oct-2026 (reporte 07).** Diferencias con lo previsto abajo: la capa 2 (peligro) no trae `volcan`, se filtra por recuadro; las 8 vías del Villarrica son de un sentido; los PET Los Calabozos y Quelhue quedan dentro del área de evacuación y se aceptan como destinos (`destino_aunque_dentro`). Escenarios del script: `pucon/cobertura`, `pucon/volcanica`, `pucon/incendio_forestal`.
 
 - **Datos (SENAPRED, mismo servidor ArcGIS que el tsunami):** `https://services5.arcgis.com/i7S5PSnIJAUcWvSE/ArcGIS/rest/services/AMENAZA_VOLCÁNICA_2024/FeatureServer` (codificar la URL: `AMENAZA_VOLC%C3%81NICA_2024`):
   - capa 0: puntos de encuentro (`nombre`, `tipo` PE/PET, `volcan`). Villarrica: 35, p. ej. "Península Pucón", "Los Calabozos";

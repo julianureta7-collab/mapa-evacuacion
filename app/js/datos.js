@@ -22,6 +22,14 @@ export async function cargarCapas(defAmenaza, fuentePorId, base = '') {
     const f = fuentePorId(c.fuente);
     for (const ft of geo.features) {
       ft.properties = { ...(ft.properties || {}), _procedencia: 'oficial', _fuente: f, _capa: c.nombre };
+      // Código estable para capas sin campo "name" (p. ej. vías volcánicas: objectid → "VE-787"),
+      // que usan la tarjeta de ruta y la desactivación de vías por el operador.
+      // (ArcGIS a veces entrega el objectid como "id" del feature y no en las propiedades)
+      const cod = c.codigo ? (ft.properties[c.codigo.campo] ?? ft.id) : null;
+      if (cod != null && ft.properties.name == null) ft.properties.name = `${c.codigo.prefijo || ''}${cod}`;
+      // Puntos de encuentro oficiales que la autoridad ubica dentro del área (p. ej. los puntos de
+      // encuentro transitorios de Pucón): siguen siendo destinos válidos.
+      if (c.destino_aunque_dentro) ft.properties._destinoDentro = true;
     }
     capas.push({ def: c, geo });
   }));

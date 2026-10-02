@@ -2,16 +2,16 @@
 // Zonas × amenazas desde data/catalogo.json (spec §3). El pin decide la zona (spec §5.1):
 // al elegir una zona en el desplegable el pin va a su centro, y al arrastrar el pin a otra zona
 // la app cambia de zona sola.
-import { cargarCatalogo, zonas, zona as zonaPorId, amenazasDe, amenazaInfo, fuente, estiloDe, clasesDe, zonaEn } from './catalogo.js?v=17';
-import { cargarCapas } from './datos.js?v=17';
-import { crearMapa, mostrarCapas, centrarEn, dibujarRuta, limpiarRuta, setModoMapa } from './mapa.js?v=17';
-import { prepararRutas, calcularRuta, nombreDestino, nombreVia, organismoDe, rumboATexto, hayRutasOperador } from './ruta.js?v=17';
-import { escucharOperador, capasOperador, codigosDesactivados, elementosActuales, desactivacionesActuales, aFeature, ROLES_OPERADOR } from './capasOperador.js?v=17';
-import { prepararAreas, diagnosticar, textosDiagnostico } from './diagnostico.js?v=17';
-import { iniciarPosicion, iniciarGPSSiHayPermiso, modoSimulacion, modoGPS, ubicarPin, setLinterna, posicionActual, ubicacionReal, pinArrastrando, bloquearPin } from './posicion.js?v=17';
-import { escucharAlertas } from './alertas.js?v=17';
-import { cargarContenido, dibujarInformacion as pintarInformacion, htmlPrecaucion } from './informacion.js?v=17';
-import { crearControlBrujula } from './brujula.js?v=17';
+import { cargarCatalogo, zonas, zona as zonaPorId, amenazasDe, amenazaInfo, fuente, estiloDe, clasesDe, zonaEn } from './catalogo.js?v=18';
+import { cargarCapas } from './datos.js?v=18';
+import { crearMapa, mostrarCapas, centrarEn, dibujarRuta, limpiarRuta, setModoMapa } from './mapa.js?v=18';
+import { prepararRutas, calcularRuta, nombreDestino, nombreVia, organismoDe, rumboATexto, hayRutasOperador } from './ruta.js?v=18';
+import { escucharOperador, capasOperador, codigosDesactivados, elementosActuales, desactivacionesActuales, aFeature, ROLES_OPERADOR } from './capasOperador.js?v=18';
+import { prepararAreas, diagnosticar, textosDiagnostico } from './diagnostico.js?v=18';
+import { iniciarPosicion, iniciarGPSSiHayPermiso, modoSimulacion, modoGPS, ubicarPin, setLinterna, posicionActual, ubicacionReal, pinArrastrando, bloquearPin } from './posicion.js?v=18';
+import { escucharAlertas } from './alertas.js?v=18';
+import { cargarContenido, dibujarInformacion as pintarInformacion, htmlPrecaucion } from './informacion.js?v=18';
+import { crearControlBrujula } from './brujula.js?v=18';
 
 const $ = (id) => document.getElementById(id);
 let mapa = null;
@@ -298,6 +298,7 @@ function mostrarDiagnostico(latlng, precision) {
       ? `Distancia al borde del área: ${fmtDist(r.distanciaBorde)}.`
       : `A ${fmtDist(r.distanciaBorde)} de la ${amenazaActual.area}${r.comuna ? ` (${r.comuna})` : ''}.`);
   }
+  if (!emergencia) detalle.push(...consultasEn(latlng));   // p. ej. "Peligro volcánico en este punto: Alto"
   if (precision != null) detalle.push(`Precisión GPS: ±${Math.round(precision)} m.`);
   pintarEstado(t.clase, t.titulo, t.texto, detalle);
   return r;
@@ -363,7 +364,7 @@ function mostrarInfoRuta(r) {
         ? `2. Síguela ${fmtDist(r.oficialM)} ${hasta}.`
         : `Sigue la vía de evacuación oficial ${fmtDist(r.oficialM)} ${hasta}.`);
     }
-    if (r.metrosDentro > 0) detalle.push(`Sales de la ${area} en ~${fmtDist(r.metrosDentro)}.`);
+    if (r.metrosDentro > 0 && !r.terminaDentro) detalle.push(`Sales de la ${area} en ~${fmtDist(r.metrosDentro)}.`);
     el.innerHTML = `
       <div class="ruta-titulo">Ruta oficial ${organismoDe(r.via)} · vía ${nombreVia(r.via)}</div>
       <div class="ruta-cifras">
@@ -371,6 +372,7 @@ function mostrarInfoRuta(r) {
         <div><strong>${fmtMin(r.duracion)}</strong><span>caminando</span></div>
       </div>
       <div class="ruta-detalle">${detalle.map(d => `<div>${d}</div>`).join('')}</div>
+      ${notaDestinoDentro(r, area)}
       ${r.aviso ? `<div class="ruta-aviso">${r.aviso}</div>` : ''}`;
     return;
   }
@@ -379,7 +381,7 @@ function mostrarInfoRuta(r) {
     const detalle = [];
     const paso = r.pasos.find(p => p.instruction)?.instruction;
     if (paso) detalle.push(`Primer paso: ${paso}.`);
-    if (r.metrosDentro > 0) detalle.push(`Sales de la ${area} en ~${fmtDist(r.metrosDentro)}.`);
+    if (r.metrosDentro > 0 && !r.terminaDentro) detalle.push(`Sales de la ${area} en ~${fmtDist(r.metrosDentro)}.`);
     if (r.fraccionVias > 0) detalle.push(`${Math.round(r.fraccionVias * 100)}% del trayecto va por vías de evacuación oficiales.`);
     if (r.descartadas) detalle.push(`Se descartaron ${r.descartadas} ruta(s) que volvían a entrar a la ${area}.`);
     el.innerHTML = `
@@ -389,6 +391,7 @@ function mostrarInfoRuta(r) {
         <div><strong>${fmtMin(r.duracion)}</strong><span>caminando</span></div>
       </div>
       <div class="ruta-detalle">${detalle.map(d => `<div>${d}</div>`).join('')}</div>
+      ${notaDestinoDentro(r, area)}
       <div class="ruta-aviso">Sugerida automáticamente por calles peatonales (OpenStreetMap), no verificada por un operador.</div>`;
   } else {
     el.innerHTML = `
@@ -399,6 +402,13 @@ function mostrarInfoRuta(r) {
       </div>
       <div class="ruta-aviso">${r.aviso}</div>`;
   }
+}
+
+// Punto de encuentro oficial que la autoridad ubica dentro del área (p. ej. un punto de encuentro
+// transitorio en Pucón): se avisa, también en la pantalla mínima de emergencia.
+function notaDestinoDentro(r, area) {
+  return r.terminaDentro
+    ? `<div class="ruta-aviso">El punto de encuentro es oficial, pero queda dentro de la ${area}: al llegar, sigue las instrucciones de la autoridad.</div>` : '';
 }
 
 // Modo precaución (spec §5.4): sin ruta válida, solo las indicaciones "durante" oficiales.
