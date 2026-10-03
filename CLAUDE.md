@@ -26,7 +26,7 @@
 
 ## Comandos
 
-- `node scripts/descargar_capas.mjs [zona/amenaza]`: descarga capas oficiales de servicios ArcGIS (necesita red hacia ArcGIS). Cada escenario declara servicio, capas, fuente y, por capa, `where`, `campos`, `recortar` (al bbox) y `generalizar`. Escenarios: `vina/tsunami`, `vina/incendio_forestal`, `macul/cobertura` (límite comunal, JSON de Esri), `macul/inundacion` (puntos críticos 2022, con dominios traducidos), `pucon/cobertura`, `pucon/volcanica` (dos servicios: `servicio` por capa), `pucon/incendio_forestal`, `tiltil/cobertura`, `tiltil/relave` (catastro SERNAGEOMIN 2025), `tiltil/incendio_forestal`, `tiltil/inundacion`.
+- `node scripts/descargar_capas.mjs [zona/amenaza]`: descarga capas oficiales de servicios ArcGIS (necesita red hacia ArcGIS). Cada escenario declara servicio, capas, fuente y, por capa, `where`, `campos`, `recortar` (al bbox) y `generalizar`. Escenarios: `vina/tsunami`, `vina/incendio_forestal`, `macul/cobertura` (límite comunal, JSON de Esri), `macul/inundacion` (puntos críticos 2022, con dominios traducidos), `pucon/cobertura`, `pucon/volcanica` (dos servicios: `servicio` por capa), `pucon/incendio_forestal`, `tiltil/cobertura`, `tiltil/relave` (catastro SERNAGEOMIN 2025), `tiltil/incendio_forestal`, `tiltil/inundacion`, y para `penalolen` y `la_florida` (función `escenariosPrecordillera`): `cobertura`, `aluvion` (PRMS de MINVU + puntos críticos por quebradas), `incendio_forestal`, `inundacion`.
 - `node scripts/servidor.mjs`: abre http://localhost:8080 (con `PORT=xxxx` para otro puerto).
 - Publicar: `git add . && git commit -m "..." && git push` (GitHub Actions publica en Pages).
 
@@ -63,6 +63,6 @@
 
 ## Próximo paso
 
-Spec §10 puntos 1 a 7 hechos, y `PLAN_ZONAS.md` ítems 1 a 4 (reportes 05 y 06; falta que Julián descargue con el script: `vina/incendio_forestal`, `macul/cobertura`, `macul/inundacion`, y que vuelva a desplegar la Edge Function `rutas`). Ítems 5 (Pucón, reporte 07) y 7 (Tiltil, reporte 08) hechos: falta descargar los escenarios `tiltil/*`. Siguiente: preparación del testeo (QR, guion) y `PLAN_ZONAS.md` ítem 6 (Santiago). Revisa §13 para ver qué falta del equipo.
+Spec §10 puntos 1 a 7 hechos, y `PLAN_ZONAS.md` ítems 1 a 4 (reportes 05 y 06; falta que Julián descargue con el script: `vina/incendio_forestal`, `macul/cobertura`, `macul/inundacion`, y que vuelva a desplegar la Edge Function `rutas`). Ítems 5 (Pucón, reporte 07), 7 (Tiltil, reporte 08) y 9–10 (Peñalolén y La Florida, reporte 09) hechos: falta descargar los escenarios `penalolen/*` y `la_florida/*`. Siguiente: preparación del testeo (QR, guion) y `PLAN_ZONAS.md` ítem 6 (Santiago). Revisa §13 para ver qué falta del equipo.
 
-**Zonas y amenazas nuevas:** sigue la tabla de `docs/PLAN_ZONAS.md` en orden (1 Campus incendio estructural ✅ → 2 Viña incendio forestal ✅ → 3 Macul comuna completa ✅ → 4 Macul inundación ✅ → 5 Pucón volcánica ✅ → 6 Santiago → 7 Tiltil relaves ✅ → …). Cada ítem trae datos, archivos a tocar y cómo verificar. Contexto: entrevista con la Dirección de Gestión del Riesgo de Macul y posible cliente minero (Tiltil, relaves).
+**Zonas y amenazas nuevas:** sigue la tabla de `docs/PLAN_ZONAS.md` en orden (1 Campus incendio estructural ✅ → 2 Viña incendio forestal ✅ → 3 Macul comuna completa ✅ → 4 Macul inundación ✅ → 5 Pucón volcánica ✅ → 6 Santiago → 7 Tiltil relaves ✅ → 9 Peñalolén ✅ → 10 La Florida ✅ → …). Cada ítem trae datos, archivos a tocar y cómo verificar. Contexto: entrevista con la Dirección de Gestión del Riesgo de Macul y posible cliente minero (Tiltil, relaves).

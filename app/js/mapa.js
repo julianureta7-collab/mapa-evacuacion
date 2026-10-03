@@ -1,5 +1,5 @@
 // Mapa Leaflet: fondo OSM y capas de la zona × amenaza actual.
-import { estiloDe } from './catalogo.js?v=19';
+import { estiloDe } from './catalogo.js?v=20';
 
 let mapa, controlCapas, grupoCapas;
 let capasDibujadas = [];        // [{ def, capa }]
@@ -34,12 +34,12 @@ const escHTML = (t) => String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;',
 
 function popupDe(def, props) {
   const nombreCapa = def.nombre;
-  const titulo = (def.titulo && props[def.titulo]) || props.nombre_pe?.trim() || props.nombre_ve?.trim() || props.nombre?.trim() || props.volcan || props.name || props.sector || nombreCapa;
+  const titulo = (def.titulo && String(props[def.titulo] ?? '').trim()) || props.nombre_pe?.trim() || props.nombre_ve?.trim() || props.nombre?.trim() || props.volcan || props.name || props.sector || nombreCapa;
   const filas = [];
   if (props.sector && titulo !== props.sector) filas.push(`Sector: ${props.sector}`);
   if (props.nom_com || props.comuna) filas.push(`Comuna: ${props.nom_com || props.comuna}`);
   if (props.name && titulo !== props.name) filas.push(`Código: ${props.name}`);
-  if (def.popup) { for (const c of def.popup) if (props[c.campo] != null) filas.push(`${c.etiqueta}: ${props[c.campo]}`); }
+  if (def.popup) { for (const c of def.popup) if (String(props[c.campo] ?? '').trim()) filas.push(`${c.etiqueta}: ${props[c.campo]}`); }
   else if (def.consulta && props[def.consulta.campo] != null) filas.push(`${def.consulta.etiqueta}: ${props[def.consulta.campo]}`);
   if (props._procedencia === 'operador') {
     const e = (t) => String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

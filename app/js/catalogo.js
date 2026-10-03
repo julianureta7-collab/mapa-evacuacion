@@ -2,7 +2,7 @@
 // qué amenazas tiene cada una y qué capas oficiales las describen" vive en data/catalogo.json.
 // El resto del código trabaja con roles genéricos y nunca pregunta por una zona por su nombre.
 
-import { cargarJSON } from './datos.js?v=19';
+import { cargarJSON } from './datos.js?v=20';
 
 export const ROLES = ['area_peligro', 'ruta', 'punto_encuentro', 'referencia', 'bloqueo'];
 
@@ -10,13 +10,13 @@ let cat = null;
 
 // base: ruta hasta la carpeta app/ ('' desde la app usuario, '../' desde la app operador)
 export async function cargarCatalogo(base = '') {
-  cat = await cargarJSON(`${base}data/catalogo.json?v=19`);   // subir junto con los ?v= de los scripts
+  cat = await cargarJSON(`${base}data/catalogo.json?v=20`);   // subir junto con los ?v= de los scripts
   // La cobertura puede venir en un archivo (p. ej. un límite comunal oficial descargado con el script).
   // Si el archivo aún no existe, la zona se omite (con aviso en la consola) en vez de romper la app.
   const listas = await Promise.all(cat.zonas.map(async (z) => {
     if (typeof z.cobertura === 'string') {
       try {
-        const fc = await cargarJSON(`${base}${z.cobertura}?v=19`);
+        const fc = await cargarJSON(`${base}${z.cobertura}?v=20`);
         const geoms = (fc.features || [fc]).map(f => f.geometry || f).filter(g => /Polygon/.test(g?.type || ''));
         if (!geoms.length) throw new Error('sin polígonos');
         z.cobertura = geoms.length === 1 ? geoms[0]

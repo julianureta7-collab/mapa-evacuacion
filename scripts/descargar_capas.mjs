@@ -183,6 +183,41 @@ const ESCENARIOS = {
   },
 };
 
+// ---- Comunas de la precordillera de Santiago (aluviones): mismo conjunto de capas para cada una ----
+// PRMS (MINVU, servicio PRMS_AGOL_2024): capa 10 riesgo de remoción en masa (art. 8.2.1.4), capa 9 riesgo de
+// derrumbes y asentamiento del suelo (art. 8.2.1.2), capa 6 quebradas (art. 8.2.1). Puntos críticos 2022 de SENAPRED:
+// para "aluvion" solo las causas 1 (flujos de barro/aluvión), 2 (deslizamiento/derrumbe) y 4 (activación de quebradas).
+const PRMS_MINVU = 'https://services3.arcgis.com/cTnMkBRk4HWkUCRo/arcgis/rest/services/PRMS_AGOL_2024/FeatureServer';
+const DPA = { servicio: DPA_MOP, fuente: 'SUBDERE, IGM e INE (2018) — División Político Administrativa, Comunas (servicio del MOP)', ficha: `${DPA_MOP}/1`, publicacion: '2018' };
+function escenariosPrecordillera(zona, nombre, cut, bbox) {
+  return {
+    [`${zona}/cobertura`]: { nombre: `${nombre} (límite comunal)`, ...DPA,
+      capas: [{ id: 1, archivo: 'limite_comunal', nombre: 'Comunas', where: `CUT_COM='${cut}'`, campos: ['CUT_COM', 'COMUNA'], generalizar: 0.00005, esri: true }] },
+    [`${zona}/aluvion`]: { nombre, bbox, servicio: PRMS_MINVU,
+      fuente: 'MINVU — Plan Regulador Metropolitano de Santiago (PRMS), áreas de riesgo y quebradas; SENAPRED — Puntos Críticos Programa Invierno 2022',
+      ficha: 'https://www.arcgis.com/home/item.html?id=4ff5a467fdc247929bd4276a39cc478a', publicacion: '2024-07-09',
+      capas: [
+        { id: 10, archivo: 'remocion_masa_prms', nombre: 'd5_art_821_remocionmasa', campos: ['COMUNA', 'ART_III', 'SECTOR'], recortar: true, generalizar: 0.00002 },
+        { id: 9, archivo: 'derrumbes_prms', nombre: '8.2.1 Riesgos de origen natural', campos: ['ORD_1', 'ORD_2'], recortar: true, generalizar: 0.00002 },
+        { id: 6, archivo: 'quebradas_prms', nombre: 'd4_art_821_quebradas', campos: ['NOMBRE', 'TRAMO', 'COMUNA'], generalizar: 0.00002 },
+        { servicio: PUNTOS_CRITICOS_2022, id: 0, archivo: 'puntos_quebradas_2022', nombre: 'Puntos Críticos Programa Invierno (quebradas y aluviones)',
+          where: `comuna='${cut}' AND causa_punt IN ('1','2','4')`, campos: ['sector', 'causa_punt', 'nivel_de_riesgo_2022'], decodificar: true },
+      ] },
+    [`${zona}/incendio_forestal`]: { nombre, bbox, servicio: `${SENAPRED}/Amenaza_por_Incendio_Forestal_2024/FeatureServer`,
+      fuente: 'SENAPRED — Amenaza por Incendio Forestal 2024 (densidad de incendios forestales 2020–2024)',
+      ficha: 'https://www.arcgis.com/home/item.html?id=19268f2baaaf4cfdb8ad93f083c2c437', publicacion: '2025-10-27',
+      capas: [{ id: 0, archivo: 'recurrencia_2020_2024', nombre: 'Densidad de Incendios Forestales 2020-2024', campos: ['gridcode', 'recurrencia'], recortar: true, generalizar: 0.00005 }] },
+    [`${zona}/inundacion`]: { nombre, servicio: PUNTOS_CRITICOS_2022,
+      fuente: 'SENAPRED (ex ONEMI) — Puntos Críticos Programa Invierno 2022 (levantamiento comunal)',
+      ficha: 'https://www.arcgis.com/home/item.html?id=09b724392dec47b2972d290e110b7dfc', publicacion: '2022-04-27',
+      capas: [{ id: 0, archivo: 'puntos_criticos_2022', nombre: 'Puntos Críticos Programa Invierno', where: `comuna='${cut}'`, campos: ['sector', 'causa_punt', 'nivel_de_riesgo_2022'], decodificar: true }] },
+  };
+}
+Object.assign(ESCENARIOS,
+  escenariosPrecordillera('penalolen', 'Peñalolén', '13122', [-70.60, -33.52, -70.44, -33.45]),
+  escenariosPrecordillera('la_florida', 'La Florida', '13110', [-70.62, -33.58, -70.43, -33.485]),
+);
+
 const DECIMALES = 6; // ~10 cm, suficiente y reduce el tamaño del archivo
 
 function redondear(coords) {

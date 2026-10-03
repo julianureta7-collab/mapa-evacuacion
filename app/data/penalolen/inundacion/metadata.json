@@ -1,0 +1,19 @@
+{
+  "escenario": "penalolen/inundacion",
+  "nombre": "Peñalolén",
+  "fuente": "SENAPRED (ex ONEMI) — Puntos Críticos Programa Invierno 2022 (levantamiento comunal)",
+  "url_servicio": "https://services5.arcgis.com/i7S5PSnIJAUcWvSE/ArcGIS/rest/services/Puntos_Cr%C3%ADticos_Programa_Invierno_2022/FeatureServer",
+  "ficha_catalogo": "https://www.arcgis.com/home/item.html?id=09b724392dec47b2972d290e110b7dfc",
+  "fecha_publicacion_fuente": "2022-04-27",
+  "fecha_descarga": "2026-10-03T02:59:45.279Z",
+  "bbox": null,
+  "capas": [
+    {
+      "capa": "Puntos Críticos Programa Invierno",
+      "indice": 0,
+      "archivo": "puntos_criticos_2022.geojson",
+      "elementos": 34,
+      "kb": 8
+    }
+  ]
+}

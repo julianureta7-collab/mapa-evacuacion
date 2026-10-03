@@ -1,5 +1,5 @@
 {
-  "_doc": "Fuentes oficiales del contenido informativo (spec §2.2). Cada recomendación cita una o más de estas. Consultadas el 1-oct-2026 (inundación, Macul, volcanes y relaves: 2-oct-2026).",
+  "_doc": "Fuentes oficiales del contenido informativo (spec §2.2). Cada recomendación cita una o más de estas. Consultadas el 1-oct-2026 (inundación, Macul, volcanes, relaves y aluviones: 2-oct-2026).",
   "senapred_tsunami":     { "organismo": "SENAPRED", "titulo": "Tsunami: recomendaciones", "url": "https://senapred.cl/tsunami/" },
   "senapred_if":          { "organismo": "SENAPRED", "titulo": "Incendios forestales: recomendaciones", "url": "https://senapred.cl/incendios-forestales/" },
   "senapred_ie":          { "organismo": "SENAPRED", "titulo": "Incendios estructurales: recomendaciones", "url": "https://senapred.cl/incendios-estructurales/" },
@@ -19,5 +19,8 @@
   "sernageomin_relaves":  { "organismo": "SERNAGEOMIN", "titulo": "Catastro de depósitos de relaves de Chile (actualizado a octubre de 2025)", "url": "https://www.arcgis.com/home/item.html?id=2798b3201c92431d87ff19fbafbabf16" },
   "codelco_ovejeria":     { "organismo": "Codelco", "titulo": "Tranque Ovejería: documento de divulgación pública GISTM (actualización 2025)", "url": "https://www.codelco.com/sites/site/docs/20250731/20250731155601/resumen_requisito_15_1_divulgacion_ovejeria_actualizacion_2025_rev_0_revpmf_re_gcr.pdf" },
   "muni_tiltil_simulacro":{ "organismo": "Municipalidad de Tiltil", "titulo": "Simulacro de emergencia comunitario del tranque Las Tórtolas en Tiltil y Colina (nov-2024)", "url": "https://munitiltil.cl/anglo-american-prepara-ejercicio-simulacro-de-emergencia-comunitario-en-tiltil-y-colina/" },
-  "muni_colina_simulacro":{ "organismo": "Municipalidad de Colina", "titulo": "Simulacro de terremoto y desborde del relave Las Tórtolas (21-nov-2024)", "url": "https://www.colina.cl/2024/11/21/con-exito-resulta-el-simulacro-de-terremoto-y-desborde-relave-las-tortolas-en-quilapilun/" }
+  "muni_colina_simulacro":{ "organismo": "Municipalidad de Colina", "titulo": "Simulacro de terremoto y desborde del relave Las Tórtolas (21-nov-2024)", "url": "https://www.colina.cl/2024/11/21/con-exito-resulta-el-simulacro-de-terremoto-y-desborde-relave-las-tortolas-en-quilapilun/" },
+  "senapred_aluviones":   { "organismo": "SENAPRED", "titulo": "Aluviones: señales y qué hacer", "url": "https://senapred.cl/aluviones/" },
+  "bcn_quebrada_macul":   { "organismo": "Biblioteca del Congreso Nacional", "titulo": "Zona de riesgo en la Quebrada de Macul", "url": "https://www.bcn.cl/siit/actualidad-territorial/zona-de-riesgo-en-la-quebrada-de-macul/document_view2" },
+  "gore_rm_penalolen":    { "organismo": "Gobierno de Santiago", "titulo": "Inspección de piscinas antialuviones de la Quebrada de Macul con la Municipalidad de Peñalolén (16-jul-2026)", "url": "https://www.gobiernosantiago.cl/2026/07/16/gobierno-de-santiago-y-municipalidad-de-penalolen-inspeccionan-piscinas-antialuviones-y-refuerzan-medidas-preventivas-ante-sistema-frontal/" }
 }

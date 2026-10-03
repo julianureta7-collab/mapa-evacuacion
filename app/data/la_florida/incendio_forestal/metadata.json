@@ -1,0 +1,26 @@
+{
+  "escenario": "la_florida/incendio_forestal",
+  "nombre": "La Florida",
+  "fuente": "SENAPRED — Amenaza por Incendio Forestal 2024 (densidad de incendios forestales 2020–2024)",
+  "url_servicio": "https://services5.arcgis.com/i7S5PSnIJAUcWvSE/ArcGIS/rest/services/Amenaza_por_Incendio_Forestal_2024/FeatureServer",
+  "ficha_catalogo": "https://www.arcgis.com/home/item.html?id=19268f2baaaf4cfdb8ad93f083c2c437",
+  "fecha_publicacion_fuente": "2025-10-27",
+  "fecha_descarga": "2026-10-03T02:59:47.038Z",
+  "bbox": [
+    -70.62,
+    -33.58,
+    -70.43,
+    -33.485
+  ],
+  "capas": [
+    {
+      "capa": "Densidad de Incendios Forestales 2020-2024",
+      "indice": 0,
+      "archivo": "recurrencia_2020_2024.geojson",
+      "elementos": 17,
+      "kb": 24,
+      "recortada_al_bbox": true,
+      "generalizacion_grados": 0.00005
+    }
+  ]
+}

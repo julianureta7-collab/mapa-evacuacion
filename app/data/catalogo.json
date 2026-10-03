@@ -31,6 +31,11 @@
       "nombre": "Falla de relaves",
       "area": "zona afectada por el relave",
       "contenido": "data/contenido/relave.json"
+    },
+    "aluvion": {
+      "nombre": "Aluvión",
+      "area": "zona afectada por el aluvión",
+      "contenido": "data/contenido/aluvion.json"
     }
   },
   "fuentes": {
@@ -71,6 +76,14 @@
       "url": "https://www.arcgis.com/home/item.html?id=2798b3201c92431d87ff19fbafbabf16",
       "_publicacion": "Ítem creado el 2025-10-02 (datos a octubre de 2025); modificado el 2026-09-21.",
       "publicacion": "2025-10-02"
+    },
+    "minvu_prms_riesgo": {
+      "organismo": "MINVU",
+      "nombre": "Plan Regulador Metropolitano de Santiago (PRMS): áreas de riesgo y quebradas",
+      "detalle": "Áreas de riesgo geofísico por remoción en masa (art. 8.2.1.4) y por derrumbes (art. 8.2.1.2), y quebradas (art. 8.2.1); servicio PRMS_AGOL_2024 del Centro de Estudios MINVU",
+      "url": "https://www.arcgis.com/home/item.html?id=4ff5a467fdc247929bd4276a39cc478a",
+      "_publicacion": "Servicio publicado el 2024-07-09 (el PRMS es de 1994, con modificaciones).",
+      "publicacion": "2024-07-09"
     }
   },
   "estilos": {
@@ -787,6 +800,546 @@
                 "detalle_minusculas": true
               },
               "aviso": "El mapa muestra los puntos críticos ante lluvias que la Municipalidad de Tiltil informó a SENAPRED en 2022 (pueden haber cambiado). No es un área de evacuación: en una emergencia, el operador marcará las calles cortadas y las zonas afectadas."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "penalolen",
+      "nombre": "Peñalolén",
+      "_centro": "Punto inicial del pin: El Valle con Sánchez Fontecilla (punto crítico 2022 de SENAPRED), en el centro de Peñalolén.",
+      "centro": [
+        -33.47956,
+        -70.55713
+      ],
+      "zoom": 15,
+      "_cobertura": "Límite comunal oficial (SUBDERE/IGM/INE 2018). Se descarga con: node scripts/descargar_capas.mjs penalolen/cobertura.",
+      "cobertura": "data/penalolen/cobertura/limite_comunal.geojson",
+      "amenazas": [
+        {
+          "id": "aluvion",
+          "_nota": "Sin área de evacuación oficial por aluvión: el PRMS define áreas de riesgo para planificar el uso del suelo, no para evacuar. Van como 'referencia'. En una emergencia, el operador marca la zona afectada, los puntos de encuentro y las calles cortadas.",
+          "carpeta": "data/penalolen/aluvion",
+          "metadata": "metadata.json",
+          "capas": [
+            {
+              "archivo": "remocion_masa_prms.geojson",
+              "rol": "referencia",
+              "nombre": "Riesgo de remoción en masa (PRMS)",
+              "fuente": "minvu_prms_riesgo",
+              "visible": true,
+              "estilo": {
+                "color": "#8e2a1d",
+                "weight": 1.5,
+                "dashArray": null,
+                "fill": true,
+                "fillColor": "#c0392b",
+                "fillOpacity": 0.18
+              },
+              "titulo": "SECTOR",
+              "popup": [
+                {
+                  "campo": "ART_III",
+                  "etiqueta": "Riesgo"
+                },
+                {
+                  "campo": "COMUNA",
+                  "etiqueta": "Comuna"
+                }
+              ],
+              "consulta": {
+                "campo": "SECTOR",
+                "etiqueta": "Área de riesgo por remoción en masa más cercana",
+                "cercano": true
+              },
+              "aviso": "El mapa muestra las áreas de riesgo por remoción en masa y las quebradas del Plan Regulador Metropolitano (MINVU), y los puntos críticos por quebradas informados a SENAPRED en 2022. No es un área de evacuación: en una emergencia, el operador marcará la zona afectada y los puntos de encuentro."
+            },
+            {
+              "archivo": "derrumbes_prms.geojson",
+              "rol": "referencia",
+              "nombre": "Riesgo de derrumbes (PRMS)",
+              "fuente": "minvu_prms_riesgo",
+              "visible": true,
+              "estilo": {
+                "color": "#a83800",
+                "weight": 1,
+                "dashArray": null,
+                "fill": true,
+                "fillColor": "#cdaa66",
+                "fillOpacity": 0.3
+              },
+              "titulo": "ORD_2",
+              "popup": [
+                {
+                  "campo": "ORD_1",
+                  "etiqueta": "Riesgo"
+                }
+              ]
+            },
+            {
+              "archivo": "quebradas_prms.geojson",
+              "rol": "referencia",
+              "nombre": "Quebradas (PRMS)",
+              "fuente": "minvu_prms_riesgo",
+              "visible": true,
+              "estilo": {
+                "color": "#0277bd",
+                "weight": 2.5,
+                "dashArray": null,
+                "opacity": 0.85
+              },
+              "titulo": "NOMBRE",
+              "popup": [
+                {
+                  "campo": "TRAMO",
+                  "etiqueta": "Tramo"
+                },
+                {
+                  "campo": "COMUNA",
+                  "etiqueta": "Comuna"
+                }
+              ]
+            },
+            {
+              "archivo": "puntos_quebradas_2022.geojson",
+              "rol": "referencia",
+              "nombre": "Puntos críticos por quebradas (2022)",
+              "fuente": "senapred_puntos_criticos_2022",
+              "visible": true,
+              "estilo": {
+                "radius": 7,
+                "color": "#ffffff",
+                "weight": 2,
+                "dashArray": null,
+                "fillColor": "#0277bd",
+                "fillOpacity": 1
+              },
+              "estilo_por": {
+                "campo": "nivel_de_riesgo_2022",
+                "valores": {
+                  "Muy Alto": {
+                    "fillColor": "#b71c1c"
+                  },
+                  "Alto": {
+                    "fillColor": "#e65100"
+                  },
+                  "Medio": {
+                    "fillColor": "#f9a825"
+                  },
+                  "Bajo": {
+                    "fillColor": "#0277bd"
+                  },
+                  "En Evaluación": {
+                    "fillColor": "#7b1fa2"
+                  },
+                  "Solucionado": {
+                    "fillColor": "#9e9e9e"
+                  }
+                }
+              },
+              "popup": [
+                {
+                  "campo": "causa_punt",
+                  "etiqueta": "Causa"
+                },
+                {
+                  "campo": "nivel_de_riesgo_2022",
+                  "etiqueta": "Nivel de riesgo 2022"
+                }
+              ]
+            }
+          ],
+          "info_zona": {
+            "antes": [
+              {
+                "texto": "El aluvión de la Quebrada de Macul del 3 de mayo de 1993 dejó 26 fallecidos en Peñalolén y La Florida; después se construyeron piscinas antialuviones en la quebrada.",
+                "fuentes": [
+                  "bcn_quebrada_macul",
+                  "gore_rm_penalolen"
+                ]
+              },
+              {
+                "texto": "En julio de 2026, la Municipalidad de Peñalolén identificó 10 puntos críticos ante el sistema frontal y revisó las piscinas antialuviones de la Quebrada de Macul con el Gobierno de Santiago.",
+                "fuentes": [
+                  "gore_rm_penalolen"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "incendio_forestal",
+          "_nota": "La capa oficial mide incendios pasados (2020–2024), no un área a evacuar: va como 'referencia' (spec §3, PLAN_ZONAS ítem 2). El área de peligro de una emergencia la dibuja el operador.",
+          "carpeta": "data/penalolen/incendio_forestal",
+          "metadata": "metadata.json",
+          "capas": [
+            {
+              "archivo": "recurrencia_2020_2024.geojson",
+              "rol": "referencia",
+              "nombre": "Recurrencia de incendios 2020–2024",
+              "fuente": "senapred_if_2024",
+              "visible": true,
+              "estilo": {
+                "color": "#7f2704",
+                "weight": 0,
+                "fill": true,
+                "fillOpacity": 0.45
+              },
+              "estilo_por": {
+                "campo": "recurrencia",
+                "valores": {
+                  "Muy baja": {
+                    "fillColor": "#ffffb2"
+                  },
+                  "Baja": {
+                    "fillColor": "#fecc5c"
+                  },
+                  "Media": {
+                    "fillColor": "#fd8d3c"
+                  },
+                  "Alta": {
+                    "fillColor": "#f03b20"
+                  },
+                  "Muy alta": {
+                    "fillColor": "#bd0026"
+                  }
+                }
+              },
+              "consulta": {
+                "campo": "recurrencia",
+                "etiqueta": "Recurrencia de incendios forestales 2020–2024"
+              },
+              "aviso": "El mapa muestra dónde hubo incendios forestales entre 2020 y 2024 (SENAPRED). No es un área de evacuación: en una emergencia, el operador marcará la zona afectada."
+            }
+          ]
+        },
+        {
+          "id": "inundacion",
+          "carpeta": "data/penalolen/inundacion",
+          "metadata": "metadata.json",
+          "_nota": "Puntos críticos 2022 de Peñalolén como 'referencia'. En una emergencia, el operador marca calles cortadas, zonas afectadas y albergues.",
+          "capas": [
+            {
+              "archivo": "puntos_criticos_2022.geojson",
+              "rol": "referencia",
+              "nombre": "Puntos críticos ante lluvias (2022)",
+              "fuente": "senapred_puntos_criticos_2022",
+              "visible": true,
+              "estilo": {
+                "radius": 7,
+                "color": "#ffffff",
+                "weight": 2,
+                "fillColor": "#0277bd",
+                "fillOpacity": 1
+              },
+              "estilo_por": {
+                "campo": "nivel_de_riesgo_2022",
+                "valores": {
+                  "Muy Alto": {
+                    "fillColor": "#b71c1c"
+                  },
+                  "Alto": {
+                    "fillColor": "#e65100"
+                  },
+                  "Medio": {
+                    "fillColor": "#f9a825"
+                  },
+                  "Bajo": {
+                    "fillColor": "#0277bd"
+                  },
+                  "En Evaluación": {
+                    "fillColor": "#7b1fa2"
+                  },
+                  "Solucionado": {
+                    "fillColor": "#9e9e9e"
+                  }
+                }
+              },
+              "popup": [
+                {
+                  "campo": "causa_punt",
+                  "etiqueta": "Causa"
+                },
+                {
+                  "campo": "nivel_de_riesgo_2022",
+                  "etiqueta": "Nivel de riesgo 2022"
+                }
+              ],
+              "consulta": {
+                "campo": "sector",
+                "etiqueta": "Punto crítico más cercano",
+                "detalle": "causa_punt",
+                "detalle_minusculas": true
+              },
+              "aviso": "El mapa muestra los puntos críticos ante lluvias que la Municipalidad de Peñalolén informó a SENAPRED en 2022 (pueden haber cambiado). No es un área de evacuación: en una emergencia, el operador marcará las calles cortadas y las zonas afectadas."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "la_florida",
+      "nombre": "La Florida",
+      "_centro": "Punto inicial del pin: Av. La Florida con Walker Martínez (punto crítico 2022 de SENAPRED), en el centro de La Florida.",
+      "centro": [
+        -33.52255,
+        -70.57843
+      ],
+      "zoom": 15,
+      "_cobertura": "Límite comunal oficial (SUBDERE/IGM/INE 2018). Se descarga con: node scripts/descargar_capas.mjs la_florida/cobertura.",
+      "cobertura": "data/la_florida/cobertura/limite_comunal.geojson",
+      "amenazas": [
+        {
+          "id": "aluvion",
+          "_nota": "Sin área de evacuación oficial por aluvión: el PRMS define áreas de riesgo para planificar el uso del suelo, no para evacuar. Van como 'referencia'. En una emergencia, el operador marca la zona afectada, los puntos de encuentro y las calles cortadas.",
+          "carpeta": "data/la_florida/aluvion",
+          "metadata": "metadata.json",
+          "capas": [
+            {
+              "archivo": "remocion_masa_prms.geojson",
+              "rol": "referencia",
+              "nombre": "Riesgo de remoción en masa (PRMS)",
+              "fuente": "minvu_prms_riesgo",
+              "visible": true,
+              "estilo": {
+                "color": "#8e2a1d",
+                "weight": 1.5,
+                "dashArray": null,
+                "fill": true,
+                "fillColor": "#c0392b",
+                "fillOpacity": 0.18
+              },
+              "titulo": "SECTOR",
+              "popup": [
+                {
+                  "campo": "ART_III",
+                  "etiqueta": "Riesgo"
+                },
+                {
+                  "campo": "COMUNA",
+                  "etiqueta": "Comuna"
+                }
+              ],
+              "consulta": {
+                "campo": "SECTOR",
+                "etiqueta": "Área de riesgo por remoción en masa más cercana",
+                "cercano": true
+              },
+              "aviso": "El mapa muestra las áreas de riesgo por remoción en masa y las quebradas del Plan Regulador Metropolitano (MINVU), y los puntos críticos por quebradas informados a SENAPRED en 2022. No es un área de evacuación: en una emergencia, el operador marcará la zona afectada y los puntos de encuentro."
+            },
+            {
+              "archivo": "derrumbes_prms.geojson",
+              "rol": "referencia",
+              "nombre": "Riesgo de derrumbes (PRMS)",
+              "fuente": "minvu_prms_riesgo",
+              "visible": true,
+              "estilo": {
+                "color": "#a83800",
+                "weight": 1,
+                "dashArray": null,
+                "fill": true,
+                "fillColor": "#cdaa66",
+                "fillOpacity": 0.3
+              },
+              "titulo": "ORD_2",
+              "popup": [
+                {
+                  "campo": "ORD_1",
+                  "etiqueta": "Riesgo"
+                }
+              ]
+            },
+            {
+              "archivo": "quebradas_prms.geojson",
+              "rol": "referencia",
+              "nombre": "Quebradas (PRMS)",
+              "fuente": "minvu_prms_riesgo",
+              "visible": true,
+              "estilo": {
+                "color": "#0277bd",
+                "weight": 2.5,
+                "dashArray": null,
+                "opacity": 0.85
+              },
+              "titulo": "NOMBRE",
+              "popup": [
+                {
+                  "campo": "TRAMO",
+                  "etiqueta": "Tramo"
+                },
+                {
+                  "campo": "COMUNA",
+                  "etiqueta": "Comuna"
+                }
+              ]
+            },
+            {
+              "archivo": "puntos_quebradas_2022.geojson",
+              "rol": "referencia",
+              "nombre": "Puntos críticos por quebradas (2022)",
+              "fuente": "senapred_puntos_criticos_2022",
+              "visible": true,
+              "estilo": {
+                "radius": 7,
+                "color": "#ffffff",
+                "weight": 2,
+                "dashArray": null,
+                "fillColor": "#0277bd",
+                "fillOpacity": 1
+              },
+              "estilo_por": {
+                "campo": "nivel_de_riesgo_2022",
+                "valores": {
+                  "Muy Alto": {
+                    "fillColor": "#b71c1c"
+                  },
+                  "Alto": {
+                    "fillColor": "#e65100"
+                  },
+                  "Medio": {
+                    "fillColor": "#f9a825"
+                  },
+                  "Bajo": {
+                    "fillColor": "#0277bd"
+                  },
+                  "En Evaluación": {
+                    "fillColor": "#7b1fa2"
+                  },
+                  "Solucionado": {
+                    "fillColor": "#9e9e9e"
+                  }
+                }
+              },
+              "popup": [
+                {
+                  "campo": "causa_punt",
+                  "etiqueta": "Causa"
+                },
+                {
+                  "campo": "nivel_de_riesgo_2022",
+                  "etiqueta": "Nivel de riesgo 2022"
+                }
+              ]
+            }
+          ],
+          "info_zona": {
+            "antes": [
+              {
+                "texto": "El aluvión de la Quebrada de Macul del 3 de mayo de 1993 dejó 26 fallecidos en Peñalolén y La Florida; después se construyeron piscinas antialuviones en la quebrada.",
+                "fuentes": [
+                  "bcn_quebrada_macul",
+                  "gore_rm_penalolen"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "incendio_forestal",
+          "_nota": "La capa oficial mide incendios pasados (2020–2024), no un área a evacuar: va como 'referencia' (spec §3, PLAN_ZONAS ítem 2). El área de peligro de una emergencia la dibuja el operador.",
+          "carpeta": "data/la_florida/incendio_forestal",
+          "metadata": "metadata.json",
+          "capas": [
+            {
+              "archivo": "recurrencia_2020_2024.geojson",
+              "rol": "referencia",
+              "nombre": "Recurrencia de incendios 2020–2024",
+              "fuente": "senapred_if_2024",
+              "visible": true,
+              "estilo": {
+                "color": "#7f2704",
+                "weight": 0,
+                "fill": true,
+                "fillOpacity": 0.45
+              },
+              "estilo_por": {
+                "campo": "recurrencia",
+                "valores": {
+                  "Muy baja": {
+                    "fillColor": "#ffffb2"
+                  },
+                  "Baja": {
+                    "fillColor": "#fecc5c"
+                  },
+                  "Media": {
+                    "fillColor": "#fd8d3c"
+                  },
+                  "Alta": {
+                    "fillColor": "#f03b20"
+                  },
+                  "Muy alta": {
+                    "fillColor": "#bd0026"
+                  }
+                }
+              },
+              "consulta": {
+                "campo": "recurrencia",
+                "etiqueta": "Recurrencia de incendios forestales 2020–2024"
+              },
+              "aviso": "El mapa muestra dónde hubo incendios forestales entre 2020 y 2024 (SENAPRED). No es un área de evacuación: en una emergencia, el operador marcará la zona afectada."
+            }
+          ]
+        },
+        {
+          "id": "inundacion",
+          "carpeta": "data/la_florida/inundacion",
+          "metadata": "metadata.json",
+          "_nota": "Puntos críticos 2022 de La Florida como 'referencia'. En una emergencia, el operador marca calles cortadas, zonas afectadas y albergues.",
+          "capas": [
+            {
+              "archivo": "puntos_criticos_2022.geojson",
+              "rol": "referencia",
+              "nombre": "Puntos críticos ante lluvias (2022)",
+              "fuente": "senapred_puntos_criticos_2022",
+              "visible": true,
+              "estilo": {
+                "radius": 7,
+                "color": "#ffffff",
+                "weight": 2,
+                "fillColor": "#0277bd",
+                "fillOpacity": 1
+              },
+              "estilo_por": {
+                "campo": "nivel_de_riesgo_2022",
+                "valores": {
+                  "Muy Alto": {
+                    "fillColor": "#b71c1c"
+                  },
+                  "Alto": {
+                    "fillColor": "#e65100"
+                  },
+                  "Medio": {
+                    "fillColor": "#f9a825"
+                  },
+                  "Bajo": {
+                    "fillColor": "#0277bd"
+                  },
+                  "En Evaluación": {
+                    "fillColor": "#7b1fa2"
+                  },
+                  "Solucionado": {
+                    "fillColor": "#9e9e9e"
+                  }
+                }
+              },
+              "popup": [
+                {
+                  "campo": "causa_punt",
+                  "etiqueta": "Causa"
+                },
+                {
+                  "campo": "nivel_de_riesgo_2022",
+                  "etiqueta": "Nivel de riesgo 2022"
+                }
+              ],
+              "consulta": {
+                "campo": "sector",
+                "etiqueta": "Punto crítico más cercano",
+                "detalle": "causa_punt",
+                "detalle_minusculas": true
+              },
+              "aviso": "El mapa muestra los puntos críticos ante lluvias que la Municipalidad de La Florida informó a SENAPRED en 2022 (pueden haber cambiado). No es un área de evacuación: en una emergencia, el operador marcará las calles cortadas y las zonas afectadas."
             }
           ]
         }

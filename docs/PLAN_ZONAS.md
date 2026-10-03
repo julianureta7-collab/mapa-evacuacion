@@ -27,8 +27,8 @@ Estados: ⏳ pendiente · 🔨 en curso · ✅ hecho · 💤 en espera (depende 
 | 6 | Santiago | Anegamiento + incendio estructural | 5 puntos críticos oficiales (Gobierno de Santiago, jul-2026) + contenido ya hecho | Bajo, después del 4 | 2ª ronda | ⏳ |
 | 7 | Tiltil | Relave (cliente minero) + incendio forestal + inundación | Depósitos SERNAGEOMIN 2025; IF 2024; puntos críticos 2022. Área, rutas y zonas seguras: las entrega la minera como operador | Medio | Cuando haya contacto minero | ✅ código (reporte 08); falta descargar |
 | 8 | Macul | Sismo | CSN MASCSN26 (regional) + SENAPRED | Bajo, solo contenido | **Requiere cambiar spec §4** | 💤 |
-| 9 | Peñalolén | Aluvión / remoción en masa | 18 puntos críticos oficiales + alertas SENAPRED (jul-2026). Sin rutas | Medio | Si un municipio lo pide | 💤 |
-| 10 | La Florida | Aluvión / inundación | 18 puntos críticos. Sin rutas | Medio | Repite el caso 9 | 💤 |
+| 9 | Peñalolén | Aluvión + incendio forestal + inundación | PRMS (MINVU) áreas de riesgo y quebradas; puntos críticos 2022 SENAPRED; IF 2024. Sin rutas | Medio | Si un municipio lo pide | ✅ código (reporte 09); falta descargar |
+| 10 | La Florida | Aluvión + incendio forestal + inundación | Igual que el 9 (comparten la Quebrada de Macul) | Bajo | Repite el caso 9 | ✅ código (reporte 09); falta descargar |
 | — | Melipeuco / Ovalle | Volcánica / relave | — | — | Alternativa a Pucón y caso de referencia del pitch; **no agregar** | — |
 
 Funciones que pesan tanto como una zona (no son filas de la tabla):
@@ -116,6 +116,8 @@ Reglas comunes (ver `CLAUDE.md`): nada hardcodeado por zona; al tocar JS/CSS o `
 - La spec §4 excluye sismo. Si el equipo cambia eso: contenido desde SENAPRED; mapa CSN MASCSN26 (https://owl.csn.uchile.cl/MapaAmenazaSismica/MASCSN26_visor.html, jul-2026), pero es regional (toda la comuna queda "dentro"), así que el diagnóstico no aporta. Solo vale la pena si el municipio entrega puntos de encuentro.
 
 ### 9–10. Peñalolén y La Florida: aluvión
+
+> **Hecho el 2-oct-2026 (reporte 09), como dos zonas separadas.** Además de los puntos críticos, se encontró una capa oficial útil: el **PRMS publicado por MINVU** (áreas de riesgo por remoción en masa y derrumbes, y quebradas). Va como referencia: regula el uso del suelo, no define áreas a evacuar. Los 18 puntos por comuna del Gobierno de Santiago (Excel, jul-2026) no se cargaron: falta un formato descargable con coordenadas; los puntos críticos 2022 de SENAPRED cubren las mismas quebradas. Escenarios: `penalolen/*` y `la_florida/*` (cobertura, aluvion, incendio_forestal, inundacion).
 
 - Datos: puntos críticos del Gobierno de Santiago (18 cada una; p. ej. Peñalolén "Quebrada de Lo Hermida", La Florida "Badén Las Perdices"). Alerta Temprana Preventiva de SENAPRED por aluviones (8-jul-2026). Mapas SERNAGEOMIN (2003, 1:100.000; 2016) en PDF o de pago. Zonas de restricción del PRMS en la Quebrada de Macul.
 - No hay rutas ni puntos oficiales: todo dependería del operador. Hacer **una sola** (Peñalolén primero: mayor población vulnerable según el Gobierno de Santiago) y solo si un municipio lo pide.

@@ -1,0 +1,63 @@
+{
+  "amenaza": "aluvion",
+  "antes": [
+    {
+      "texto": "Reconoce las señales de un aluvión: lluvia fuerte y sostenida, más calor de lo normal en la cordillera, agua más turbia en los cauces, cambios bruscos en su nivel y un fuerte ruido de fondo, como de muchos camiones acercándose.",
+      "fuentes": [
+        "senapred_aluviones"
+      ]
+    },
+    {
+      "texto": "Si estás cerca de la precordillera o de laderas, no te ubiques en quebradas, desembocaduras, puentes ni badenes cuando llueve.",
+      "fuentes": [
+        "senapred_aluviones",
+        "minsal_aluviones"
+      ]
+    },
+    {
+      "texto": "Presta atención a los pronósticos del tiempo y a las alertas vigentes.",
+      "fuentes": [
+        "minsal_aluviones"
+      ]
+    }
+  ],
+  "durante": [
+    {
+      "texto": "Si debes evacuar, ve a los puntos de encuentro que defina la autoridad; si no hay, aléjate de ríos, esteros y quebradas.",
+      "fuentes": [
+        "senapred_aluviones",
+        "minsal_aluviones"
+      ]
+    },
+    {
+      "texto": "Si el aluvión se acerca y no alcanzas a salir, sube a la parte alta de la casa, al techo o a un edificio.",
+      "fuentes": [
+        "senapred_aluviones",
+        "minsal_aluviones"
+      ]
+    },
+    {
+      "texto": "Si llegas a una zona afectada, no la cruces y aléjate del lugar.",
+      "fuentes": [
+        "senapred_aluviones",
+        "minsal_aluviones"
+      ]
+    }
+  ],
+  "despues": [
+    {
+      "texto": "Aléjate de la zona afectada: podrían generarse otros aluviones en la cercanía.",
+      "fuentes": [
+        "senapred_aluviones",
+        "minsal_aluviones"
+      ]
+    },
+    {
+      "texto": "Vuelve a tu casa solo cuando las autoridades indiquen que es seguro.",
+      "fuentes": [
+        "senapred_aluviones",
+        "minsal_aluviones"
+      ]
+    }
+  ]
+}

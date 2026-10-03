@@ -1,0 +1,20 @@
+{
+  "escenario": "penalolen/cobertura",
+  "nombre": "Peñalolén (límite comunal)",
+  "fuente": "SUBDERE, IGM e INE (2018) — División Político Administrativa, Comunas (servicio del MOP)",
+  "url_servicio": "https://rest-sit.mop.gob.cl/arcgis/rest/services/INTEROP/SERVICIO_DPA/MapServer",
+  "ficha_catalogo": "https://rest-sit.mop.gob.cl/arcgis/rest/services/INTEROP/SERVICIO_DPA/MapServer/1",
+  "fecha_publicacion_fuente": "2018",
+  "fecha_descarga": "2026-10-03T02:59:42.922Z",
+  "bbox": null,
+  "capas": [
+    {
+      "capa": "Comunas",
+      "indice": 1,
+      "archivo": "limite_comunal.geojson",
+      "elementos": 1,
+      "kb": 3,
+      "generalizacion_grados": 0.00005
+    }
+  ]
+}

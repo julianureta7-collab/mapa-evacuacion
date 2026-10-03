@@ -2,16 +2,16 @@
 // Zonas × amenazas desde data/catalogo.json (spec §3). El pin decide la zona (spec §5.1):
 // al elegir una zona en el desplegable el pin va a su centro, y al arrastrar el pin a otra zona
 // la app cambia de zona sola.
-import { cargarCatalogo, zonas, zona as zonaPorId, amenazasDe, amenazaInfo, fuente, estiloDe, clasesDe, zonaEn } from './catalogo.js?v=19';
-import { cargarCapas } from './datos.js?v=19';
-import { crearMapa, mostrarCapas, centrarEn, dibujarRuta, limpiarRuta, setModoMapa } from './mapa.js?v=19';
-import { prepararRutas, calcularRuta, nombreDestino, nombreVia, organismoDe, rumboATexto, hayRutasOperador } from './ruta.js?v=19';
-import { escucharOperador, capasOperador, codigosDesactivados, elementosActuales, desactivacionesActuales, aFeature, ROLES_OPERADOR } from './capasOperador.js?v=19';
-import { prepararAreas, diagnosticar, textosDiagnostico } from './diagnostico.js?v=19';
-import { iniciarPosicion, iniciarGPSSiHayPermiso, modoSimulacion, modoGPS, ubicarPin, setLinterna, posicionActual, ubicacionReal, pinArrastrando, bloquearPin } from './posicion.js?v=19';
-import { escucharAlertas } from './alertas.js?v=19';
-import { cargarContenido, dibujarInformacion as pintarInformacion, htmlPrecaucion } from './informacion.js?v=19';
-import { crearControlBrujula } from './brujula.js?v=19';
+import { cargarCatalogo, zonas, zona as zonaPorId, amenazasDe, amenazaInfo, fuente, estiloDe, clasesDe, zonaEn } from './catalogo.js?v=20';
+import { cargarCapas } from './datos.js?v=20';
+import { crearMapa, mostrarCapas, centrarEn, dibujarRuta, limpiarRuta, setModoMapa } from './mapa.js?v=20';
+import { prepararRutas, calcularRuta, nombreDestino, nombreVia, organismoDe, rumboATexto, hayRutasOperador } from './ruta.js?v=20';
+import { escucharOperador, capasOperador, codigosDesactivados, elementosActuales, desactivacionesActuales, aFeature, ROLES_OPERADOR } from './capasOperador.js?v=20';
+import { prepararAreas, diagnosticar, textosDiagnostico } from './diagnostico.js?v=20';
+import { iniciarPosicion, iniciarGPSSiHayPermiso, modoSimulacion, modoGPS, ubicarPin, setLinterna, posicionActual, ubicacionReal, pinArrastrando, bloquearPin } from './posicion.js?v=20';
+import { escucharAlertas } from './alertas.js?v=20';
+import { cargarContenido, dibujarInformacion as pintarInformacion, htmlPrecaucion } from './informacion.js?v=20';
+import { crearControlBrujula } from './brujula.js?v=20';
 
 const $ = (id) => document.getElementById(id);
 let mapa = null;

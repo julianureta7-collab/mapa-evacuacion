@@ -1,0 +1,51 @@
+{
+  "escenario": "penalolen/aluvion",
+  "nombre": "Peñalolén",
+  "fuente": "MINVU — Plan Regulador Metropolitano de Santiago (PRMS), áreas de riesgo y quebradas; SENAPRED — Puntos Críticos Programa Invierno 2022",
+  "url_servicio": "https://services3.arcgis.com/cTnMkBRk4HWkUCRo/arcgis/rest/services/PRMS_AGOL_2024/FeatureServer",
+  "ficha_catalogo": "https://www.arcgis.com/home/item.html?id=4ff5a467fdc247929bd4276a39cc478a",
+  "fecha_publicacion_fuente": "2024-07-09",
+  "fecha_descarga": "2026-10-03T02:59:44.480Z",
+  "bbox": [
+    -70.6,
+    -33.52,
+    -70.44,
+    -33.45
+  ],
+  "capas": [
+    {
+      "capa": "d5_art_821_remocionmasa",
+      "indice": 10,
+      "archivo": "remocion_masa_prms.geojson",
+      "elementos": 3,
+      "kb": 10,
+      "recortada_al_bbox": true,
+      "generalizacion_grados": 0.00002
+    },
+    {
+      "capa": "8.2.1 Riesgos de origen natural",
+      "indice": 9,
+      "archivo": "derrumbes_prms.geojson",
+      "elementos": 1,
+      "kb": 1,
+      "recortada_al_bbox": true,
+      "generalizacion_grados": 0.00002
+    },
+    {
+      "capa": "d4_art_821_quebradas",
+      "indice": 6,
+      "archivo": "quebradas_prms.geojson",
+      "elementos": 36,
+      "kb": 17,
+      "generalizacion_grados": 0.00002
+    },
+    {
+      "capa": "Puntos Críticos Programa Invierno (quebradas y aluviones)",
+      "indice": 0,
+      "archivo": "puntos_quebradas_2022.geojson",
+      "elementos": 4,
+      "kb": 1,
+      "servicio": "https://services5.arcgis.com/i7S5PSnIJAUcWvSE/ArcGIS/rest/services/Puntos_Cr%C3%ADticos_Programa_Invierno_2022/FeatureServer"
+    }
+  ]
+}
