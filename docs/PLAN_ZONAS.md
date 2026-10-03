@@ -25,7 +25,7 @@ Estados: ⏳ pendiente · 🔨 en curso · ✅ hecho · 💤 en espera (depende 
 | 4 | Macul | Inundación / anegamiento | Contenido SENAPRED y MINSAL. Puntos críticos 2022 de SENAPRED (31); los actuales, la municipalidad | Medio | Entrevista | ✅ código (reporte 06); falta descargar los puntos |
 | 5 | Pucón | Volcánica (V. Villarrica) + incendio forestal | Vías, puntos y área de evacuación SENAPRED 2024; IF 2024 | Medio | 2ª ronda de testeo | ✅ código (reporte 07); falta descargar |
 | 6 | Santiago | Anegamiento + incendio estructural | 5 puntos críticos oficiales (Gobierno de Santiago, jul-2026) + contenido ya hecho | Bajo, después del 4 | 2ª ronda | ⏳ |
-| 7 | Tiltil | Relave (cliente minero) | Depósitos SERNAGEOMIN. Rutas y zonas seguras: las entrega la minera como operador | Medio | Cuando haya contacto minero | 💤 |
+| 7 | Tiltil | Relave (cliente minero) + incendio forestal + inundación | Depósitos SERNAGEOMIN 2025; IF 2024; puntos críticos 2022. Área, rutas y zonas seguras: las entrega la minera como operador | Medio | Cuando haya contacto minero | ✅ código (reporte 08); falta descargar |
 | 8 | Macul | Sismo | CSN MASCSN26 (regional) + SENAPRED | Bajo, solo contenido | **Requiere cambiar spec §4** | 💤 |
 | 9 | Peñalolén | Aluvión / remoción en masa | 18 puntos críticos oficiales + alertas SENAPRED (jul-2026). Sin rutas | Medio | Si un municipio lo pide | 💤 |
 | 10 | La Florida | Aluvión / inundación | 18 puntos críticos. Sin rutas | Medio | Repite el caso 9 | 💤 |
@@ -102,6 +102,8 @@ Reglas comunes (ver `CLAUDE.md`): nada hardcodeado por zona; al tocar JS/CSS o `
 - **Pendiente:** el Plan Comunal de Emergencia 2025–2027 (https://documentos.munistgo.cl/plan-de-comunal-de-emergencia-2025-2027/) es un PDF escaneado; revisarlo a mano por puntos de encuentro o albergues.
 
 ### 7. Tiltil: relave (cliente minero)
+
+> **Hecho el 2-oct-2026 (reporte 08).** Correcciones a lo de abajo: la fuente vigente de depósitos es el **catastro SERNAGEOMIN de octubre de 2025** (`CDR_CHILE_AREAL_2025`), no la capa de la SMA (2019). Tiltil tiene también 48 puntos críticos 2022 (incluidos los dos tranques) y alertas SAE por incendio forestal (dic-2024, nov-2025), así que la zona lleva tres amenazas. No hay guía oficial de recomendaciones ante falla de relaves: se usan las de MINSAL para aluviones. Escenarios: `tiltil/cobertura`, `tiltil/relave`, `tiltil/incendio_forestal`, `tiltil/inundacion`.
 
 - **Por qué Tiltil:** sin mar, a 45 km de Santiago. Tiene **Ovejería** (Codelco Andina) y **Las Tórtolas** (Anglo American, Colina/Tiltil), los dos con simulacros con la comunidad (Las Tórtolas: nov-2024 y oct-2025; 55 señaléticas, monitores comunitarios, puntos de encuentro).
 - **Datos públicos oficiales:** ubicación y estado de los depósitos (plataforma pública de relaves de SERNAGEOMIN; capa `ideserver.sma.gob.cl/arcgis/rest/services/IDE/Industria_y_actividades/MapServer/4`). La divulgación GISTM de Ovejería (Codelco, 2025) nombra a Huechún, Santa Matilde y Huertos Familiares como localidades expuestas, **sin mapa de inundación**.

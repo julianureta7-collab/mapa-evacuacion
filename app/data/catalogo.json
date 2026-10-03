@@ -1,5 +1,5 @@
 {
-  "_doc": "Catálogo de zonas × amenazas (spec §3). Agregar una zona o amenaza = editar este archivo y agregar sus capas en data/<zona>/<amenaza>/. El código no conoce zonas por nombre. Roles válidos: area_peligro, ruta, punto_encuentro, referencia, bloqueo. La cobertura de una zona puede ser un polígono o la ruta a un GeoJSON (p. ej. un límite comunal oficial); el centro es opcional. Las zonas pequeñas van antes que las que las contienen (zonaEn devuelve la primera). Opcionales por capa: estilo_por {campo, valores: {valor: estilo}} colorea por clase (también en la leyenda); consulta {campo, etiqueta} muestra el valor en el punto del pin (diagnóstico informativo) y en el popup; aviso: texto bajo el diagnóstico cuando la amenaza no tiene área de peligro. popup [{campo, etiqueta}]: filas extra en el popup. En capas de puntos, consulta {campo, etiqueta, detalle} muestra el punto más cercano. En ruta: codigo {campo, prefijo} crea el código de la vía si la capa no trae 'name'. En punto_encuentro: destino_aunque_dentro: true si la autoridad designa puntos dentro del área (siguen siendo destinos).",
+  "_doc": "Catálogo de zonas × amenazas (spec §3). Agregar una zona o amenaza = editar este archivo y agregar sus capas en data/<zona>/<amenaza>/. El código no conoce zonas por nombre. Roles válidos: area_peligro, ruta, punto_encuentro, referencia, bloqueo. La cobertura de una zona puede ser un polígono o la ruta a un GeoJSON (p. ej. un límite comunal oficial); el centro es opcional. Las zonas pequeñas van antes que las que las contienen (zonaEn devuelve la primera). Opcionales por capa: estilo_por {campo, valores: {valor: estilo}} colorea por clase (también en la leyenda); consulta {campo, etiqueta} muestra el valor en el punto del pin (diagnóstico informativo) y en el popup; aviso: texto bajo el diagnóstico cuando la amenaza no tiene área de peligro. popup [{campo, etiqueta}]: filas extra en el popup. En capas de puntos, consulta {campo, etiqueta, detalle} muestra el punto más cercano. En ruta: codigo {campo, prefijo} crea el código de la vía si la capa no trae 'name'. En punto_encuentro: destino_aunque_dentro: true si la autoridad designa puntos dentro del área (siguen siendo destinos). En consulta: cercano: true busca también el polígono más cercano si el punto no está dentro; detalle_minusculas: true pone el detalle en minúsculas. titulo: campo que da el título del popup (p. ej. NOMBRE_INSTALACION).",
   "version": 1,
   "amenazas": {
     "tsunami": {
@@ -26,6 +26,11 @@
       "nombre": "Erupción volcánica",
       "area": "zona de evacuación volcánica",
       "contenido": "data/contenido/volcanica.json"
+    },
+    "relave": {
+      "nombre": "Falla de relaves",
+      "area": "zona afectada por el relave",
+      "contenido": "data/contenido/relave.json"
     }
   },
   "fuentes": {
@@ -58,6 +63,14 @@
       "url": "https://www.arcgis.com/home/item.html?id=cdc76e7d47a74c89b1111c3d1e25924c",
       "_publicacion": "Amenaza Volcánica 2024: creado 2024-10-07, modificado 2026-09-21. Área de Evacuación Volcanes: publicado 2026-09-22.",
       "publicacion": "2026-09-21"
+    },
+    "sernageomin_relaves_2025": {
+      "organismo": "SERNAGEOMIN",
+      "nombre": "Catastro de depósitos de relaves de Chile",
+      "detalle": "Depósitos de relaves (polígonos) con empresa, instalación, tipo, estado y método constructivo del muro, actualizado a octubre de 2025",
+      "url": "https://www.arcgis.com/home/item.html?id=2798b3201c92431d87ff19fbafbabf16",
+      "_publicacion": "Ítem creado el 2025-10-02 (datos a octubre de 2025); modificado el 2026-09-21.",
+      "publicacion": "2025-10-02"
     }
   },
   "estilos": {
@@ -359,7 +372,8 @@
               "consulta": {
                 "campo": "sector",
                 "etiqueta": "Punto crítico más cercano",
-                "detalle": "causa_punt"
+                "detalle": "causa_punt",
+                "detalle_minusculas": true
               },
               "aviso": "El mapa muestra los puntos críticos ante lluvias que la Municipalidad de Macul informó a SENAPRED en 2022 (pueden haber cambiado). No es un área de evacuación: en una emergencia, el operador marcará las calles cortadas y las zonas afectadas."
             }
@@ -486,7 +500,8 @@
                 "color": "#ffffff",
                 "weight": 2,
                 "fillColor": "#5d4037",
-                "fillOpacity": 1
+                "fillOpacity": 1,
+                "dashArray": null
               },
               "popup": [
                 {
@@ -556,6 +571,222 @@
                 "etiqueta": "Recurrencia de incendios forestales 2020–2024"
               },
               "aviso": "El mapa muestra dónde hubo incendios forestales entre 2020 y 2024 (SENAPRED). No es un área de evacuación: en una emergencia, el operador marcará la zona afectada."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "tiltil",
+      "nombre": "Tiltil",
+      "_centro": "Punto inicial del pin: centro de Tiltil (Manuel Rodríguez con Daniel Moya, punto crítico 2022 de SENAPRED).",
+      "centro": [
+        -33.0861,
+        -70.9279
+      ],
+      "zoom": 14,
+      "_cobertura": "Límite comunal oficial (SUBDERE/IGM/INE 2018). Se descarga con: node scripts/descargar_capas.mjs tiltil/cobertura. El tranque Las Tórtolas está en Colina, junto al límite: se ve en el mapa de relaves, pero la zona es la comuna de Tiltil.",
+      "cobertura": "data/tiltil/cobertura/limite_comunal.geojson",
+      "amenazas": [
+        {
+          "id": "relave",
+          "_nota": "Depósitos de relaves SERNAGEOMIN 2025 como 'referencia'. Los mapas de inundación por falla de los tranques NO son públicos (están en el plan de emergencia de cada empresa): el área de peligro, los puntos de encuentro y las rutas los publica un operador (la minera o el municipio), con su fuente. No se inventan áreas.",
+          "carpeta": "data/tiltil/relave",
+          "metadata": "metadata.json",
+          "capas": [
+            {
+              "archivo": "depositos_relaves.geojson",
+              "rol": "referencia",
+              "nombre": "Depósitos de relaves (SERNAGEOMIN 2025)",
+              "fuente": "sernageomin_relaves_2025",
+              "visible": true,
+              "estilo": {
+                "weight": 1.5,
+                "fill": true,
+                "fillOpacity": 0.45,
+                "dashArray": null
+              },
+              "estilo_por": {
+                "campo": "ESTADO_INSTALACION",
+                "valores": {
+                  "ACTIVO": {
+                    "fillColor": "#c62828",
+                    "color": "#7f0000"
+                  },
+                  "EN CONSTRUCCION": {
+                    "fillColor": "#ef6c00",
+                    "color": "#8a3c00"
+                  },
+                  "EN REVISION": {
+                    "fillColor": "#ef6c00",
+                    "color": "#8a3c00"
+                  },
+                  "INACTIVO": {
+                    "fillColor": "#8d6e63",
+                    "color": "#4e342e"
+                  },
+                  "ABANDONADO": {
+                    "fillColor": "#757575",
+                    "color": "#424242"
+                  }
+                }
+              },
+              "popup": [
+                {
+                  "campo": "NOMBRE_EMPRESA_O_PRODUCTOR_MINE",
+                  "etiqueta": "Empresa"
+                },
+                {
+                  "campo": "TIPO_DEPOSITO",
+                  "etiqueta": "Tipo"
+                },
+                {
+                  "campo": "ESTADO_INSTALACION",
+                  "etiqueta": "Estado"
+                },
+                {
+                  "campo": "METODO_CONSTRUCTIVO_MURO",
+                  "etiqueta": "Muro"
+                },
+                {
+                  "campo": "COMUNA",
+                  "etiqueta": "Comuna"
+                }
+              ],
+              "consulta": {
+                "campo": "NOMBRE_INSTALACION",
+                "etiqueta": "Depósito de relaves más cercano",
+                "detalle": "ESTADO_INSTALACION",
+                "detalle_minusculas": true,
+                "cercano": true
+              },
+              "aviso": "El mapa muestra los depósitos de relaves registrados por SERNAGEOMIN (2025). Los mapas de inundación por falla de un depósito no son públicos: en una emergencia, el operador marcará la zona afectada y los puntos de encuentro.",
+              "titulo": "NOMBRE_INSTALACION"
+            }
+          ],
+          "info_zona": {
+            "antes": [
+              {
+                "texto": "Los poblados más cercanos al tranque Ovejería (Codelco) son Huechún, Santa Matilde y Huertos Familiares, a menos de 10 km.",
+                "fuentes": [
+                  "codelco_ovejeria"
+                ]
+              },
+              {
+                "texto": "Huertos Familiares, Huechún, Santa Matilde y Los Lingues han participado en simulacros de evacuación del tranque Las Tórtolas, con puntos de encuentro señalizados.",
+                "fuentes": [
+                  "muni_tiltil_simulacro",
+                  "muni_colina_simulacro"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "incendio_forestal",
+          "_nota": "La capa oficial mide incendios pasados (2020–2024), no un área a evacuar: va como 'referencia' (spec §3, PLAN_ZONAS ítem 2). El área de peligro de una emergencia la dibuja el operador.",
+          "carpeta": "data/tiltil/incendio_forestal",
+          "metadata": "metadata.json",
+          "capas": [
+            {
+              "archivo": "recurrencia_2020_2024.geojson",
+              "rol": "referencia",
+              "nombre": "Recurrencia de incendios 2020–2024",
+              "fuente": "senapred_if_2024",
+              "visible": true,
+              "estilo": {
+                "color": "#7f2704",
+                "weight": 0,
+                "fill": true,
+                "fillOpacity": 0.45
+              },
+              "estilo_por": {
+                "campo": "recurrencia",
+                "valores": {
+                  "Muy baja": {
+                    "fillColor": "#ffffb2"
+                  },
+                  "Baja": {
+                    "fillColor": "#fecc5c"
+                  },
+                  "Media": {
+                    "fillColor": "#fd8d3c"
+                  },
+                  "Alta": {
+                    "fillColor": "#f03b20"
+                  },
+                  "Muy alta": {
+                    "fillColor": "#bd0026"
+                  }
+                }
+              },
+              "consulta": {
+                "campo": "recurrencia",
+                "etiqueta": "Recurrencia de incendios forestales 2020–2024"
+              },
+              "aviso": "El mapa muestra dónde hubo incendios forestales entre 2020 y 2024 (SENAPRED). No es un área de evacuación: en una emergencia, el operador marcará la zona afectada."
+            }
+          ]
+        },
+        {
+          "id": "inundacion",
+          "carpeta": "data/tiltil/inundacion",
+          "metadata": "metadata.json",
+          "_nota": "Puntos críticos 2022 de Tiltil como 'referencia' (incluye los tranques Ovejería y Las Tórtolas). En una emergencia, el operador marca calles cortadas, zonas afectadas y albergues.",
+          "capas": [
+            {
+              "archivo": "puntos_criticos_2022.geojson",
+              "rol": "referencia",
+              "nombre": "Puntos críticos ante lluvias (2022)",
+              "fuente": "senapred_puntos_criticos_2022",
+              "visible": true,
+              "estilo": {
+                "radius": 7,
+                "color": "#ffffff",
+                "weight": 2,
+                "fillColor": "#0277bd",
+                "fillOpacity": 1
+              },
+              "estilo_por": {
+                "campo": "nivel_de_riesgo_2022",
+                "valores": {
+                  "Muy Alto": {
+                    "fillColor": "#b71c1c"
+                  },
+                  "Alto": {
+                    "fillColor": "#e65100"
+                  },
+                  "Medio": {
+                    "fillColor": "#f9a825"
+                  },
+                  "Bajo": {
+                    "fillColor": "#0277bd"
+                  },
+                  "En Evaluación": {
+                    "fillColor": "#7b1fa2"
+                  },
+                  "Solucionado": {
+                    "fillColor": "#9e9e9e"
+                  }
+                }
+              },
+              "popup": [
+                {
+                  "campo": "causa_punt",
+                  "etiqueta": "Causa"
+                },
+                {
+                  "campo": "nivel_de_riesgo_2022",
+                  "etiqueta": "Nivel de riesgo 2022"
+                }
+              ],
+              "consulta": {
+                "campo": "sector",
+                "etiqueta": "Punto crítico más cercano",
+                "detalle": "causa_punt",
+                "detalle_minusculas": true
+              },
+              "aviso": "El mapa muestra los puntos críticos ante lluvias que la Municipalidad de Tiltil informó a SENAPRED en 2022 (pueden haber cambiado). No es un área de evacuación: en una emergencia, el operador marcará las calles cortadas y las zonas afectadas."
             }
           ]
         }

@@ -15,6 +15,11 @@ const SENAPRED = 'https://services5.arcgis.com/i7S5PSnIJAUcWvSE/ArcGIS/rest/serv
 const VOLCANICA = `${SENAPRED}/AMENAZA_VOLC%C3%81NICA_2024/FeatureServer`;
 const AREA_EVAC_VOLCANES = `${SENAPRED}/%C3%81rea_de_Evacuaci%C3%B3n_Volcanes/FeatureServer`;
 const BBOX_PUCON = [-72.02, -39.46, -71.54, -39.05];   // comuna de Pucón con un pequeño margen
+// Comuna de Tiltil con margen: incluye el tranque Las Tórtolas (comuna de Colina, en el límite con Tiltil)
+const BBOX_TILTIL = [-71.04, -33.22, -70.70, -32.91];
+// Catastro de depósitos de relaves de SERNAGEOMIN, actualizado a octubre de 2025 (polígonos)
+const RELAVES_SNGM = 'https://services1.arcgis.com/OyjvVdFTl5hfSdX3/arcgis/rest/services/CDR_CHILE_AREAL_2025/FeatureServer';
+const PUNTOS_CRITICOS_2022 = `${SENAPRED}/Puntos_Cr%C3%ADticos_Programa_Invierno_2022/FeatureServer`;
 // División Político Administrativa (SUBDERE, IGM e INE, 2018), publicada por el MOP. Solo responde en JSON de Esri.
 const DPA_MOP = 'https://rest-sit.mop.gob.cl/arcgis/rest/services/INTEROP/SERVICIO_DPA/MapServer';
 
@@ -113,9 +118,60 @@ const ESCENARIOS = {
         campos: ['gridcode', 'recurrencia'], recortar: true, generalizar: 0.00005 },
     ],
   },
+  'tiltil/cobertura': {
+    nombre: 'Tiltil (límite comunal)',
+    servicio: DPA_MOP,
+    fuente: 'SUBDERE, IGM e INE (2018) — División Político Administrativa, Comunas (servicio del MOP)',
+    ficha: `${DPA_MOP}/1`,
+    publicacion: '2018',
+    capas: [
+      { id: 1, archivo: 'limite_comunal', nombre: 'Comunas', where: "CUT_COM='13303'",
+        campos: ['CUT_COM', 'COMUNA'], generalizar: 0.0001, esri: true },
+    ],
+  },
+  'tiltil/relave': {
+    nombre: 'Tiltil (depósitos de relaves)',
+    bbox: BBOX_TILTIL,
+    servicio: RELAVES_SNGM,
+    fuente: 'SERNAGEOMIN — Catastro de depósitos de relaves de Chile, areal (actualizado a octubre de 2025)',
+    ficha: 'https://www.arcgis.com/home/item.html?id=2798b3201c92431d87ff19fbafbabf16',
+    publicacion: '2025-10-02',
+    capas: [
+      // 11 depósitos en el recuadro (consultado el 2-oct-2026): 8 en Tiltil, Las Tórtolas (Colina) y
+      // Ramayana 1 y 2 (Olmué, abandonados), junto al límite poniente.
+      // No se guardan el RUT ni las coordenadas UTM (redundantes).
+      { id: 0, archivo: 'depositos_relaves', nombre: 'CDR_CHILE_AREAL_2025',
+        campos: ['ID', 'NOMBRE_EMPRESA_O_PRODUCTOR_MINE', 'NOMBRE_FAENA', 'NOMBRE_INSTALACION', 'TIPO_DEPOSITO', 'RECURSO',
+          'ESTADO_INSTALACION', 'METODO_CONSTRUCTIVO_MURO', 'VOL_AUTORIZADO', 'COMUNA'], generalizar: 0.00002 },
+    ],
+  },
+  'tiltil/incendio_forestal': {
+    nombre: 'Tiltil',
+    bbox: BBOX_TILTIL,
+    servicio: `${SENAPRED}/Amenaza_por_Incendio_Forestal_2024/FeatureServer`,
+    fuente: 'SENAPRED — Amenaza por Incendio Forestal 2024 (densidad de incendios forestales 2020–2024)',
+    ficha: 'https://www.arcgis.com/home/item.html?id=19268f2baaaf4cfdb8ad93f083c2c437',
+    publicacion: '2025-10-27',
+    capas: [
+      { id: 0, archivo: 'recurrencia_2020_2024', nombre: 'Densidad de Incendios Forestales 2020-2024',
+        campos: ['gridcode', 'recurrencia'], recortar: true, generalizar: 0.00005 },
+    ],
+  },
+  'tiltil/inundacion': {
+    nombre: 'Tiltil',
+    servicio: PUNTOS_CRITICOS_2022,
+    fuente: 'SENAPRED (ex ONEMI) — Puntos Críticos Programa Invierno 2022 (levantamiento comunal)',
+    ficha: 'https://www.arcgis.com/home/item.html?id=09b724392dec47b2972d290e110b7dfc',
+    publicacion: '2022-04-27',
+    capas: [
+      // 48 puntos de Tiltil (consultado el 2-oct-2026), incluidos los tranques Ovejería y Las Tórtolas (muro oeste).
+      { id: 0, archivo: 'puntos_criticos_2022', nombre: 'Puntos Críticos Programa Invierno', where: "comuna='13303'",
+        campos: ['sector', 'causa_punt', 'nivel_de_riesgo_2022'], decodificar: true },
+    ],
+  },
   'macul/inundacion': {
     nombre: 'Macul',
-    servicio: `${SENAPRED}/Puntos_Cr%C3%ADticos_Programa_Invierno_2022/FeatureServer`,
+    servicio: PUNTOS_CRITICOS_2022,
     fuente: 'SENAPRED (ex ONEMI) — Puntos Críticos Programa Invierno 2022 (levantamiento comunal)',
     ficha: 'https://www.arcgis.com/home/item.html?id=09b724392dec47b2972d290e110b7dfc',
     publicacion: '2022-04-27',

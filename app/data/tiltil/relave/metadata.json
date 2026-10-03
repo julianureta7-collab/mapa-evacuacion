@@ -1,0 +1,25 @@
+{
+  "escenario": "tiltil/relave",
+  "nombre": "Tiltil (depósitos de relaves)",
+  "fuente": "SERNAGEOMIN — Catastro de depósitos de relaves de Chile, areal (actualizado a octubre de 2025)",
+  "url_servicio": "https://services1.arcgis.com/OyjvVdFTl5hfSdX3/arcgis/rest/services/CDR_CHILE_AREAL_2025/FeatureServer",
+  "ficha_catalogo": "https://www.arcgis.com/home/item.html?id=2798b3201c92431d87ff19fbafbabf16",
+  "fecha_publicacion_fuente": "2025-10-02",
+  "fecha_descarga": "2026-10-03T02:36:15.271Z",
+  "bbox": [
+    -71.04,
+    -33.22,
+    -70.7,
+    -32.91
+  ],
+  "capas": [
+    {
+      "capa": "CDR_CHILE_AREAL_2025",
+      "indice": 0,
+      "archivo": "depositos_relaves.geojson",
+      "elementos": 11,
+      "kb": 31,
+      "generalizacion_grados": 0.00002
+    }
+  ]
+}

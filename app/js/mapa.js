@@ -1,5 +1,5 @@
 // Mapa Leaflet: fondo OSM y capas de la zona × amenaza actual.
-import { estiloDe } from './catalogo.js?v=18';
+import { estiloDe } from './catalogo.js?v=19';
 
 let mapa, controlCapas, grupoCapas;
 let capasDibujadas = [];        // [{ def, capa }]
@@ -34,7 +34,7 @@ const escHTML = (t) => String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;',
 
 function popupDe(def, props) {
   const nombreCapa = def.nombre;
-  const titulo = props.nombre_pe?.trim() || props.nombre_ve?.trim() || props.nombre?.trim() || props.volcan || props.name || props.sector || nombreCapa;
+  const titulo = (def.titulo && props[def.titulo]) || props.nombre_pe?.trim() || props.nombre_ve?.trim() || props.nombre?.trim() || props.volcan || props.name || props.sector || nombreCapa;
   const filas = [];
   if (props.sector && titulo !== props.sector) filas.push(`Sector: ${props.sector}`);
   if (props.nom_com || props.comuna) filas.push(`Comuna: ${props.nom_com || props.comuna}`);

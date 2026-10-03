@@ -2,16 +2,16 @@
 // Zonas × amenazas desde data/catalogo.json (spec §3). El pin decide la zona (spec §5.1):
 // al elegir una zona en el desplegable el pin va a su centro, y al arrastrar el pin a otra zona
 // la app cambia de zona sola.
-import { cargarCatalogo, zonas, zona as zonaPorId, amenazasDe, amenazaInfo, fuente, estiloDe, clasesDe, zonaEn } from './catalogo.js?v=18';
-import { cargarCapas } from './datos.js?v=18';
-import { crearMapa, mostrarCapas, centrarEn, dibujarRuta, limpiarRuta, setModoMapa } from './mapa.js?v=18';
-import { prepararRutas, calcularRuta, nombreDestino, nombreVia, organismoDe, rumboATexto, hayRutasOperador } from './ruta.js?v=18';
-import { escucharOperador, capasOperador, codigosDesactivados, elementosActuales, desactivacionesActuales, aFeature, ROLES_OPERADOR } from './capasOperador.js?v=18';
-import { prepararAreas, diagnosticar, textosDiagnostico } from './diagnostico.js?v=18';
-import { iniciarPosicion, iniciarGPSSiHayPermiso, modoSimulacion, modoGPS, ubicarPin, setLinterna, posicionActual, ubicacionReal, pinArrastrando, bloquearPin } from './posicion.js?v=18';
-import { escucharAlertas } from './alertas.js?v=18';
-import { cargarContenido, dibujarInformacion as pintarInformacion, htmlPrecaucion } from './informacion.js?v=18';
-import { crearControlBrujula } from './brujula.js?v=18';
+import { cargarCatalogo, zonas, zona as zonaPorId, amenazasDe, amenazaInfo, fuente, estiloDe, clasesDe, zonaEn } from './catalogo.js?v=19';
+import { cargarCapas } from './datos.js?v=19';
+import { crearMapa, mostrarCapas, centrarEn, dibujarRuta, limpiarRuta, setModoMapa } from './mapa.js?v=19';
+import { prepararRutas, calcularRuta, nombreDestino, nombreVia, organismoDe, rumboATexto, hayRutasOperador } from './ruta.js?v=19';
+import { escucharOperador, capasOperador, codigosDesactivados, elementosActuales, desactivacionesActuales, aFeature, ROLES_OPERADOR } from './capasOperador.js?v=19';
+import { prepararAreas, diagnosticar, textosDiagnostico } from './diagnostico.js?v=19';
+import { iniciarPosicion, iniciarGPSSiHayPermiso, modoSimulacion, modoGPS, ubicarPin, setLinterna, posicionActual, ubicacionReal, pinArrastrando, bloquearPin } from './posicion.js?v=19';
+import { escucharAlertas } from './alertas.js?v=19';
+import { cargarContenido, dibujarInformacion as pintarInformacion, htmlPrecaucion } from './informacion.js?v=19';
+import { crearControlBrujula } from './brujula.js?v=19';
 
 const $ = (id) => document.getElementById(id);
 let mapa = null;
@@ -222,6 +222,18 @@ function otraAreaQueContiene(latlng) {
 // (p. ej. recurrencia de incendios 2020–2024); en puntos, el más cercano (p. ej. punto crítico de lluvias).
 let capasConsulta = [];
 const RADIO_CERCANO_M = 3000;
+const RADIO_CERCANO_POLIGONO_M = 20000;   // depósitos de relaves: interesa saber si hay uno a pocos km
+// Distancia (m) de un punto al borde de un polígono o multipolígono (todos sus anillos).
+function distanciaAPoligono(pt, ft) {
+  if (!ft._anillos) ft._anillos = turf.flatten(turf.polygonToLine(ft)).features;
+  return Math.min(...ft._anillos.map(l => turf.pointToLineDistance(pt, l, { units: 'meters' })));
+}
+
+function filaCercano(q, p, d) {
+  const det = q.detalle && p[q.detalle] ? String(p[q.detalle]) : '';
+  const detalle = det ? ` (${escaparHTML(q.detalle_minusculas ? det.toLowerCase() : det)})` : '';
+  return `${q.etiqueta}: <strong>${escaparHTML(String(p[q.campo] ?? 'sin nombre'))}</strong>, a ${fmtDist(d)}${detalle}.`;
+}
 function consultasEn(latlng) {
   if (!latlng) return [];
   const pt = turf.point([latlng.lng, latlng.lat]);
@@ -237,18 +249,29 @@ function consultasEn(latlng) {
         if (!mejor || d < mejor.d) mejor = { ft, d };
       }
       if (!mejor || mejor.d > RADIO_CERCANO_M) { filas.push(`${q.etiqueta}: ninguno a menos de ${fmtDist(RADIO_CERCANO_M)}.`); continue; }
-      const p = mejor.ft.properties || {};
-      const detalle = q.detalle && p[q.detalle] ? ` (${escaparHTML(String(p[q.detalle]).toLowerCase())})` : '';
-      filas.push(`${q.etiqueta}: <strong>${escaparHTML(String(p[q.campo] ?? 'sin nombre'))}</strong>, a ${fmtDist(mejor.d)}${detalle}.`);
+      filas.push(filaCercano(q, mejor.ft.properties || {}, mejor.d));
       continue;
     }
     const f = geo.features.find(ft => {
       const [o, s, e, n] = ft._bbox || (ft._bbox = turf.bbox(ft));
       return latlng.lng >= o && latlng.lng <= e && latlng.lat >= s && latlng.lat <= n && turf.booleanPointInPolygon(pt, ft);
     });
+    // Polígonos con "cercano": si el punto no está dentro de ninguno, el más cercano (p. ej. un depósito de relaves)
+    if (!f && q.cercano) {
+      let mejor = null;
+      for (const ft of geo.features) {
+        if (!ft.geometry || !/Polygon/.test(ft.geometry.type)) continue;
+        const d = distanciaAPoligono(pt, ft);
+        if (!mejor || d < mejor.d) mejor = { ft, d };
+      }
+      filas.push(mejor && mejor.d <= RADIO_CERCANO_POLIGONO_M
+        ? filaCercano(q, mejor.ft.properties || {}, mejor.d)
+        : `${q.etiqueta}: ninguno a menos de ${fmtDist(RADIO_CERCANO_POLIGONO_M)}.`);
+      continue;
+    }
     const v = f?.properties?.[q.campo];
     filas.push(v != null
-      ? `${q.etiqueta} en este punto: <strong>${escaparHTML(String(v))}</strong>.`
+      ? (q.cercano ? `${q.etiqueta}: <strong>${escaparHTML(String(v))}</strong> (estás dentro).` : `${q.etiqueta} en este punto: <strong>${escaparHTML(String(v))}</strong>.`)
       : `${q.etiqueta}: sin registro en este punto.`);
   }
   return filas;

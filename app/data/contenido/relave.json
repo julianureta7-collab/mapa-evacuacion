@@ -1,0 +1,58 @@
+{
+  "amenaza": "relave",
+  "_nota": "No existe una guía oficial de recomendaciones a la población ante la falla de un depósito de relaves (revisado SENAPRED, SERNAGEOMIN y MINSAL, 2-oct-2026). Una falla genera un flujo de barro: se usan las recomendaciones oficiales de MINSAL para aluviones (flujos de barro). Validar con SENAPRED o con el plan de emergencia de cada depósito.",
+  "antes": [
+    {
+      "texto": "Infórmate si vives, estudias o trabajas aguas abajo de un depósito de relaves. Este mapa muestra los depósitos registrados por SERNAGEOMIN.",
+      "fuentes": [
+        "sernageomin_relaves"
+      ]
+    },
+    {
+      "texto": "En días de lluvia intensa, no te ubiques en quebradas ni hondonadas.",
+      "fuentes": [
+        "minsal_aluviones"
+      ]
+    },
+    {
+      "texto": "Presta atención a los pronósticos del tiempo y a las alertas vigentes.",
+      "fuentes": [
+        "minsal_aluviones"
+      ]
+    }
+  ],
+  "durante": [
+    {
+      "texto": "Si te piden evacuar, hazlo de inmediato hacia las zonas seguras que haya definido la autoridad.",
+      "fuentes": [
+        "minsal_aluviones"
+      ]
+    },
+    {
+      "texto": "Si ves bajar un flujo de barro, no lo cruces: aléjate hacia un lugar alto.",
+      "fuentes": [
+        "minsal_aluviones"
+      ]
+    },
+    {
+      "texto": "Si no alcanzas a salir, busca protección en la parte alta de la construcción.",
+      "fuentes": [
+        "minsal_aluviones"
+      ]
+    }
+  ],
+  "despues": [
+    {
+      "texto": "Aléjate de la zona afectada: podrían producirse nuevos flujos.",
+      "fuentes": [
+        "minsal_aluviones"
+      ]
+    },
+    {
+      "texto": "Vuelve a tu casa solo cuando las autoridades indiquen que es seguro.",
+      "fuentes": [
+        "minsal_aluviones"
+      ]
+    }
+  ]
+}

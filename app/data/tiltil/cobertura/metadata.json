@@ -1,0 +1,20 @@
+{
+  "escenario": "tiltil/cobertura",
+  "nombre": "Tiltil (límite comunal)",
+  "fuente": "SUBDERE, IGM e INE (2018) — División Político Administrativa, Comunas (servicio del MOP)",
+  "url_servicio": "https://rest-sit.mop.gob.cl/arcgis/rest/services/INTEROP/SERVICIO_DPA/MapServer",
+  "ficha_catalogo": "https://rest-sit.mop.gob.cl/arcgis/rest/services/INTEROP/SERVICIO_DPA/MapServer/1",
+  "fecha_publicacion_fuente": "2018",
+  "fecha_descarga": "2026-10-03T02:36:14.349Z",
+  "bbox": null,
+  "capas": [
+    {
+      "capa": "Comunas",
+      "indice": 1,
+      "archivo": "limite_comunal.geojson",
+      "elementos": 1,
+      "kb": 15,
+      "generalizacion_grados": 0.0001
+    }
+  ]
+}
