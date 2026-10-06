@@ -1,8 +1,8 @@
-# Mapa de Evacuación — Especificación (v3.3)
+# Mapa de Evacuación — Especificación (v3.4)
 
 > **Fuente única de verdad del proyecto.** Si algo en otro archivo contradice esto, manda este documento.
 > Ubicación: `docs/ESPECIFICACION.md` del repo `julianureta7-collab/mapa-evacuacion`.
-> Versión 3.3 · acordada el 30 de septiembre de 2026, actualizada el 5 de octubre de 2026 · reemplaza a la especificación v1 (archivo en OneDrive, ya retirado).
+> Versión 3.4 · acordada el 30 de septiembre de 2026, actualizada el 5 de octubre de 2026 · reemplaza a la especificación v1 (archivo en OneDrive, ya retirado).
 
 ## 1. Qué es y para cuándo
 
@@ -119,7 +119,7 @@ La app maneja **dos puntos**:
   - La regla "sale y no vuelve a entrar" se aplica a **cada área por separado**: entrar al área de un incendio cuenta aunque la persona siga dentro del área de inundación. Una ruta tampoco puede tocar un área de otra alerta donde la persona no está (se revisa también entre vértices).
   - Si la persona está dentro del área de otra alerta, el estado es "Debes evacuar" aunque esté fuera del área de la alerta principal.
 - **Si hay área de peligro y el punto de origen está fuera de ella** (a más de 100 m del borde): pantalla verde "Estás en zona segura, permanece aquí", sin ruta. **Si la amenaza no tiene área de peligro** (p. ej. el Campus antes de que el operador marque el edificio), se guía al punto de encuentro con ruta del operador si existe, y si no, se pasa a precaución.
-- **Pantalla mínima:** se ocultan la cabecera, los botones de modo, el panel de información, la leyenda, las fuentes, el control de capas y los detalles; en el mapa quedan el área de peligro y los puntos de encuentro oficiales, **todo lo que marcó el operador** (puntos, áreas, rutas y tramos bloqueados) y la ruta personal. Se ve: aviso de alerta, mapa, estado en una línea, distancia, tiempo y una instrucción.
+- **Pantalla mínima:** se ocultan la cabecera, los botones de modo, el panel de información, la leyenda, las fuentes, el control de capas y los detalles; en el mapa quedan el área de peligro y los puntos de encuentro oficiales, lo que marcó el operador (puntos, áreas y tramos bloqueados; **sus rutas no**: la persona sigue solo su ruta personal) y la ruta personal. Se ve: aviso de alerta, mapa, estado en una línea, distancia, tiempo y una instrucción.
 - **Lo primario es la alerta y la ruta:** banner con el mensaje del operador (y SIMULACRO si corresponde), ruta grande y clara, distancia y tiempo. La flecha, la voz y la vibración quedan **después del viernes**.
 - **Botón "Necesito ayuda"** disponible en cualquier momento de la alerta (§8). **Es la última feature.**
 - Vuelve sola a modo informativo cuando el operador cancela la alerta o cuando vence (**por defecto, a las 2 horas**).
@@ -295,6 +295,7 @@ Reportes para el informe del equipo: `docs/reportes/` (uno por hito).
 ## Anexo C — Registro de cambios
 
 - **v2.1 (30-sep-2026):** modelo de dos puntos: la ubicación real se sigue siempre si hay permiso, y el pin es lo que se mira; la alerta llega si cualquiera de los dos está en la zona (§5.1). La ruta de emergencia sale de la ubicación real si está en la zona alertada; con dos alertas simultáneas manda la de la ubicación real (§5.3). Validación común de rutas contra bloqueos y áreas de peligro del operador (§6). Vigencia permanente y amenaza "todas" para elementos del operador (§7). Roles genéricos de capa y contenido por amenaza (§3). Estado "zona segura" en emergencia (§5.3). El campus usa modo precaución hasta que el operador dibuje (§4).
+- **v3.4 (6-oct-2026):** en una alerta no se dibujan las rutas del operador (sí sus áreas, puntos y bloqueos) (§5.3).
 - **v3.3 (5-oct-2026):** operador: dibujar un elemento sobre otro, imán a lo ya dibujado, motivo y fuente opcionales (§7).
 - **v3.2 (5-oct-2026):** "Usar mi ubicación" solo sigue al GPS dentro de una zona cubierta; fuera, se queda en el último lugar del pin, con aviso (§5.1).
 - **v3.1 (5-oct-2026):** capas visibles por defecto en tsunami y erupción volcánica; el operador muestra por defecto puntos y áreas, y en una alerta todo lo suyo (§5.2, §5.3). Se quita la Cota 30 de Viña. Leyenda con capas apagadas atenuadas.

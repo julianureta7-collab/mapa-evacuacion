@@ -1,5 +1,5 @@
 // Mapa Leaflet: fondo OSM y capas de la zona × amenaza actual.
-import { estiloDe } from './catalogo.js?v=23';
+import { estiloDe } from './catalogo.js?v=24';
 
 let mapa, controlCapas, grupoCapas;
 let capasDibujadas = [];        // [{ def, capa }]
@@ -56,9 +56,9 @@ function popupDe(def, props) {
 }
 
 // En emergencia el mapa muestra lo esencial de las capas oficiales (área de peligro y puntos de
-// encuentro; la ruta personal se dibuja aparte) y TODO lo que marcó el operador (también sus rutas
-// y tramos bloqueados). En informativo, lo que diga el catálogo (visible); el resto se activa en el
-// control de capas.
+// encuentro; la ruta personal se dibuja aparte) y lo que marcó el operador (áreas, puntos y tramos
+// bloqueados), MENOS sus rutas: la persona sigue solo su ruta personal. En informativo, lo que diga
+// el catálogo (visible); el resto se activa en el control de capas.
 const ROLES_EMERGENCIA = ['area_peligro', 'punto_encuentro', 'bloqueo'];
 let alCambiarVisibles = () => {};
 export const onCambioCapas = (cb) => { alCambiarVisibles = cb; };
@@ -66,7 +66,7 @@ export const onCambioCapas = (cb) => { alCambiarVisibles = cb; };
 export const capaVisible = (def) => capasDibujadas.some(c => c.def === def && mapa.hasLayer(c.capa));
 function aplicarVisibilidad() {
   for (const { def, capa } of capasDibujadas) {
-    const ver = modoEmergenciaMapa ? (def.operador || ROLES_EMERGENCIA.includes(def.rol)) : def.visible;
+    const ver = modoEmergenciaMapa ? (def.operador ? def.rol !== 'ruta' : ROLES_EMERGENCIA.includes(def.rol)) : def.visible;
     if (ver) capa.addTo(grupoCapas); else { grupoCapas.removeLayer(capa); mapa.removeLayer(capa); }
   }
   alCambiarVisibles();

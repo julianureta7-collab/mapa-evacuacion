@@ -2,7 +2,7 @@
 // Contenido oficial por amenaza en data/contenido/<amenaza>.json, con fuentes citadas.
 // Regla de diseño: "durante" es mínimo (3 frases cortas). En una alerta la pantalla es casi solo el mapa;
 // el texto "durante" aparece únicamente si no hay ruta válida (modo precaución).
-import { cargarJSON } from './datos.js?v=23';
+import { cargarJSON } from './datos.js?v=24';
 
 // Misma versión con que se cargó este módulo (?v=N), para no servir contenido viejo desde la caché.
 const VERSION = new URL(import.meta.url).search.slice(1) || 'v=0';
