@@ -16,7 +16,7 @@
 //     dentro del área); a igualdad, la más corta en tiempo.
 //  5. Si ORS falla (sin clave, sin red, límite 429): dirección en línea recta al más cercano.
 
-import { ORS_API_KEY, SUPABASE_URL, SUPABASE_KEY } from './claves.js?v=22';
+import { ORS_API_KEY, SUPABASE_URL, SUPABASE_KEY } from './claves.js?v=23';
 
 // HeiGIT apagó api.openrouteservice.org el 28-sep-2026 (desde el 27-ago solo daba 10 % de cuota y luego 403).
 // Dirección vigente: api.heigit.org/<servicio>/<versión>/… con la MISMA clave, enviada en el encabezado Authorization.

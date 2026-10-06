@@ -2,10 +2,10 @@
 // Rutas, puntos de encuentro, áreas de peligro y tramos bloqueados, cada uno con motivo, fuente,
 // autor (automático) y vigencia. También permite desactivar (sin borrar) una vía oficial.
 // Usa Leaflet-Geoman (vendor/geoman, licencia MIT) para dibujar.
-import { zonas, zona as zonaPorId, amenazasDe, amenazaInfo, fuente, estiloDe } from '../js/catalogo.js?v=22';
-import { cargarCapas } from '../js/datos.js?v=22';
-import { nube } from '../js/nube.js?v=22';
-import { ROLES_OPERADOR, escucharOperador, consultarOperador, aFeature, elementosActuales, desactivacionesActuales } from '../js/capasOperador.js?v=22';
+import { zonas, zona as zonaPorId, amenazasDe, amenazaInfo, fuente, estiloDe } from '../js/catalogo.js?v=23';
+import { cargarCapas } from '../js/datos.js?v=23';
+import { nube } from '../js/nube.js?v=23';
+import { ROLES_OPERADOR, escucharOperador, consultarOperador, aFeature, elementosActuales, desactivacionesActuales } from '../js/capasOperador.js?v=23';
 
 const $ = (id) => document.getElementById(id);
 const esc = (t) => String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -34,7 +34,9 @@ export function iniciarDibujo() {
   grupoOficial = L.featureGroup().addTo(mapa);
   grupoOperador = L.featureGroup().addTo(mapa);
   mapa.pm.setLang('es');
-  mapa.pm.setGlobalOptions({ snappable: true, snapDistance: 15, allowSelfIntersection: false });
+  // Imán: al dibujar, los vértices se pegan a los elementos ya dibujados (y a las capas oficiales),
+  // p. ej. para que una ruta termine justo sobre un punto de encuentro.
+  mapa.pm.setGlobalOptions({ snappable: true, snapDistance: 20, allowSelfIntersection: false });
   mapa.on('pm:create', alCrear);
 
   $('dib-zona').innerHTML = zonas().map(z => `<option value="${z.id}">${esc(z.nombre)}</option>`).join('');
@@ -83,7 +85,7 @@ async function cargarVista(centrar) {
           style: (f) => c.rol === 'ruta' && desact.has(f.properties?.name)
             ? { ...estilo, color: '#9e9e9e', dashArray: '4 6', opacity: 0.8 } : { ...estiloDe(c, f), opacity: (estilo.opacity ?? 1) * 0.8 },
           pointToLayer: (_f, ll) => L.circleMarker(ll, estilo),
-          pmIgnore: true,
+          snapIgnore: false,
           onEachFeature: (f, l) => {
             if (c.rol !== 'ruta') return;
             const cod = f.properties?.name || '';
@@ -110,12 +112,14 @@ function elementosVista() {
 function dibujarOperador() {
   if (!mapa) return;
   grupoOperador.clearLayers();
-  for (const e of elementosVista()) {
+  // Áreas abajo y puntos encima (mismo orden que ROLES_OPERADOR), para que todo se pueda tocar
+  const orden = Object.keys(ROLES_OPERADOR);
+  for (const e of [...elementosVista()].sort((a, b) => orden.indexOf(a.rol) - orden.indexOf(b.rol))) {
     const info = ROLES_OPERADOR[e.rol];
     L.geoJSON(aFeature(e), {
       style: () => info.estilo,
       pointToLayer: (_f, ll) => L.circleMarker(ll, info.estilo),
-      pmIgnore: true,
+      snapIgnore: false,              // sirven de imán para los nuevos elementos
     }).bindPopup(`<strong>${esc(e.nombre || info.nombre)}</strong><br>Motivo: ${esc(e.motivo)}<br>Fuente: ${esc(e.fuente)}<br><small>${esc(e.autor)} · ${hora(e.creado)}${e.vigente_hasta ? ` · hasta ${hora(e.vigente_hasta)}` : ' · permanente'}</small>`)
       .addTo(grupoOperador);
   }
@@ -153,6 +157,9 @@ function elegirHerramienta(h) {
   mapa.pm.disableDraw();
   herramienta = herramienta === h ? null : h;
   document.querySelectorAll('[data-herr]').forEach(b => b.classList.toggle('activa', b.dataset.herr === herramienta));
+  // Mientras se dibuja, los elementos existentes no capturan los clics: se puede poner un elemento sobre
+  // otro (un bloqueo dentro de un área, una ruta que termina en un punto). Con "desactivar" sí se clickean.
+  mapa.getContainer().classList.toggle('dibujando', !!herramienta && herramienta !== 'desactivar');
   $('ayuda-dibujo').textContent = herramienta ? AYUDAS[herramienta] : 'Elige una herramienta y dibuja sobre el mapa.';
   if (!herramienta || herramienta === 'desactivar') return;
   if (herramienta !== 'punto_encuentro' && amenazaSel() === 'todas' && herramienta === 'area_peligro') {
@@ -210,8 +217,8 @@ function cargarVistaSoloEstilos() { grupoOficial.eachLayer(g => g.resetStyle?.()
 async function publicar(ev) {
   ev.preventDefault();
   if (!pendiente) return;
-  const motivo = $('el-motivo').value.trim(), fuenteTxt = $('el-fuente').value.trim();
-  if (!motivo || !fuenteTxt) { mostrarError('Motivo y fuente son obligatorios.'); return; }
+  // Motivo y fuente son opcionales (demo). La base de datos exige texto, así que se guarda "Sin especificar".
+  const motivo = $('el-motivo').value.trim() || 'Sin especificar', fuenteTxt = $('el-fuente').value.trim() || 'Sin especificar';
   $('btn-guardar-el').disabled = true;
   let error;
   if (pendiente.tipo === 'elemento') {

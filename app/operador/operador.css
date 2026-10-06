@@ -67,3 +67,5 @@ button.secundario-oscuro { background: #fff; color: var(--marca); border: 1px so
 .elementos li.rol-bloqueo { border-left-color: #b00020; }
 .elementos li.desact { border-left-color: #6b7b8c; }
 .elementos button { padding: 4px 8px; font-size: 12px; }
+/* Dibujando: los elementos ya dibujados no capturan clics (se puede dibujar encima de ellos). */
+#mapa-operador.dibujando .leaflet-overlay-pane .leaflet-interactive { pointer-events: none; }

@@ -1,5 +1,5 @@
 // Mapa Leaflet: fondo OSM y capas de la zona × amenaza actual.
-import { estiloDe } from './catalogo.js?v=22';
+import { estiloDe } from './catalogo.js?v=23';
 
 let mapa, controlCapas, grupoCapas;
 let capasDibujadas = [];        // [{ def, capa }]
@@ -45,7 +45,9 @@ function popupDe(def, props) {
     const e = (t) => String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const cuando = props.creado ? new Date(props.creado).toLocaleString('es-CL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
     return `<div class="popup-titulo">${e(props.nombre || nombreCapa)}</div><div>${e(nombreCapa)}</div>`
-      + `<div>Motivo: ${e(props.motivo)}</div><div>Fuente: ${e(props.fuente_texto)}</div>`
+      // "Sin especificar" = el operador no lo indicó (motivo y fuente son opcionales): no se muestra
+      + (props.motivo && props.motivo !== 'Sin especificar' ? `<div>Motivo: ${e(props.motivo)}</div>` : '')
+      + (props.fuente_texto && props.fuente_texto !== 'Sin especificar' ? `<div>Fuente: ${e(props.fuente_texto)}</div>` : '')
       + `<div class="popup-fuente">Marcado por ${e(props.autor)} · ${cuando}${props.vigente_hasta ? ` · vigente hasta ${new Date(props.vigente_hasta).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}` : ''}</div>`;
   }
   const f = props._fuente;

@@ -1,8 +1,8 @@
-# Mapa de Evacuación — Especificación (v3.2)
+# Mapa de Evacuación — Especificación (v3.3)
 
 > **Fuente única de verdad del proyecto.** Si algo en otro archivo contradice esto, manda este documento.
 > Ubicación: `docs/ESPECIFICACION.md` del repo `julianureta7-collab/mapa-evacuacion`.
-> Versión 3.2 · acordada el 30 de septiembre de 2026, actualizada el 5 de octubre de 2026 · reemplaza a la especificación v1 (archivo en OneDrive, ya retirado).
+> Versión 3.3 · acordada el 30 de septiembre de 2026, actualizada el 5 de octubre de 2026 · reemplaza a la especificación v1 (archivo en OneDrive, ya retirado).
 
 ## 1. Qué es y para cuándo
 
@@ -165,7 +165,8 @@ Mientras el operador todavía no dibuja nada, los niveles 2 y 3 cubren usando in
 - Diseñada para **notebook**.
 - **Alertas:** elegir zona, amenaza, mensaje, simulacro (sí por defecto) y vigencia (2 h por defecto); activar y cancelar. **Solo se pueden enviar alertas a zonas cubiertas.**
 - **Dibujo en el mapa** (en tiempo real hacia los usuarios): rutas, puntos de encuentro, áreas de peligro (polígonos) y tramos bloqueados. Solo dentro de zonas cubiertas.
-- **Cada elemento dibujado lleva obligatoriamente:** motivo, fuente de la información, autor, hora y vigencia.
+- **Cada elemento dibujado lleva** autor y hora (automáticos) y vigencia. **Motivo y fuente son opcionales** (decisión para la demo, 5-oct-2026): si se dejan vacíos se guarda "Sin especificar" (la base de datos exige texto) y la app usuario no los muestra.
+- **Dibujo cómodo:** mientras hay una herramienta activa, lo ya dibujado no captura los clics, así que se puede poner un elemento sobre otro (un bloqueo o un punto dentro de un área). Los vértices se pegan con imán (20 px) a lo ya dibujado y a las capas oficiales, para que una ruta termine justo sobre un punto de encuentro. Orden de dibujo: áreas abajo, luego bloqueos, rutas y puntos encima.
 - **Vigencia:** "permanente" (p. ej. las zonas de seguridad del Campus) o "hasta [fecha y hora]" (p. ej. un bloqueo durante una alerta).
 - **Amenaza:** cada elemento se asocia a una amenaza de la zona o a **"todas"**. Por ejemplo, un punto de encuentro del Campus sirve para cualquier amenaza del Campus.
 - Lo dibujado y vigente se ve **en ambos modos**: en informativo, como preparación, y en emergencia, como guía.
@@ -294,6 +295,7 @@ Reportes para el informe del equipo: `docs/reportes/` (uno por hito).
 ## Anexo C — Registro de cambios
 
 - **v2.1 (30-sep-2026):** modelo de dos puntos: la ubicación real se sigue siempre si hay permiso, y el pin es lo que se mira; la alerta llega si cualquiera de los dos está en la zona (§5.1). La ruta de emergencia sale de la ubicación real si está en la zona alertada; con dos alertas simultáneas manda la de la ubicación real (§5.3). Validación común de rutas contra bloqueos y áreas de peligro del operador (§6). Vigencia permanente y amenaza "todas" para elementos del operador (§7). Roles genéricos de capa y contenido por amenaza (§3). Estado "zona segura" en emergencia (§5.3). El campus usa modo precaución hasta que el operador dibuje (§4).
+- **v3.3 (5-oct-2026):** operador: dibujar un elemento sobre otro, imán a lo ya dibujado, motivo y fuente opcionales (§7).
 - **v3.2 (5-oct-2026):** "Usar mi ubicación" solo sigue al GPS dentro de una zona cubierta; fuera, se queda en el último lugar del pin, con aviso (§5.1).
 - **v3.1 (5-oct-2026):** capas visibles por defecto en tsunami y erupción volcánica; el operador muestra por defecto puntos y áreas, y en una alerta todo lo suyo (§5.2, §5.3). Se quita la Cota 30 de Viña. Leyenda con capas apagadas atenuadas.
 - **v3.0 (2-oct-2026):** zonas Peñalolén y La Florida (§4), con amenaza nueva "aluvión" (PRMS de MINVU y puntos críticos por quebradas como referencia; contenido oficial de SENAPRED). El contenido de relaves también cita la página de aluviones de SENAPRED.

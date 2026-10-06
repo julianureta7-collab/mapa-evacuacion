@@ -7,7 +7,7 @@
   <title>Operador · Mapa de Evacuación</title>
   <link rel="stylesheet" href="../vendor/leaflet/leaflet.css">
   <link rel="stylesheet" href="../vendor/geoman/leaflet-geoman.css">
-  <link rel="stylesheet" href="operador.css?v=22">
+  <link rel="stylesheet" href="operador.css?v=23">
 </head>
 <body>
   <header class="cabecera">
@@ -91,10 +91,10 @@
             <form id="form-elemento" class="form-elemento" hidden>
               <h3 id="form-titulo">Nuevo elemento</h3>
               <label>Nombre (opcional) <input type="text" id="el-nombre" maxlength="60" placeholder="Ej.: Escalera Patio Norte"></label>
-              <label>Motivo <span class="req">*</span>
-                <textarea id="el-motivo" rows="2" maxlength="200" required placeholder="Ej.: Vía oficial bloqueada por derrumbe"></textarea></label>
-              <label>Fuente de la información <span class="req">*</span>
-                <input type="text" id="el-fuente" maxlength="120" required placeholder="Ej.: Bomberos en terreno, plan de emergencia UC"></label>
+              <label>Motivo (opcional)
+                <textarea id="el-motivo" rows="2" maxlength="200" placeholder="Ej.: Vía oficial bloqueada por derrumbe"></textarea></label>
+              <label>Fuente de la información (opcional)
+                <input type="text" id="el-fuente" maxlength="120" placeholder="Ej.: Bomberos en terreno, plan de emergencia UC"></label>
               <label id="campo-vigencia">Vigencia
                 <select id="el-vigencia">
                   <option value="">Permanente</option>
@@ -126,6 +126,6 @@
   <script src="../vendor/geoman/leaflet-geoman.min.js"></script>
   <script src="../vendor/turf.min.js"></script>
   <script src="../vendor/supabase.js"></script>
-  <script type="module" src="operador.js?v=22"></script>
+  <script type="module" src="operador.js?v=23"></script>
 </body>
 </html>

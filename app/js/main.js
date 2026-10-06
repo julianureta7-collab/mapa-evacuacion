@@ -2,16 +2,16 @@
 // Zonas × amenazas desde data/catalogo.json (spec §3). El pin decide la zona (spec §5.1):
 // al elegir una zona en el desplegable el pin va a su centro, y al arrastrar el pin a otra zona
 // la app cambia de zona sola.
-import { cargarCatalogo, zonas, zona as zonaPorId, amenazasDe, amenazaInfo, fuente, estiloDe, clasesDe, zonaEn } from './catalogo.js?v=22';
-import { cargarCapas } from './datos.js?v=22';
-import { crearMapa, mostrarCapas, centrarEn, dibujarRuta, limpiarRuta, setModoMapa, capaVisible, onCambioCapas } from './mapa.js?v=22';
-import { prepararRutas, calcularRuta, nombreDestino, nombreVia, organismoDe, rumboATexto, hayRutasOperador } from './ruta.js?v=22';
-import { escucharOperador, capasOperador, codigosDesactivados, elementosActuales, desactivacionesActuales, aFeature, ROLES_OPERADOR } from './capasOperador.js?v=22';
-import { prepararAreas, diagnosticar, textosDiagnostico } from './diagnostico.js?v=22';
-import { iniciarPosicion, iniciarGPSSiHayPermiso, modoSimulacion, modoGPS, ubicarPin, setLinterna, posicionActual, ubicacionReal, pinArrastrando, bloquearPin } from './posicion.js?v=22';
-import { escucharAlertas } from './alertas.js?v=22';
-import { cargarContenido, dibujarInformacion as pintarInformacion, htmlPrecaucion } from './informacion.js?v=22';
-import { crearControlBrujula } from './brujula.js?v=22';
+import { cargarCatalogo, zonas, zona as zonaPorId, amenazasDe, amenazaInfo, fuente, estiloDe, clasesDe, zonaEn } from './catalogo.js?v=23';
+import { cargarCapas } from './datos.js?v=23';
+import { crearMapa, mostrarCapas, centrarEn, dibujarRuta, limpiarRuta, setModoMapa, capaVisible, onCambioCapas } from './mapa.js?v=23';
+import { prepararRutas, calcularRuta, nombreDestino, nombreVia, organismoDe, rumboATexto, hayRutasOperador } from './ruta.js?v=23';
+import { escucharOperador, capasOperador, codigosDesactivados, elementosActuales, desactivacionesActuales, aFeature, ROLES_OPERADOR } from './capasOperador.js?v=23';
+import { prepararAreas, diagnosticar, textosDiagnostico } from './diagnostico.js?v=23';
+import { iniciarPosicion, iniciarGPSSiHayPermiso, modoSimulacion, modoGPS, ubicarPin, setLinterna, posicionActual, ubicacionReal, pinArrastrando, bloquearPin } from './posicion.js?v=23';
+import { escucharAlertas } from './alertas.js?v=23';
+import { cargarContenido, dibujarInformacion as pintarInformacion, htmlPrecaucion } from './informacion.js?v=23';
+import { crearControlBrujula } from './brujula.js?v=23';
 
 const $ = (id) => document.getElementById(id);
 let mapa = null;
@@ -375,8 +375,8 @@ function mostrarInfoRuta(r) {
         <div><strong>${fmtDist(r.distancia)}</strong><span>a pie</span></div>
         <div><strong>${fmtMin(r.duracion)}</strong><span>caminando</span></div>
       </div>
-      <div class="ruta-detalle">${pasos.map(d => `<div>${d}</div>`).join('')}<div>Motivo: ${escaparHTML(p.motivo || '')}</div></div>
-      <div class="ruta-aviso">Marcada ${hace} por ${escaparHTML(p.autor || 'un operador')} · fuente: ${escaparHTML(p.fuente_texto || '')}</div>`;
+      <div class="ruta-detalle">${pasos.map(d => `<div>${d}</div>`).join('')}${p.motivo && p.motivo !== 'Sin especificar' ? `<div>Motivo: ${escaparHTML(p.motivo)}</div>` : ''}</div>
+      <div class="ruta-aviso">Marcada ${hace} por ${escaparHTML(p.autor || 'un operador')} ${p.fuente_texto && p.fuente_texto !== 'Sin especificar' ? ` · fuente: ${escaparHTML(p.fuente_texto)}` : ''}</div>`;
     return;
   }
   if (r.tipo === 'oficial') {
