@@ -1,8 +1,8 @@
-# Mapa de Evacuación — Especificación (v3.1)
+# Mapa de Evacuación — Especificación (v3.2)
 
 > **Fuente única de verdad del proyecto.** Si algo en otro archivo contradice esto, manda este documento.
 > Ubicación: `docs/ESPECIFICACION.md` del repo `julianureta7-collab/mapa-evacuacion`.
-> Versión 3.1 · acordada el 30 de septiembre de 2026, actualizada el 5 de octubre de 2026 · reemplaza a la especificación v1 (archivo en OneDrive, ya retirado).
+> Versión 3.2 · acordada el 30 de septiembre de 2026, actualizada el 5 de octubre de 2026 · reemplaza a la especificación v1 (archivo en OneDrive, ya retirado).
 
 ## 1. Qué es y para cuándo
 
@@ -84,7 +84,7 @@ Los elementos del operador usan los mismos roles. Así, una zona o amenaza nueva
 La app maneja **dos puntos**:
 
 - **Ubicación real (GPS):** si la persona dio permiso de ubicación, se sigue **todo el tiempo**, aunque esté mirando otra parte. Se procesa solo en el teléfono.
-- **Pin de referencia:** decide **qué zona y qué mapa se muestran** en modo informativo. Se mueve arrastrándolo, tocando el mapa o con el **desplegable de zona**, que lo lleva al centro de esa zona. Sin permiso de GPS, el pin es el único punto. El botón "Ir a mi ubicación" pone el pin sobre la ubicación real.
+- **Pin de referencia:** decide **qué zona y qué mapa se muestran** en modo informativo. Se mueve arrastrándolo, tocando el mapa o con el **desplegable de zona**, que lo lleva al centro de esa zona. Sin permiso de GPS, el pin es el único punto. El botón **"Usar mi ubicación"** pone el pin sobre la ubicación real **solo si está dentro de una zona cubierta**, y muestra la información de ese lugar. Si la ubicación real está fuera de todas las zonas, el pin se queda donde estaba, se sigue mostrando ese lugar y aparece el aviso "Tu ubicación está fuera de las zonas que cubrimos. Sigues viendo [zona]…". Si después la persona entra a una zona cubierta, el pin la sigue y el mapa se centra. "Simular con pin" vuelve a mostrar el lugar del pin.
 
 **Quién recibe una alerta:** la alerta llega si **la ubicación real o el pin** están dentro de la zona alertada.
 
@@ -294,6 +294,7 @@ Reportes para el informe del equipo: `docs/reportes/` (uno por hito).
 ## Anexo C — Registro de cambios
 
 - **v2.1 (30-sep-2026):** modelo de dos puntos: la ubicación real se sigue siempre si hay permiso, y el pin es lo que se mira; la alerta llega si cualquiera de los dos está en la zona (§5.1). La ruta de emergencia sale de la ubicación real si está en la zona alertada; con dos alertas simultáneas manda la de la ubicación real (§5.3). Validación común de rutas contra bloqueos y áreas de peligro del operador (§6). Vigencia permanente y amenaza "todas" para elementos del operador (§7). Roles genéricos de capa y contenido por amenaza (§3). Estado "zona segura" en emergencia (§5.3). El campus usa modo precaución hasta que el operador dibuje (§4).
+- **v3.2 (5-oct-2026):** "Usar mi ubicación" solo sigue al GPS dentro de una zona cubierta; fuera, se queda en el último lugar del pin, con aviso (§5.1).
 - **v3.1 (5-oct-2026):** capas visibles por defecto en tsunami y erupción volcánica; el operador muestra por defecto puntos y áreas, y en una alerta todo lo suyo (§5.2, §5.3). Se quita la Cota 30 de Viña. Leyenda con capas apagadas atenuadas.
 - **v3.0 (2-oct-2026):** zonas Peñalolén y La Florida (§4), con amenaza nueva "aluvión" (PRMS de MINVU y puntos críticos por quebradas como referencia; contenido oficial de SENAPRED). El contenido de relaves también cita la página de aluviones de SENAPRED.
 - **v2.9 (2-oct-2026):** zona Tiltil (§4) con amenaza nueva "falla de relaves" (`relave`) (depósitos SERNAGEOMIN 2025 como referencia; área de peligro solo del operador), incendio forestal e inundación. Consulta del depósito más cercano (polígonos con `cercano`) y título del popup desde un campo (`titulo`).

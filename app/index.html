@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#12324a">
   <title>Mapa de Evacuación</title>
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
-  <link rel="stylesheet" href="css/estilos.css?v=21">
+  <link rel="stylesheet" href="css/estilos.css?v=22">
 </head>
 <body>
   <div class="aviso-simulacro" id="aviso-simulacro">PROTOTIPO · SIMULACRO · No reemplaza las instrucciones de la autoridad</div>
@@ -32,6 +32,7 @@
           <button type="button" id="btn-simulacion" class="activo">Simular con pin</button>
           <button type="button" id="btn-gps">Usar mi ubicación</button>
         </div>
+        <p class="aviso-gps" id="aviso-gps" hidden></p>
         <div class="estado" id="estado" aria-live="polite">
           <div class="estado-titulo" id="estado-titulo"></div>
           <div class="estado-texto" id="estado-texto"></div>
@@ -52,6 +53,6 @@
   <script src="vendor/leaflet-rotate.js"></script>
   <script src="vendor/supabase.js"></script>
   <script src="vendor/turf.min.js"></script>
-  <script type="module" src="js/main.js?v=21"></script>
+  <script type="module" src="js/main.js?v=22"></script>
 </body>
 </html>

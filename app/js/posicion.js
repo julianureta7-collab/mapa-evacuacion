@@ -2,7 +2,8 @@
 //  - Ubicación real (GPS): si hay permiso se sigue siempre, también mientras se usa el pin.
 //    Solo se procesa en el teléfono. Se dibuja como un punto azul pequeño cuando el pin está en otra parte.
 //  - Pin de referencia: lo que la persona está mirando. En modo "simulación" se arrastra libremente;
-//    en modo "gps" sigue a la ubicación real.
+//    en modo "gps" sigue a la ubicación real, pero SOLO si está dentro de una zona cubierta: si no,
+//    el pin se queda donde estaba (se sigue mostrando ese lugar) y se avisa con onAvisoGPS(true).
 
 let mapa, pin, circulo, idWatch = null;
 let alCambiarPin = () => {};      // (latlng, precision|null, arrastrando)
@@ -13,6 +14,9 @@ let marcadorReal = null, circuloReal = null;
 let centrarAlPrimerFix = false;
 let arrastrandoPin = false;
 let bloqueado = false;          // con la brújula activa el pin no se arrastra (el mapa rotado lo hace saltar)
+let enCobertura = () => true;   // ¿el punto está en alguna zona cubierta? (lo define main.js)
+let alAvisoGPS = () => {};      // (fuera: boolean) la ubicación real está fuera de toda zona cubierta
+let gpsFuera = false;
 
 export let modo = 'simulacion';
 
@@ -38,11 +42,13 @@ const ICONO_REAL = L.divIcon({
   iconAnchor: [8, 8],
 });
 
-export function iniciarPosicion(m, { onPin, onReal, onErrorGPS } = {}) {
+export function iniciarPosicion(m, { onPin, onReal, onErrorGPS, dentroDeCobertura, onAvisoGPS } = {}) {
   mapa = m;
   alCambiarPin = onPin || alCambiarPin;
   alCambiarReal = onReal || alCambiarReal;
   alErrorGPS = onErrorGPS || alErrorGPS;
+  enCobertura = dentroDeCobertura || enCobertura;
+  alAvisoGPS = onAvisoGPS || alAvisoGPS;
   mapa.on('click', (e) => { if (modo === 'simulacion' && !bloqueado) moverPin(e.latlng, null); });
 }
 
@@ -64,9 +70,27 @@ function moverPin(latlng, precision) {
   alCambiarPin(latlng, precision, false);
 }
 
-// Punto azul de la ubicación real, visible solo cuando el pin NO la está siguiendo.
+function marcarFuera(fuera) {
+  if (fuera === gpsFuera) return;
+  gpsFuera = fuera;
+  alAvisoGPS(fuera);
+}
+
+// En modo GPS: el pin sigue a la ubicación real solo dentro de las zonas cubiertas.
+function seguirGPS() {
+  const dentro = enCobertura(real.latlng);
+  const veniaDeFuera = gpsFuera;
+  marcarFuera(!dentro);
+  if (!dentro) { centrarAlPrimerFix = false; return; }   // se sigue mostrando el último lugar del pin
+  const primera = centrarAlPrimerFix || veniaDeFuera || !pin;   // centrar al empezar o al entrar a una zona
+  moverPin(real.latlng, real.precision);
+  pin.dragging.disable();
+  if (primera) { mapa.setView(real.latlng, Math.max(mapa.getZoom(), 16)); centrarAlPrimerFix = false; }
+}
+
+// Punto azul de la ubicación real, visible cuando el pin NO la está siguiendo.
 function dibujarReal() {
-  const mostrar = real && modo !== 'gps';
+  const mostrar = real && (modo !== 'gps' || gpsFuera);
   if (!mostrar) {
     marcadorReal?.remove(); circuloReal?.remove(); marcadorReal = circuloReal = null;
     return;
@@ -82,11 +106,7 @@ function dibujarReal() {
 
 function alPosicionGPS(p) {
   real = { latlng: L.latLng(p.coords.latitude, p.coords.longitude), precision: p.coords.accuracy };
-  if (modo === 'gps') {
-    moverPin(real.latlng, real.precision);
-    pin.dragging.disable();
-    if (centrarAlPrimerFix) { mapa.setView(real.latlng, Math.max(mapa.getZoom(), 16)); centrarAlPrimerFix = false; }
-  }
+  if (modo === 'gps') seguirGPS();
   dibujarReal();
   alCambiarReal(real.latlng, real.precision);
 }
@@ -113,6 +133,7 @@ export async function iniciarGPSSiHayPermiso() {
 
 export function modoSimulacion(latlngInicial) {
   modo = 'simulacion';                     // el GPS sigue corriendo (dos puntos)
+  marcarFuera(false);
   moverPin(pin ? pin.getLatLng() : L.latLng(latlngInicial), null);
   if (!bloqueado) pin.dragging.enable();
   dibujarReal();
@@ -121,6 +142,7 @@ export function modoSimulacion(latlngInicial) {
 // Pone el pin en un punto (p. ej. al elegir una zona en el desplegable) y vuelve a modo simulación.
 export function ubicarPin(latlng) {
   modo = 'simulacion';
+  marcarFuera(false);
   moverPin(L.latLng(latlng), null);
   if (!bloqueado) pin.dragging.enable();
   dibujarReal();
@@ -138,9 +160,9 @@ export function modoGPS(onError) {
   if (onError) alErrorGPS = onError;
   modo = 'gps';
   pin?.dragging.disable();
-  dibujarReal();
-  if (real) { moverPin(real.latlng, real.precision); mapa.setView(real.latlng, Math.max(mapa.getZoom(), 16)); }
+  if (real) { centrarAlPrimerFix = true; seguirGPS(); }
   else centrarAlPrimerFix = true;
+  dibujarReal();
   iniciarWatch();
 }
 

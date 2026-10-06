@@ -215,3 +215,5 @@ body.modo-emergencia .ruta-aviso { font-size: 12px; }
 .leyenda li.leyenda-clase { padding: 2px 0 2px 8px; font-size: 13px; }
 .leyenda li.apagada { opacity: .45; }
 .leyenda-nota { font-size: 12px; color: var(--tenue); margin-left: 4px; }
+.aviso-gps { font-size: 13px; background: #e3f2fd; color: #0d3c61; border: 1px solid #90caf9; border-radius: 8px; padding: 8px 10px; margin: 0 0 10px; }
+body.modo-emergencia .aviso-gps { display: none; }

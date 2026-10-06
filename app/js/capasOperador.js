@@ -1,7 +1,7 @@
 // Elementos dibujados por operadores (spec §7) y desactivaciones de vías oficiales.
 // Compartido por la app usuario (lee) y la app operador (lee y escribe).
 // Tablas: elementos_operador, desactivaciones_oficiales (supabase/esquema.sql).
-import { nube } from './nube.js?v=21';
+import { nube } from './nube.js?v=22';
 
 // visible: si se ve por defecto en modo informativo (en una alerta se ven todas, ver mapa.js).
 export const ROLES_OPERADOR = {
