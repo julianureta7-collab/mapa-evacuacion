@@ -2,16 +2,16 @@
 // Zonas × amenazas desde data/catalogo.json (spec §3). El pin decide la zona (spec §5.1):
 // al elegir una zona en el desplegable el pin va a su centro, y al arrastrar el pin a otra zona
 // la app cambia de zona sola.
-import { cargarCatalogo, zonas, zona as zonaPorId, amenazasDe, amenazaInfo, fuente, estiloDe, clasesDe, zonaEn } from './catalogo.js?v=20';
-import { cargarCapas } from './datos.js?v=20';
-import { crearMapa, mostrarCapas, centrarEn, dibujarRuta, limpiarRuta, setModoMapa } from './mapa.js?v=20';
-import { prepararRutas, calcularRuta, nombreDestino, nombreVia, organismoDe, rumboATexto, hayRutasOperador } from './ruta.js?v=20';
-import { escucharOperador, capasOperador, codigosDesactivados, elementosActuales, desactivacionesActuales, aFeature, ROLES_OPERADOR } from './capasOperador.js?v=20';
-import { prepararAreas, diagnosticar, textosDiagnostico } from './diagnostico.js?v=20';
-import { iniciarPosicion, iniciarGPSSiHayPermiso, modoSimulacion, modoGPS, ubicarPin, setLinterna, posicionActual, ubicacionReal, pinArrastrando, bloquearPin } from './posicion.js?v=20';
-import { escucharAlertas } from './alertas.js?v=20';
-import { cargarContenido, dibujarInformacion as pintarInformacion, htmlPrecaucion } from './informacion.js?v=20';
-import { crearControlBrujula } from './brujula.js?v=20';
+import { cargarCatalogo, zonas, zona as zonaPorId, amenazasDe, amenazaInfo, fuente, estiloDe, clasesDe, zonaEn } from './catalogo.js?v=21';
+import { cargarCapas } from './datos.js?v=21';
+import { crearMapa, mostrarCapas, centrarEn, dibujarRuta, limpiarRuta, setModoMapa, capaVisible, onCambioCapas } from './mapa.js?v=21';
+import { prepararRutas, calcularRuta, nombreDestino, nombreVia, organismoDe, rumboATexto, hayRutasOperador } from './ruta.js?v=21';
+import { escucharOperador, capasOperador, codigosDesactivados, elementosActuales, desactivacionesActuales, aFeature, ROLES_OPERADOR } from './capasOperador.js?v=21';
+import { prepararAreas, diagnosticar, textosDiagnostico } from './diagnostico.js?v=21';
+import { iniciarPosicion, iniciarGPSSiHayPermiso, modoSimulacion, modoGPS, ubicarPin, setLinterna, posicionActual, ubicacionReal, pinArrastrando, bloquearPin } from './posicion.js?v=21';
+import { escucharAlertas } from './alertas.js?v=21';
+import { cargarContenido, dibujarInformacion as pintarInformacion, htmlPrecaucion } from './informacion.js?v=21';
+import { crearControlBrujula } from './brujula.js?v=21';
 
 const $ = (id) => document.getElementById(id);
 let mapa = null;
@@ -39,16 +39,21 @@ function muestraDe(def, e) {
   return `<span class="muestra linea" style="border-top-color:${e.color};border-top-style:${e.dashArray ? 'dashed' : 'solid'}"></span>`;
 }
 
-function dibujarLeyenda(capas) {
+// Las capas apagadas aparecen atenuadas: se activan en el control de capas del mapa.
+let capasLeyenda = [];
+function dibujarLeyenda(capas = capasLeyenda) {
+  capasLeyenda = capas;
+  const apagada = (def) => capaVisible(def) ? '' : ' apagada';
+  const nota = (def) => capaVisible(def) ? '' : ' <span class="leyenda-nota">(apagada)</span>';
   $('leyenda').innerHTML = capas.map(({ def, geo }) => {
     // Solo las clases que aparecen en los datos (p. ej. sin "Muy alto" si no hay ninguno)
     const presentes = def.estilo_por ? new Set(geo.features.map(f => String(f.properties?.[def.estilo_por.campo]))) : null;
     const clases = clasesDe(def).filter(c => !presentes || presentes.has(c.valor));
     if (clases.length) {
-      return `<li class="leyenda-grupo">${def.nombre}</li>`
-        + clases.map(c => `<li class="leyenda-clase">${muestraDe(def, c.estilo)}${c.valor}</li>`).join('');
+      return `<li class="leyenda-grupo${apagada(def)}">${def.nombre}${nota(def)}</li>`
+        + clases.map(c => `<li class="leyenda-clase${apagada(def)}">${muestraDe(def, c.estilo)}${c.valor}</li>`).join('');
     }
-    return `<li>${muestraDe(def, estiloDe(def))}${def.nombre}</li>`;
+    return `<li class="${apagada(def).trim()}">${muestraDe(def, estiloDe(def))}${def.nombre}${nota(def)}</li>`;
   }).join('');
 }
 
@@ -588,6 +593,7 @@ function mostrarEstadoAlertas(estado) {
 
 async function iniciar() {
   mapa = crearMapa('mapa');
+  onCambioCapas(() => dibujarLeyenda());
   try {
     await cargarCatalogo();
   } catch (e) {

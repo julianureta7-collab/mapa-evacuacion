@@ -1,5 +1,5 @@
 // Mapa Leaflet: fondo OSM y capas de la zona × amenaza actual.
-import { estiloDe } from './catalogo.js?v=20';
+import { estiloDe } from './catalogo.js?v=21';
 
 let mapa, controlCapas, grupoCapas;
 let capasDibujadas = [];        // [{ def, capa }]
@@ -53,14 +53,21 @@ function popupDe(def, props) {
   return `<div class="popup-titulo">${escHTML(titulo)}</div>${titulo !== nombreCapa ? `<div>${escHTML(nombreCapa)}</div>` : ''}${filas.map(x => `<div>${escHTML(x)}</div>`).join('')}${origen ? `<div class="popup-fuente">${escHTML(origen)}</div>` : ''}`;
 }
 
-// En emergencia el mapa muestra solo lo esencial: área de peligro y puntos de encuentro
-// (la ruta personal se dibuja aparte). En informativo, lo que diga el catálogo (visible).
+// En emergencia el mapa muestra lo esencial de las capas oficiales (área de peligro y puntos de
+// encuentro; la ruta personal se dibuja aparte) y TODO lo que marcó el operador (también sus rutas
+// y tramos bloqueados). En informativo, lo que diga el catálogo (visible); el resto se activa en el
+// control de capas.
 const ROLES_EMERGENCIA = ['area_peligro', 'punto_encuentro', 'bloqueo'];
+let alCambiarVisibles = () => {};
+export const onCambioCapas = (cb) => { alCambiarVisibles = cb; };
+// ¿La capa de esta definición se está viendo ahora en el mapa?
+export const capaVisible = (def) => capasDibujadas.some(c => c.def === def && mapa.hasLayer(c.capa));
 function aplicarVisibilidad() {
   for (const { def, capa } of capasDibujadas) {
-    const ver = modoEmergenciaMapa ? ROLES_EMERGENCIA.includes(def.rol) : def.visible;
-    if (ver) capa.addTo(grupoCapas); else grupoCapas.removeLayer(capa);
+    const ver = modoEmergenciaMapa ? (def.operador || ROLES_EMERGENCIA.includes(def.rol)) : def.visible;
+    if (ver) capa.addTo(grupoCapas); else { grupoCapas.removeLayer(capa); mapa.removeLayer(capa); }
   }
+  alCambiarVisibles();
 }
 
 export function setModoMapa(emergencia) {
@@ -81,6 +88,10 @@ export function mostrarCapas(capas) {
   grupoCapas = L.featureGroup().addTo(mapa);
   if (!capas.length) return;
   controlCapas = L.control.layers(null, null, { collapsed: window.innerWidth < 760 }).addTo(mapa);
+  if (!mapa._avisaCapas) {      // al activar/desactivar en el control, actualizar la leyenda
+    mapa.on('overlayadd overlayremove', () => alCambiarVisibles());
+    mapa._avisaCapas = true;
+  }
   const organismos = new Set();
   for (const { def, geo } of capas) {
     const capa = L.geoJSON(geo, {

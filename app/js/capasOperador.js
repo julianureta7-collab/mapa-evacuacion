@@ -1,13 +1,14 @@
 // Elementos dibujados por operadores (spec §7) y desactivaciones de vías oficiales.
 // Compartido por la app usuario (lee) y la app operador (lee y escribe).
 // Tablas: elementos_operador, desactivaciones_oficiales (supabase/esquema.sql).
-import { nube } from './nube.js?v=20';
+import { nube } from './nube.js?v=21';
 
+// visible: si se ve por defecto en modo informativo (en una alerta se ven todas, ver mapa.js).
 export const ROLES_OPERADOR = {
-  ruta:            { nombre: 'Rutas del operador',          geometria: 'Line',         estilo: { color: '#0d47a1', weight: 6, opacity: 0.95 } },
-  punto_encuentro: { nombre: 'Puntos de encuentro (operador)', geometria: 'CircleMarker', estilo: { radius: 10, color: '#ffffff', weight: 3, fillColor: '#00897b', fillOpacity: 1 } },
-  area_peligro:    { nombre: 'Áreas de peligro (operador)', geometria: 'Polygon',      estilo: { color: '#c62828', weight: 2, fillColor: '#e53935', fillOpacity: 0.28, dashArray: '6 4' } },
-  bloqueo:         { nombre: 'Tramos bloqueados',            geometria: 'Line',         estilo: { color: '#b00020', weight: 7, opacity: 0.95, dashArray: '2 10', lineCap: 'round' } },
+  ruta:            { nombre: 'Rutas del operador',          geometria: 'Line',         visible: false, estilo: { color: '#0d47a1', weight: 6, opacity: 0.95 } },
+  punto_encuentro: { nombre: 'Puntos de encuentro (operador)', geometria: 'CircleMarker', visible: true, estilo: { radius: 10, color: '#ffffff', weight: 3, fillColor: '#00897b', fillOpacity: 1 } },
+  area_peligro:    { nombre: 'Áreas de peligro (operador)', geometria: 'Polygon',      visible: true, estilo: { color: '#c62828', weight: 2, fillColor: '#e53935', fillOpacity: 0.28, dashArray: '6 4' } },
+  bloqueo:         { nombre: 'Tramos bloqueados',            geometria: 'Line',         visible: false, estilo: { color: '#b00020', weight: 7, opacity: 0.95, dashArray: '2 10', lineCap: 'round' } },
 };
 
 const vigente = (e) => e.activo && (!e.vigente_hasta || new Date(e.vigente_hasta) > new Date());
@@ -65,7 +66,7 @@ export function capasOperador(lista, zonaId, amenazaId) {
   const capas = [];
   for (const [rol, info] of Object.entries(ROLES_OPERADOR)) {
     const feats = lista.filter(e => e.rol === rol && aplica(e, zonaId, amenazaId)).map(aFeature);
-    if (feats.length) capas.push({ def: { nombre: info.nombre, rol, visible: true, estilo: info.estilo, operador: true }, geo: { type: 'FeatureCollection', features: feats } });
+    if (feats.length) capas.push({ def: { nombre: info.nombre, rol, visible: info.visible, estilo: info.estilo, operador: true }, geo: { type: 'FeatureCollection', features: feats } });
   }
   return capas;
 }

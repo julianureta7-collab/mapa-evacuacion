@@ -49,7 +49,7 @@ const ESCENARIOS = {
       { id: 1, archivo: 'vias_evacuacion', nombre: 'Vía de Evacuación' },
       { id: 2, archivo: 'linea_segura', nombre: 'Línea Segura' },
       { id: 3, archivo: 'area_evacuar', nombre: 'Área a Evacuar' },
-      { id: 4, archivo: 'cota_30', nombre: 'Cota 30 mts.' },
+      // Capa 4 "Cota 30 mts." no se descarga: en Viña solo trae dos fragmentos en los bordes del recuadro.
     ],
   },
   'vina/incendio_forestal': {

@@ -1,5 +1,5 @@
 {
-  "_doc": "Catálogo de zonas × amenazas (spec §3). Agregar una zona o amenaza = editar este archivo y agregar sus capas en data/<zona>/<amenaza>/. El código no conoce zonas por nombre. Roles válidos: area_peligro, ruta, punto_encuentro, referencia, bloqueo. La cobertura de una zona puede ser un polígono o la ruta a un GeoJSON (p. ej. un límite comunal oficial); el centro es opcional. Las zonas pequeñas van antes que las que las contienen (zonaEn devuelve la primera). Opcionales por capa: estilo_por {campo, valores: {valor: estilo}} colorea por clase (también en la leyenda); consulta {campo, etiqueta} muestra el valor en el punto del pin (diagnóstico informativo) y en el popup; aviso: texto bajo el diagnóstico cuando la amenaza no tiene área de peligro. popup [{campo, etiqueta}]: filas extra en el popup. En capas de puntos, consulta {campo, etiqueta, detalle} muestra el punto más cercano. En ruta: codigo {campo, prefijo} crea el código de la vía si la capa no trae 'name'. En punto_encuentro: destino_aunque_dentro: true si la autoridad designa puntos dentro del área (siguen siendo destinos). En consulta: cercano: true busca también el polígono más cercano si el punto no está dentro; detalle_minusculas: true pone el detalle en minúsculas. titulo: campo que da el título del popup (p. ej. NOMBRE_INSTALACION).",
+  "_doc": "Catálogo de zonas × amenazas (spec §3). Agregar una zona o amenaza = editar este archivo y agregar sus capas en data/<zona>/<amenaza>/. El código no conoce zonas por nombre. Roles válidos: area_peligro, ruta, punto_encuentro, referencia, bloqueo. La cobertura de una zona puede ser un polígono o la ruta a un GeoJSON (p. ej. un límite comunal oficial); el centro es opcional. Las zonas pequeñas van antes que las que las contienen (zonaEn devuelve la primera). Opcionales por capa: estilo_por {campo, valores: {valor: estilo}} colorea por clase (también en la leyenda); consulta {campo, etiqueta} muestra el valor en el punto del pin (diagnóstico informativo) y en el popup; aviso: texto bajo el diagnóstico cuando la amenaza no tiene área de peligro. popup [{campo, etiqueta}]: filas extra en el popup. En capas de puntos, consulta {campo, etiqueta, detalle} muestra el punto más cercano. En ruta: codigo {campo, prefijo} crea el código de la vía si la capa no trae 'name'. En punto_encuentro: destino_aunque_dentro: true si la autoridad designa puntos dentro del área (siguen siendo destinos). En consulta: cercano: true busca también el polígono más cercano si el punto no está dentro; detalle_minusculas: true pone el detalle en minúsculas. titulo: campo que da el título del popup (p. ej. NOMBRE_INSTALACION). visible: si la capa se ve por defecto en modo informativo (las apagadas se activan en el control de capas y salen atenuadas en la leyenda). En una alerta se ven el área de peligro, los puntos de encuentro y todo lo del operador.",
   "version": 1,
   "amenazas": {
     "tsunami": {
@@ -168,30 +168,18 @@
               "visible": true
             },
             {
-              "archivo": "cota_30.geojson",
-              "rol": "referencia",
-              "nombre": "Cota 30 m",
-              "fuente": "senapred_tsunami_2024",
-              "visible": false,
-              "estilo": {
-                "color": "#6b7b8c",
-                "weight": 1.5,
-                "opacity": 0.8
-              }
-            },
-            {
               "archivo": "linea_segura.geojson",
               "rol": "referencia",
               "nombre": "Línea segura",
               "fuente": "senapred_tsunami_2024",
-              "visible": true
+              "visible": false
             },
             {
               "archivo": "vias_evacuacion.geojson",
               "rol": "ruta",
               "nombre": "Vías de evacuación",
               "fuente": "senapred_tsunami_2024",
-              "visible": true
+              "visible": false
             },
             {
               "archivo": "puntos_encuentro.geojson",
@@ -200,7 +188,8 @@
               "fuente": "senapred_tsunami_2024",
               "visible": true
             }
-          ]
+          ],
+          "_capas": "Por defecto se ven el área a evacuar y los puntos de encuentro; la línea segura y las vías se activan en el control de capas. La Cota 30 se quitó: en el recuadro de Viña la capa oficial solo trae dos fragmentos en los bordes (Reñaca Alto y Valparaíso), no la cota a lo largo de la costa."
         },
         {
           "id": "incendio_forestal",
@@ -488,7 +477,7 @@
               "rol": "ruta",
               "nombre": "Vías de evacuación",
               "fuente": "senapred_volcanica_2024",
-              "visible": true,
+              "visible": false,
               "codigo": {
                 "campo": "objectid",
                 "prefijo": "VE-"
@@ -539,7 +528,8 @@
                 ]
               }
             ]
-          }
+          },
+          "_capas": "Por defecto se ven el área de evacuación, los puntos de encuentro y el volcán; el peligro volcánico y las vías se activan en el control de capas."
         },
         {
           "id": "incendio_forestal",

@@ -1,8 +1,8 @@
-# Mapa de Evacuación — Especificación (v3.0)
+# Mapa de Evacuación — Especificación (v3.1)
 
 > **Fuente única de verdad del proyecto.** Si algo en otro archivo contradice esto, manda este documento.
 > Ubicación: `docs/ESPECIFICACION.md` del repo `julianureta7-collab/mapa-evacuacion`.
-> Versión 3.0 · acordada el 30 de septiembre de 2026, actualizada el 2 de octubre de 2026 · reemplaza a la especificación v1 (archivo en OneDrive, ya retirado).
+> Versión 3.1 · acordada el 30 de septiembre de 2026, actualizada el 5 de octubre de 2026 · reemplaza a la especificación v1 (archivo en OneDrive, ya retirado).
 
 ## 1. Qué es y para cuándo
 
@@ -46,7 +46,7 @@ Proyecto del curso Investigación, Innovación y Emprendimiento (UC), 5 integran
 | `area_peligro` | Diagnóstico y validación de rutas | Área a Evacuar |
 | `ruta` | Rutas a seguir (en el sentido de evacuación) | Vía de Evacuación |
 | `punto_encuentro` | Destinos | Punto de Encuentro |
-| `referencia` | Solo dibujo, sin lógica | Línea Segura, Cota 30 |
+| `referencia` | Solo dibujo, sin lógica | Línea Segura |
 | `bloqueo` | Tramos que ninguna ruta puede cruzar | (solo del operador) |
 
 Los elementos del operador usan los mismos roles. Así, una zona o amenaza nueva se incorpora sin tocar el código.
@@ -97,6 +97,11 @@ La app maneja **dos puntos**:
 ### 5.2 Modo informativo
 
 - Mapa de la zona con las capas de la amenaza elegida en el desplegable y la leyenda.
+- **Capas visibles por defecto** (el resto se activa en el control de capas y sale atenuada en la leyenda, con "(apagada)"):
+  - Tsunami: área a evacuar y puntos de encuentro. Línea segura y vías de evacuación, apagadas.
+  - Erupción volcánica: área de evacuación, puntos de encuentro y volcán. Peligro volcánico y vías de evacuación, apagadas.
+  - Lo del operador: puntos de encuentro y áreas de peligro, encendidos; rutas y tramos bloqueados, apagados.
+  - El catálogo lo define por capa (`visible`).
 - **Panel "Información"** por amenaza: pestañas Antes / Durante / Después, cada frase con su fuente oficial enlazada (`app/data/contenido/<amenaza>.json` + `fuentes.json`; agregados por zona en `info_zona` del catálogo). Es lo que evalúa O3. **"Durante" tiene máximo 3 frases cortas**: en una alerta la pantalla es casi solo el mapa.
 - Diagnóstico (dentro / cerca del límite / fuera del área de peligro), **calculado desde el pin**, con textos de preparación ("si llega una alerta…").
 - **Sin ruta personal en modo informativo:** la ruta solo aparece durante una alerta. En informativo se ven las capas oficiales (vías, puntos) como preparación.
@@ -114,7 +119,7 @@ La app maneja **dos puntos**:
   - La regla "sale y no vuelve a entrar" se aplica a **cada área por separado**: entrar al área de un incendio cuenta aunque la persona siga dentro del área de inundación. Una ruta tampoco puede tocar un área de otra alerta donde la persona no está (se revisa también entre vértices).
   - Si la persona está dentro del área de otra alerta, el estado es "Debes evacuar" aunque esté fuera del área de la alerta principal.
 - **Si hay área de peligro y el punto de origen está fuera de ella** (a más de 100 m del borde): pantalla verde "Estás en zona segura, permanece aquí", sin ruta. **Si la amenaza no tiene área de peligro** (p. ej. el Campus antes de que el operador marque el edificio), se guía al punto de encuentro con ruta del operador si existe, y si no, se pasa a precaución.
-- **Pantalla mínima:** se ocultan la cabecera, los botones de modo, el panel de información, la leyenda, las fuentes, el control de capas y los detalles; en el mapa quedan solo el área de peligro, los puntos de encuentro y la ruta personal. Se ve: aviso de alerta, mapa, estado en una línea, distancia, tiempo y una instrucción.
+- **Pantalla mínima:** se ocultan la cabecera, los botones de modo, el panel de información, la leyenda, las fuentes, el control de capas y los detalles; en el mapa quedan el área de peligro y los puntos de encuentro oficiales, **todo lo que marcó el operador** (puntos, áreas, rutas y tramos bloqueados) y la ruta personal. Se ve: aviso de alerta, mapa, estado en una línea, distancia, tiempo y una instrucción.
 - **Lo primario es la alerta y la ruta:** banner con el mensaje del operador (y SIMULACRO si corresponde), ruta grande y clara, distancia y tiempo. La flecha, la voz y la vibración quedan **después del viernes**.
 - **Botón "Necesito ayuda"** disponible en cualquier momento de la alerta (§8). **Es la última feature.**
 - Vuelve sola a modo informativo cuando el operador cancela la alerta o cuando vence (**por defecto, a las 2 horas**).
@@ -265,7 +270,7 @@ Reportes para el informe del equipo: `docs/reportes/` (uno por hito).
 
 ## Anexo A — Fuentes de datos verificadas
 
-- **Tsunami (SENAPRED 2024):** FeatureServer `https://services5.arcgis.com/i7S5PSnIJAUcWvSE/ArcGIS/rest/services/Amenaza_por_Tsunami_2024/FeatureServer`. Capas: 0 Punto de Encuentro, 1 Vía de Evacuación, 2 Línea Segura, 3 Área a Evacuar, 4 Cota 30. Puntos y vías usan el campo `nom_com`; el área usa `comuna`. Descarga: `node scripts/descargar_capas.mjs`.
+- **Tsunami (SENAPRED 2024):** FeatureServer `https://services5.arcgis.com/i7S5PSnIJAUcWvSE/ArcGIS/rest/services/Amenaza_por_Tsunami_2024/FeatureServer`. Capas: 0 Punto de Encuentro, 1 Vía de Evacuación, 2 Línea Segura, 3 Área a Evacuar, 4 Cota 30 (no se usa: en Viña solo trae dos fragmentos en los bordes del recuadro). Puntos y vías usan el campo `nom_com`; el área usa `comuna`. Descarga: `node scripts/descargar_capas.mjs`.
 - **Viña (bbox −71.60, −33.06, −71.48, −32.93):** 34 puntos de encuentro (25 Viña, 7 Valparaíso, 2 Concón; sin nombre, solo código), 74 vías (todas empiezan dentro del área y 59 terminan fuera; solo 4 se tocan entre sí), 3 polígonos de área, ≈ 490 KB en total.
 - **Incendio forestal:** `Amenaza_por_Incendio_Forestal_2024/FeatureServer/0` (mismo servidor que el tsunami; ítem ArcGIS `19268f2baaaf4cfdb8ad93f083c2c437`, creado el 2024-04-10, modificado el 2025-10-27). Polígonos "Densidad de Incendios Forestales 2020-2024 (Inc./Km2)" con campos `gridcode` (1–5) y `recurrencia` (Muy baja, Baja, Media, Alta, Muy alta). En el recuadro de Viña hay **23 polígonos** (2 Muy baja, 5 Baja, 8 Media, 6 Alta, 1 Muy alta); uno "Muy baja" es enorme (≈330 km²), por eso el script los **recorta al recuadro** y los generaliza (~5 m). Mide incendios pasados, así que se usa solo como `referencia` (verificado el 2-oct-2026). La ficha antigua del Geoportal (publicación 2020) queda reemplazada.
 - **Volcánica (SENAPRED 2024):** `AMENAZA_VOLCÁNICA_2024` (ítem `cdc76e7d…`, creado 2024-10-07, modificado 2026-09-21): capa 0 puntos de encuentro (`nombre`, `tipo` PET, `volcan`; 42 del Villarrica), 1 vías (`volcan`, `bidireccional`; 8 del Villarrica, **todas "no" bidireccionales**; en Pucón VE-787 y VE-793 van hacia la Península y VE-794 hacia Los Calabozos), 2 áreas de peligro (`peligro` Alto/Medio/Bajo; **`volcan` vacío**, se filtra por recuadro: 120 polígonos en Pucón), 3 volcanes (`categoria`; Villarrica "Muy Alta"). `Área_de_Evacuación_Volcanes` (ítem `a7bdd62b…`, publicado 2026-09-22): un polígono por volcán (`nombre`, `clase` "Validado"); el del Villarrica mide ≈650 km² y contiene el centro de Pucón; la Península queda fuera. **Hallazgo:** los PET Los Calabozos y Quelhue quedan dentro del área de evacuación, pero son oficiales (el Plan Comunal de Pucón pone puestos médicos ahí): en el catálogo van con `destino_aunque_dentro` (§6). Las vías no traen `name`: el código se arma con `objectid` ("VE-787"). Descarga: `node scripts/descargar_capas.mjs pucon/volcanica`.
@@ -289,6 +294,7 @@ Reportes para el informe del equipo: `docs/reportes/` (uno por hito).
 ## Anexo C — Registro de cambios
 
 - **v2.1 (30-sep-2026):** modelo de dos puntos: la ubicación real se sigue siempre si hay permiso, y el pin es lo que se mira; la alerta llega si cualquiera de los dos está en la zona (§5.1). La ruta de emergencia sale de la ubicación real si está en la zona alertada; con dos alertas simultáneas manda la de la ubicación real (§5.3). Validación común de rutas contra bloqueos y áreas de peligro del operador (§6). Vigencia permanente y amenaza "todas" para elementos del operador (§7). Roles genéricos de capa y contenido por amenaza (§3). Estado "zona segura" en emergencia (§5.3). El campus usa modo precaución hasta que el operador dibuje (§4).
+- **v3.1 (5-oct-2026):** capas visibles por defecto en tsunami y erupción volcánica; el operador muestra por defecto puntos y áreas, y en una alerta todo lo suyo (§5.2, §5.3). Se quita la Cota 30 de Viña. Leyenda con capas apagadas atenuadas.
 - **v3.0 (2-oct-2026):** zonas Peñalolén y La Florida (§4), con amenaza nueva "aluvión" (PRMS de MINVU y puntos críticos por quebradas como referencia; contenido oficial de SENAPRED). El contenido de relaves también cita la página de aluviones de SENAPRED.
 - **v2.9 (2-oct-2026):** zona Tiltil (§4) con amenaza nueva "falla de relaves" (`relave`) (depósitos SERNAGEOMIN 2025 como referencia; área de peligro solo del operador), incendio forestal e inundación. Consulta del depósito más cercano (polígonos con `cercano`) y título del popup desde un campo (`titulo`).
 - **v2.8 (2-oct-2026):** zona 3 = Pucón, con erupción volcánica (volcán Villarrica) e incendio forestal (§4). Puntos de encuentro oficiales dentro del área siguen siendo destinos (catálogo `destino_aunque_dentro`), con aviso en la tarjeta de ruta. Códigos de vía desde un campo (`codigo`). El dato de una capa de referencia en el pin también aparece cuando hay área de peligro (p. ej. "Peligro volcánico en este punto: Alto").
